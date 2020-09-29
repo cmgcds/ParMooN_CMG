@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "*Dict": "OpenFOAM",
+        "*Properties": "OpenFOAM",
+        "fvSchemes": "OpenFOAM",
+        "fvSolution": "OpenFOAM",
+        "**/constant/g": "OpenFOAM",
+        "**/0/*": "OpenFOAM",
+        "*.cmake": "c",
+        "DirectSolver.C": "cpp",
+        "FE3D.C": "cpp",
+        "FE3D_ALE.C": "cpp",
+        "FEDatabase2D.C": "cpp",
+        "CD2D_ParMooN.C": "cpp"
+    }
+}

@@ -1,0 +1,51 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/thivin/ParMooN_Working/ParMooN/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/gmake" "cmTC_229db/fast"
+/usr/bin/gmake -f CMakeFiles/cmTC_229db.dir/build.make CMakeFiles/cmTC_229db.dir/build
+gmake[1]: Entering directory '/home/thivin/ParMooN_Working/ParMooN/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_229db.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_229db.dir/CheckSymbolExists.c.o   -c /home/thivin/ParMooN_Working/ParMooN/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_229db
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_229db.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_229db.dir/CheckSymbolExists.c.o  -o cmTC_229db 
+/usr/lib64/gcc/x86_64-suse-linux/8/../../../../x86_64-suse-linux/bin/ld: CMakeFiles/cmTC_229db.dir/CheckSymbolExists.c.o: in function `main':
+CheckSymbolExists.c:(.text+0x16): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+gmake[1]: *** [CMakeFiles/cmTC_229db.dir/build.make:87: cmTC_229db] Error 1
+gmake[1]: Leaving directory '/home/thivin/ParMooN_Working/ParMooN/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:121: cmTC_229db/fast] Error 2
+
+File /home/thivin/ParMooN_Working/ParMooN/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/thivin/ParMooN_Working/ParMooN/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/gmake" "cmTC_fade5/fast"
+/usr/bin/gmake -f CMakeFiles/cmTC_fade5.dir/build.make CMakeFiles/cmTC_fade5.dir/build
+gmake[1]: Entering directory '/home/thivin/ParMooN_Working/ParMooN/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_fade5.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_fade5.dir/CheckFunctionExists.c.o   -c /usr/share/cmake/Modules/CheckFunctionExists.c
+Linking C executable cmTC_fade5
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_fade5.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_fade5.dir/CheckFunctionExists.c.o  -o cmTC_fade5 -lpthreads 
+/usr/lib64/gcc/x86_64-suse-linux/8/../../../../x86_64-suse-linux/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+gmake[1]: *** [CMakeFiles/cmTC_fade5.dir/build.make:87: cmTC_fade5] Error 1
+gmake[1]: Leaving directory '/home/thivin/ParMooN_Working/ParMooN/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:121: cmTC_fade5/fast] Error 2
+
+

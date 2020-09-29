@@ -1,0 +1,33 @@
+{VERSION 2 3 "HP RISC UNIX" "2.3" }
+{USTYLETAB {CSTYLE "Maple Input" -1 0 "Courier" 0 1 255 0 0 1 0 1 0 0 
+1 0 0 0 0 }{CSTYLE "2D Math" -1 2 "Times" 0 1 0 0 0 0 0 0 2 0 0 0 0 0 
+0 }{CSTYLE "2D Output" 2 20 "" 0 1 0 0 255 1 0 0 0 0 0 0 0 0 0 }
+{PSTYLE "Normal" -1 0 1 {CSTYLE "" -1 -1 "" 0 1 0 0 0 0 0 0 0 0 0 0 0 
+0 0 }0 0 0 -1 -1 -1 0 0 0 0 0 0 -1 0 }{PSTYLE "Maple Output" 0 11 1 
+{CSTYLE "" -1 -1 "" 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 }3 3 0 -1 -1 -1 0 0 
+0 0 0 0 -1 0 }}
+{SECT 0 {EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 231 "  t2 := 1/eps;\n  t
+4 := exp(2.0*(x-1.0)*t2);\n  t5 := x-t4;\n  t6 := y*y;\n  t9 := exp(3.
+0*(y-1.0)*t2);\n  t10 := t6-t9;\n  t11 := t5*t10;\n  t12 := z*z;\n  t1
+6 := exp(4.0*(z-1.0)*t2);\n  t17 := t12*z-t16;\n  t30 := eps*eps;\n  t
+31 := 1/t30;\n" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#>%#t2G*$%$epsG!\"\"
+" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#>%#t4G-%$expG6#,$*&,&%\"xG\"\"\"$!
+#5!\"\"F,F,%$epsGF/$\"#?F/" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#>%#t5G,&
+%\"xG\"\"\"-%$expG6#,$*&,&F&F'$!#5!\"\"F'F'%$epsGF0$\"#?F0F0" }}{PARA 
+11 "" 1 "" {XPPMATH 20 "6#>%#t6G*$%\"yG\"\"#" }}{PARA 11 "" 1 "" 
+{XPPMATH 20 "6#>%#t9G-%$expG6#,$*&,&%\"yG\"\"\"$!#5!\"\"F,F,%$epsGF/$
+\"#IF/" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#>%$t10G,&*$%\"yG\"\"#\"\"\"-
+%$expG6#,$*&,&F'F)$!#5!\"\"F)F)%$epsGF2$\"#IF2F2" }}{PARA 11 "" 1 "" 
+{XPPMATH 20 "6#>%$t11G*&,&%\"xG\"\"\"-%$expG6#,$*&,&F'F($!#5!\"\"F(F(%
+$epsGF1$\"#?F1F1F(,&*$%\"yG\"\"#F(-F*6#,$*&,&F7F(F/F(F(F2F1$\"#IF1F1F(
+" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#>%$t12G*$%\"zG\"\"#" }}{PARA 11 "
+" 1 "" {XPPMATH 20 "6#>%$t16G-%$expG6#,$*&,&%\"zG\"\"\"$!#5!\"\"F,F,%$
+epsGF/$\"#SF/" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#>%$t17G,&*$%\"zG\"\"$
+\"\"\"-%$expG6#,$*&,&F'F)$!#5!\"\"F)F)%$epsGF2$\"#SF2F2" }}{PARA 11 "
+" 1 "" {XPPMATH 20 "6#>%$t30G*$%$epsG\"\"#" }}{PARA 11 "" 1 "" 
+{XPPMATH 20 "6#>%$t31G*$%$epsG!\"#" }}}{EXCHG {PARA 0 "> " 0 "" 
+{MPLTEXT 1 0 11 "u:=t11*t17;" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#>%\"uG
+*(,&%\"xG\"\"\"-%$expG6#,$*&,&F'F($!#5!\"\"F(F(%$epsGF1$\"#?F1F1F(,&*$
+%\"yG\"\"#F(-F*6#,$*&,&F7F(F/F(F(F2F1$\"#IF1F1F(,&*$%\"zG\"\"$F(-F*6#,
+$*&,&FBF(F/F(F(F2F1$\"#SF1F1F(" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 
+1 0 0 "" }}}}{MARK "0 10 0" 0 }{VIEWOPTS 1 1 0 1 1 1803 }

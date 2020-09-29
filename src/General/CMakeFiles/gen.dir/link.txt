@@ -1,0 +1,2 @@
+/usr/bin/ar qc /home/thivin/ParMooN_Working/ParMooN_Output/6dof/lib/libgen.a  CMakeFiles/gen.dir/Database.C.o CMakeFiles/gen.dir/MainUtilities.C.o CMakeFiles/gen.dir/MooNMD_Io.C.o CMakeFiles/gen.dir/ReadParam.C.o CMakeFiles/gen.dir/Utilities.C.o CMakeFiles/gen.dir/Vector.C.o
+/usr/bin/ranlib /home/thivin/ParMooN_Working/ParMooN_Output/6dof/lib/libgen.a

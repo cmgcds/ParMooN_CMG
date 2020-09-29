@@ -21,7 +21,7 @@
 #ifdef _TEST     // Do not change ..!!!!
   #include "../Examples/CD_2D/SineLaplace.h" // smooth sol in unitsquares
 #else
-  #include "../Examples/CD_2D/Hemker1996.h" // circle in a channel
+  #include "../Examples/CD_2D/SineLaplace.h"  // circle in a channel
 #endif
 
 

@@ -25,8 +25,8 @@
 # beginners are advised NOT to alter anything the below contents
 
 cmake_minimum_required (VERSION 2.8)
- 
-project (ParMooN LANGUAGES C CXX CUDA)
+
+project (ParMooN LANGUAGES C CXX)
 
 include(${CMAKE_SOURCE_DIR}/UserConfig.cmake)
 
@@ -57,9 +57,9 @@ set(PARMOON_EXTLIB_PATH ${PROJECT_SOURCE_DIR}/EXT_LIB)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 if("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
+  project (ParMooN LANGUAGES C CXX CUDA)
   set (CMAKE_CUDA_COMPILER "/usr/local/cuda-10.2/bin/nvcc")
 endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
-
 
 
 if(NOT "${AParMooN_ARCH}" STREQUAL "CRAY64")

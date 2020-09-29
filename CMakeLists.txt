@@ -25,17 +25,8 @@
 # beginners are advised NOT to alter anything the below contents
 
 cmake_minimum_required (VERSION 2.8)
-if("${AParMooN_ARCH}" STREQUAL "INTEL64" )
-set (CMAKE_C_COMPILER "/opt/intel/compilers_and_libraries/linux/bin/intel64/icc")
-set (CMAKE_CXX_COMPILER "/opt/intel/compilers_and_libraries/linux/bin/intel64/icpc")
-endif("${AParMooN_ARCH}" STREQUAL "INTEL64")
-if("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
-  set (CMAKE_CUDA_COMPILER "/usr/local/cuda-10.2/bin/nvcc")
-  project (ParMooN LANGUAGES C CXX CUDA )
 
-else("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
-  project (ParMooN LANGUAGES C CXX )
-endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
+project (ParMooN LANGUAGES C CXX)
 
 include(${CMAKE_SOURCE_DIR}/UserConfig.cmake)
 
@@ -43,8 +34,7 @@ set (ParMooN_VERSION_MAJOR 1)
 set (ParMooN_VERSION_MINOR 0)
 
 SET(BUILD_SHARED_LIBS ON)
-set (CMAKE_CXX_COMPILER icpc)
-
+ 
 # set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/local/lib)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/lib)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/intel/mkl/lib/intel64)
@@ -65,6 +55,12 @@ set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/Software/include)
 set(PARMOON_EXTLIB_PATH ${PROJECT_SOURCE_DIR}/EXT_LIB)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
+if("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
+  project (ParMooN LANGUAGES C CXX CUDA)
+  set (CMAKE_CUDA_COMPILER "/usr/local/cuda-10.2/bin/nvcc")
+endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
+
 
 if(NOT "${AParMooN_ARCH}" STREQUAL "CRAY64")
 # search the blas in the system, if available it will be default

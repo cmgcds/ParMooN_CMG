@@ -14,8 +14,12 @@
 #include <Database.h>
 #include "stdlib.h"
 #include <LinAlg.h>
-#include <mkl.h>
-#include <omp.h>
+
+#ifdef _MPI
+  #include <mkl.h>
+  #include <omp.h>
+#endif
+
 
 #include <fstream>
 

@@ -25,8 +25,10 @@
 # beginners are advised NOT to alter anything the below contents
 
 cmake_minimum_required (VERSION 2.8)
+if("${AParMooN_ARCH}" STREQUAL "INTEL64" )
 set (CMAKE_C_COMPILER "/opt/intel/compilers_and_libraries/linux/bin/intel64/icc")
 set (CMAKE_CXX_COMPILER "/opt/intel/compilers_and_libraries/linux/bin/intel64/icpc")
+endif("${AParMooN_ARCH}" STREQUAL "INTEL64")
 if("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
   set (CMAKE_CUDA_COMPILER "/usr/local/cuda-10.2/bin/nvcc")
   project (ParMooN LANGUAGES C CXX CUDA )

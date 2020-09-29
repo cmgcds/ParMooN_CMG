@@ -11,6 +11,8 @@
         "FE3D.C": "cpp",
         "FE3D_ALE.C": "cpp",
         "FEDatabase2D.C": "cpp",
-        "CD2D_ParMooN.C": "cpp"
+        "CD2D_ParMooN.C": "cpp",
+        "SystemTNSE2D.C": "cpp",
+        "TNSE2D_ParMooN.C": "cpp"
     }
 }

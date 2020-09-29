@@ -13,7 +13,7 @@
 #include <Output2D.h>
 #include <MainUtilities.h>
 
-#include <stdlib.h>
+#include  <stdlib.h>
 #include <MooNMD_Io.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -21,7 +21,7 @@
 #ifdef _TEST     // Do not change ..!!!!
   #include "../Examples/CD_2D/SineLaplace.h" // smooth sol in unitsquares
 #else
-  #include "../Examples/CD_2D/SineLaplace.h"  // circle in a channel
+  #include "../Examples/CD_2D/SineLaplace.h"  
 #endif
 
 

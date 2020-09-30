@@ -13,6 +13,7 @@
         "FEDatabase2D.C": "cpp",
         "CD2D_ParMooN.C": "cpp",
         "SystemTNSE2D.C": "cpp",
-        "TNSE2D_ParMooN.C": "cpp"
+        "TNSE2D_ParMooN.C": "cpp",
+        "Domain.C": "cpp"
     }
 }

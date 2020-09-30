@@ -28,7 +28,7 @@ set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/CD2D_ParMooN.C" CACHE STRIN
 
 
 # selection of architect type (LINUX64 MAC64 INTEL64 TYRONE64 CRAY64)
-set(AParMooN_ARCH "MAC64" CACHE STRING "select the machine type")
+set(AParMooN_ARCH "LINUX64" CACHE STRING "select the machine type")
 
 #  selection of program type (SEQUENTIAL SMPI MPI OMPONLY HYBRID SCUDA)
 set(AParMooN_PARALLEL_TYPE "SEQUENTIAL" CACHE STRING "select the parallel type")
@@ -120,8 +120,8 @@ endif()
  endif()
 
  if("${AParMooN_ARCH}" STREQUAL "LINUX64")
-   set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -std=c++14 -lmkl_rt -fopenmp")
-   set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -DREDUCED -DNO_TIMER -DMKL_ILP64  ")
+   set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -fopenmp -std=c++11 -lmkl_rt -lmkl_intel_thread -lpthread -liomp5")
+   set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -DREDUCED -DNO_TIMER -m64  -lmkl_rt -lmkl_intel_thread  ")
    set(PARMOON_CUDA_DEF "${PARMOON_CUDA_DEF} -arch=sm_70 -Xcompiler -fopenmp -w ")
    
  elseif("${AParMooN_ARCH}" STREQUAL "MAC64")

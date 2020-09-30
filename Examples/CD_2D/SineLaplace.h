@@ -77,8 +77,8 @@ void BilinearCoeffs(int n_points, double *x, double *y,
 // Enable it only when you want to use tetgen for meshing
 
 // // Generate the mesh using triangle.h
-// void  TriaReMeshGen(TDomain *&Domain)
-// {
+void  TriaReMeshGen(TDomain *&Domain)
+{
 //   int j, ID, k, N_G, *PartMarker, *PointNeighb, maxEpV=0;
 //   int a, b, len1, len2, Neighb_tmp, BDpart;
 //   int i, temp, N_Cells, N_RootCells, CurrVertex, N_Joints, N_Vertices;
@@ -605,5 +605,5 @@ void BilinearCoeffs(int n_points, double *x, double *y,
 // //   exit(0);
 // //   
  
-// } // TriaReMeshGen
+} // TriaReMeshGen
 

@@ -23,7 +23,7 @@ if(NOT BLAS_FOUND)
   find_library(BLAS_LIBRARY NAMES mkl_core PATHS $ENV{BLASDIR}/lib ${CMAKE_LIBRARY_PATH})
   get_filename_component(BLAS_LIBDIR ${BLAS_LIBRARY} PATH)
   find_library(BLAS_LIBRARY_MP NAMES mkl_intel_lp64 PATHS ${BLAS_LIBDIR})
-  #find_library(BLAS_LIBRARY_SQ NAMES mkl_sequential PATHS ${BLAS_LIBDIR})
+  find_library(BLAS_LIBRARY_SQ NAMES mkl_sequential PATHS ${BLAS_LIBDIR})
   find_library(BLAS_LIBRARY_SQ NAMES mkl_intel_thread PATHS ${BLAS_LIBDIR})
   
   if(BLAS_LIBRARY)  

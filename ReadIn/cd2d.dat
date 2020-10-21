@@ -13,7 +13,7 @@ BNDFILE:        ../../ParMooN/data/UnitSquare.PRM
 MESH_TYPE: 0
 USE_PRM: 1
 
-GEOFILE:        ../../ParMooN/data/UnitSquare.GEO
+GEOFILE:          ../../ParMooN/data/UnitSquare.GEO
 # GEOFILE:        ../../ParMooN/data/Gmsh/VacuumTube2D.mesh
 # GEOFILE:        ../../ParMooN/data/Gmsh/UnitSqure2D.mesh
 ----------------------------------------------------------------------

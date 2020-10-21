@@ -54,6 +54,7 @@ void BilinearCoeffs(int n_points, double *x, double *y,
         double **parameters, double **coeffs)
 {
   static double eps=1/TDatabase::ParamDB->PE_NR;
+  
   int i;
   double *coeff;
 

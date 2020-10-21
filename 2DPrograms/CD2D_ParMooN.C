@@ -21,7 +21,8 @@
 #ifdef _TEST     // Do not change ..!!!!
   #include "../Examples/CD_2D/SineLaplace.h" // smooth sol in unitsquares
 #else
-  #include "../Examples/CD_2D/SineLaplace.h"  
+  // #include "../Examples/CD_2D/SineLaplace.h"  
+  #include "../Examples/CD_2D/TempDistribution.h" 
 #endif
 
 

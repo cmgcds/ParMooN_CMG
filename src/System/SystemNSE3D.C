@@ -1209,7 +1209,7 @@ void TSystemNSE3D::Solve(double *sol, double *rhs)
 
          
      
-             DirectSolver(SqmatrixA11[N_Levels-1], SqmatrixA12[N_Levels-1], SqmatrixA13[N_Levels-1], 
+             PardisoDirectSolver(SqmatrixA11[N_Levels-1], SqmatrixA12[N_Levels-1], SqmatrixA13[N_Levels-1], 
                           SqmatrixA21[N_Levels-1], SqmatrixA22[N_Levels-1], SqmatrixA23[N_Levels-1],  
                           SqmatrixA31[N_Levels-1], SqmatrixA32[N_Levels-1], SqmatrixA33[N_Levels-1],  
                           MatrixB1T[N_Levels-1], MatrixB2T[N_Levels-1], MatrixB3T[N_Levels-1],

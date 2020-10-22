@@ -57,7 +57,7 @@ double timeC = 0;
 //   #include "../Examples/TNSE_3D/Hole3D.h"
 //  #include "../Examples/TNSE_3D/AnsatzLinConst.h"
 //  #include "../Examples/TNSE_3D/Bsp3.h"
- #include "../Examples/TNSE_3D/climate_2.h"
+//  #include "../Examples/TNSE_3D/climate_2.h"
 //  #include "../Examples/TNSE_3D/Channel3D_volker.h"
 // #include "../Examples/TNSE_3D/Channel3D_slip.h"
 // #include "../Examples/TNSE_3D/test_slip.h"
@@ -65,6 +65,11 @@ double timeC = 0;
 // #include "../Examples/TNSE_3D/ChannelObstacle3D_slip.h"
 //#include "../Examples/TNSE_3D/ChannelObstacle3D_slip_volker.h"
 // #include "../Examples/TNSE_3D/ChannelObstacle3D_freeslip.h"
+
+
+// -------------  Example file for Siminhale ----------- // 
+#include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
+
 
 void printall_array ( double * Arr1,double * Arr2, int SizeOfArr )
       {

@@ -66,20 +66,29 @@ if(NOT "${AParMooN_ARCH}" STREQUAL "CRAY64")
 # search the blas in the system, if available it will be default
 message("==================Searching BLAS in the System - begin===================================================")
 if(AParMooN_USE_SYSTEM_MKLBLAS)
-    message("Searching MKL BLAS ...")
+    message("Searching MKL BLAS HOME...")
     find_package(MKLBLAS REQUIRED)
     include_directories(${BLAS_INCLUDE_DIRS})
     if(CMAKE_VERBOSE_MAKEFILE)
       if(BLAS_FOUND)
         message("Available system BLAS_LIB =${BLAS_LIBRARIES}")
+        # Declare a private Variable for _INTELMKLBLAS_ in order to include Header Files
       elseif(NOT BLAS_FOUND)
         message("MKL BLAS_NOT_FOUND in your system, searching ...")
       endif(BLAS_FOUND)
     endif(CMAKE_VERBOSE_MAKEFILE)  
+
+    # add a User parameter to be passed to parmoon to inform the usage of MKL header files
+    if(BLAS_FOUND)
+    set(PARMOON_C_DEF " ${PARMOON_C_DEF} -DINTELMKLBLAS")
+    set(PARMOON_CXX_DEF " ${PARMOON_CXX_DEF} -DINTELMKLBLAS")
+
+    endif(BLAS_FOUND)
 endif(AParMooN_USE_SYSTEM_MKLBLAS)
 
 if(NOT BLAS_FOUND)
 # if(AParMooN_USE_SYSTEM_BLAS)
+message("hey bro<< blas not found bro ...")
   find_package(BLAS)
   include_directories(${BLAS_INCLUDE_DIRS})
   if(CMAKE_VERBOSE_MAKEFILE)

@@ -241,6 +241,20 @@ TMatrix3D *matrixB1T, TMatrix3D *matrixB2T, TMatrix3D *matrixB3T,
 TMatrix3D *matrixB1,  TMatrix3D *matrixB2, TMatrix3D *matrixB3,
 double *rhs, double *sol, int flag);
 
+
+//THIVIN 
+// NSE Type 4 -- Routine for PARDISO NSE - TYPE 4 , with removing redundant dirichlet DOFs
+
+void PardisoDirectSolver(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
+                                                        TSquareMatrix3D *sqmatrixA13,
+                                                        TSquareMatrix3D *sqmatrixA21, TSquareMatrix3D *sqmatrixA22,
+                                                        TSquareMatrix3D *sqmatrixA23,
+                                                        TSquareMatrix3D *sqmatrixA31, TSquareMatrix3D *sqmatrixA32,
+                                                        TSquareMatrix3D *sqmatrixA33,
+                                                        TMatrix3D *matrixB1T, TMatrix3D *matrixB2T, TMatrix3D *matrixB3T,
+                                                        TMatrix3D *matrixB1, TMatrix3D *matrixB2, TMatrix3D *matrixB3,
+                                                        double *rhs, double *sol, int flag);
+
 void DirectSolver(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
                   double *sol, double *rhs, double *&Entries,
                    int *&KCol, int *&RowPtr, void *&Symbolic, void *&Numeric, int rb_flag);

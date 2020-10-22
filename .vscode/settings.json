@@ -14,6 +14,12 @@
         "CD2D_ParMooN.C": "cpp",
         "SystemTNSE2D.C": "cpp",
         "TNSE2D_ParMooN.C": "cpp",
-        "Domain.C": "cpp"
+        "Domain.C": "cpp",
+        "TNSE3D_ParMooN.C": "cpp",
+        "SystemTNSE3D_ALE.C": "cpp",
+        "MainUtilities.C": "cpp",
+        "NSE3D_ParMooN.C": "cpp",
+        "SystemNSE3D.C": "cpp",
+        "SystemTNSE3D.C": "cpp"
     }
 }

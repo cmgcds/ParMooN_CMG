@@ -45,14 +45,17 @@ double timeC = 0;
 // =======================================================================
 //  #include "../Examples/NSE_3D/BSExample.h" // smooth sol in unit square
 // #include "../Examples/NSE_3D/AnsatzLinConst.h"
-  #include "../Examples/NSE_3D/CircularChannel.h"
+  // #include "../Examples/NSE_3D/CircularChannel.h"
 // #include "../Examples/NSE_3D/StaticBubble.h"
 // #include "../Examples/NSE_3D/DrivenCavity3D.h"
+#include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
 // =======================================================================
 // main program
 // =======================================================================
 int main(int argc, char* argv[])
 {
+
+  omp_set_num_threads(24);   // FOr intel MKL Solver
   // ======================================================================
   //  declaration of variables
   // ======================================================================

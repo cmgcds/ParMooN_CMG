@@ -1807,7 +1807,7 @@ void TSystemTNSE3D_ALE::Solve(double *sol)
 
              else
              {
-                DirectSolver(SqmatrixM11[N_Levels-1], SqmatrixM12[N_Levels-1], SqmatrixM13[N_Levels-1], 
+                PardisoDirectSolver(SqmatrixM11[N_Levels-1], SqmatrixM12[N_Levels-1], SqmatrixM13[N_Levels-1], 
                           SqmatrixM21[N_Levels-1], SqmatrixM22[N_Levels-1], SqmatrixM23[N_Levels-1],  
                           SqmatrixM31[N_Levels-1], SqmatrixM32[N_Levels-1], SqmatrixM33[N_Levels-1],  
                           MatrixB1T[N_Levels-1], MatrixB2T[N_Levels-1], MatrixB3T[N_Levels-1],
@@ -3328,6 +3328,7 @@ void TSystemTNSE3D_ALE::imposeExternalBoundaryCondition(void externalBoundaryPar
     switch (type)
     {
     case 1:      // Swaying Motion
+    {
         int forwardFlag = 0; 
 
         const int totallength = VelocityFEvect->GetLength() * VelocityFEvect->GetN_Components();
@@ -3395,7 +3396,7 @@ void TSystemTNSE3D_ALE::imposeExternalBoundaryCondition(void externalBoundaryPar
         cblas_daxpby(totallength,-1.0,ExternalVelocityArray ,1.0,1.0,VelocityArray,1.0);
 
       break;
-    
+    }
     default:
       break;
     }

@@ -20,6 +20,9 @@
         "MainUtilities.C": "cpp",
         "NSE3D_ParMooN.C": "cpp",
         "SystemNSE3D.C": "cpp",
-        "SystemTNSE3D.C": "cpp"
+        "SystemTNSE3D.C": "cpp",
+        "ReadGeo.C": "cpp",
+        "Database.C": "cpp",
+        "ReadParam.C": "cpp"
     }
 }

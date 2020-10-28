@@ -1034,10 +1034,15 @@ struct TParaDB
   int DEPENDENT_BASIS_Q2;  
   bool ASSEMBLEMESHMAT;
 
-  // THIVIN 
+  // THIVIN -- Added for Cuda Solver Parameters in ALE-FEM
   bool CUDASOLVERFLAG;
   char *CUDASOLVERTYPE;
   int N_CUDA_REFACTOR_STEPS;
+
+  //THIVIN - SCALING PARAMETERS 
+  double MESH_SCALE_X;
+  double MESH_SCALE_Y;
+  double MESH_SCALE_Z;
 
 
   #if defined(_MPI) || defined(_SMPI)

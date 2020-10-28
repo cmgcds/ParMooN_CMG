@@ -34,6 +34,14 @@
 #include <MeshPartition.h>
 #endif
 
+#ifdef  INTELMKLBLAS
+#include <omp.h>
+#include "mkl.h"
+#include "mkl_spblas.h"
+#include "mkl_types.h"
+#endif  //INTELMKLBLAS
+
+
 double bound = 0;
 double timeC = 0;
 
@@ -54,8 +62,10 @@ double timeC = 0;
 // =======================================================================
 int main(int argc, char* argv[])
 {
-
-  omp_set_num_threads(24);   // FOr intel MKL Solver
+  
+  #ifdef  INTELMKLBLAS
+    omp_set_num_threads(24);   // FOr intel MKL Pardiso Solver 
+  #endif  //_INTELMKL
   // ======================================================================
   //  declaration of variables
   // ======================================================================

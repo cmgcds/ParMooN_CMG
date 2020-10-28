@@ -1700,6 +1700,11 @@ int TDomain::MakeGrid(double *DCORVG, int *KVERT, int *KNPR, int *ELEMSREF,
   TInterfaceJoint3D *IFJoint;
   TIsoInterfaceJoint3D *IIJoint;
   double scale_x, scale_y,scale_z;
+
+  scale_x = TDatabase::ParamDB->MESH_SCALE_X;
+  scale_y = TDatabase::ParamDB->MESH_SCALE_Y;
+  scale_z = TDatabase::ParamDB->MESH_SCALE_Z;
+
   // generate vertices, faces and cells
   // search neighbours
   KVEL = new int[N_Vertices];
@@ -1747,13 +1752,17 @@ int TDomain::MakeGrid(double *DCORVG, int *KVERT, int *KNPR, int *ELEMSREF,
       if ( counterrr == 0)
       {
         counterrr ++;
-        cout << " ================================= MESH HAS BEEN SCALLED - read =================================== " <<endl;
-        cout << " ==================== File Name ; Read Geo  , FunctionName : MakeGrid ======================= " <<endl;
-        cout << " ========= " << " Scale X = " <<scale_x << " Scale X = " <<scale_y << " Scale X = " <<scale_z << "==============="<<endl;
+        
+        if(fabs(scale_x - 1.0) > 1e-8 || fabs(scale_y - 1.0) > 1e-8 || fabs(scale_z - 1.0) > 1e-8)
+        {
+          cout << " ================================= MESH HAS BEEN SCALLED - read =================================== " <<endl;
+          cout << " ==================== File Name ; Read Geo  , FunctionName : MakeGrid ======================= " <<endl;
+          cout << " ========= " << " Scale X = " <<scale_x << " Scale X = " <<scale_y << " Scale X = " <<scale_z << "==============="<<endl;
+        }
       }       
-      X *= 1;
-      Y *= 0.346;
-      Z *= 0.346;
+      X *= scale_x;
+      Y *= scale_y;
+      Z *= scale_z;
 	}
 	else
 	{
@@ -3471,6 +3480,9 @@ int TDomain::GmshGen(char *GeoFile)
   char  line[100];
  
   bool mark;
+
+  //Counter variable for Printing Scalling
+  int counterrr = 0;
   
   TVertex **NewVertices;
   TBaseCell **CellTree, *cell, *neib0, *neib1;  
@@ -3524,18 +3536,30 @@ int TDomain::GmshGen(char *GeoFile)
 //    cout <<"N_Vertices "<<N_Vertices<<endl;
    NewVertices = new TVertex*[N_Vertices];  
   
-   // THIVIN - Added mesh scalling based on the parameter values 
-  cout << "=============================================================================================================================" << endl;
-   cout<< " THIVIN - Mesh has been scalled for ship, Please check the readgeo file for further information  " << endl;
-  cout << "=============================================================================================================================" << endl;
+   // THIVIN - Added mesh scalling based on the parameter values
+   // Scalling Parameters : 
+   double scale_x = TDatabase::ParamDB->MESH_SCALE_X;
+   double scale_y = TDatabase::ParamDB->MESH_SCALE_Y;
+   double scale_z = TDatabase::ParamDB->MESH_SCALE_Z; 
+    if ( counterrr == 0 )
+    {
+        counterrr ++;
+      if(fabs(scale_x - 1.0) > 1e-8 || fabs(scale_y - 1.0) > 1e-8 || fabs(scale_z - 1.0) > 1e-8)
+      {
+          cout << " ================================= MESH HAS BEEN SCALLED - read =================================== " <<endl;
+          cout << " ==================== File Name ; Read Geo  , FunctionName : GmshGen ======================= " <<endl;
+          cout << " ========= " << " Scale X = " <<scale_x << " Scale X = " <<scale_y << " Scale X = " <<scale_z << "==============="<<endl;
+      }
+          
+    } 
    for(i=0;i<N_Vertices; i++)
     {
      dat.getline (line, 99);
      dat >> X >> Y >> Z;      
      
-    // X = X*10;
-    // Y = Y + 10;                        
-    // Z = Z*0.01068;
+    X *= scale_x;
+    Y *= scale_y;
+    Z *= scale_z;
      
      NewVertices[i] = new TVertex(X, Y, Z);
       if (X > Xmax) Xmax = X;

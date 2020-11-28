@@ -23,6 +23,10 @@
         "SystemTNSE3D.C": "cpp",
         "ReadGeo.C": "cpp",
         "Database.C": "cpp",
-        "ReadParam.C": "cpp"
+        "ReadParam.C": "cpp",
+        "TBE2D_ParMooN.C": "cpp",
+        "SystemNSE2D.C": "cpp",
+        "bitset": "c",
+        "set": "c"
     }
 }

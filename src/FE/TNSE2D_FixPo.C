@@ -9376,3 +9376,121 @@ double ***LocMatrices, double **LocRhs)
   
    }
 }
+
+// ======================================================================
+// Burgers, Standard Galerkin
+// ======================================================================
+void TimeBurgersGalerkin(double Mult, double *coeff,
+double *param, double hK,
+double **OrigValues, int *N_BaseFuncts,
+double ***LocMatrices, double **LocRhs)
+{
+  double **MatrixA, **MatrixM;
+  double *Rhs1, *Rhs2, val;
+  double *MatrixRow, *MatrixMRow;
+  double ansatz00, ansatz10, ansatz01;
+  double test00, test10, test01;
+  double *Orig0, *Orig1, *Orig2, *Orig3;
+  int i,j,N_U;
+  double c0, c1, c2;
+  double u1, u2;
+
+  MatrixA = LocMatrices[0];
+  MatrixM = LocMatrices[1];
+
+  Rhs1 = LocRhs[0];
+  Rhs2 = LocRhs[1];
+
+  N_U = N_BaseFuncts[0];
+
+  Orig0 = OrigValues[0];         // u_x
+  Orig1 = OrigValues[1];         // u_y
+  Orig2 = OrigValues[2];         // u
+
+  c0 = coeff[0];                 // nu
+  c1 = coeff[1];                 // f1
+  c2 = coeff[2];                 // f2
+
+  u1 = param[0];                 // u1old
+  u2 = param[1];                 // u2old
+
+  for(i=0;i<N_U;i++)
+  {
+    MatrixRow = MatrixA[i];
+    MatrixMRow = MatrixM[i];
+    test10 = Orig0[i];
+    test01 = Orig1[i];
+    test00 = Orig2[i];
+
+    Rhs1[i] += Mult*test00*c1;
+    Rhs2[i] += Mult*test00*c2;
+
+    for(j=0;j<N_U;j++)
+    {
+      ansatz10 = Orig0[j];
+      ansatz01 = Orig1[j];
+      ansatz00 = Orig2[j];
+
+      val  = c0*(test10*ansatz10+test01*ansatz01);
+      val += (u1*ansatz10+u2*ansatz01)*test00;
+      MatrixRow[j] += Mult * val;
+
+      val = ansatz00*test00;
+      MatrixMRow[j] += Mult * val;
+    }                            // endfor j
+  }                              // endfor i
+
+}
+
+// ======================================================================
+// Burgers nonlinear matrix, Standard Galerkin
+// ======================================================================
+void TimeBurgersNLGalerkin(double Mult, double *coeff,
+double *param, double hK,
+double **OrigValues, int *N_BaseFuncts,
+double ***LocMatrices, double **LocRhs)
+{
+  double **MatrixA;
+  double val;
+  double *MatrixRow;
+  double ansatz00, ansatz10, ansatz01;
+  double test00, test10, test01;
+  double *Orig0, *Orig1, *Orig2, *Orig3;
+  int i,j,N_U;
+  double c0, c1, c2;
+  double u1, u2;
+
+  MatrixA = LocMatrices[0];
+  N_U = N_BaseFuncts[0];
+
+  Orig0 = OrigValues[0];         // u_x
+  Orig1 = OrigValues[1];         // u_y
+  Orig2 = OrigValues[2];         // u
+
+  c0 = coeff[0];                 // nu
+
+  u1 = param[0];                 // u1old
+  u2 = param[1];                 // u2old
+
+  for(i=0;i<N_U;i++)
+  {
+    MatrixRow = MatrixA[i];
+    test10 = Orig0[i];
+    test01 = Orig1[i];
+    test00 = Orig2[i];
+
+    for(j=0;j<N_U;j++)
+    {
+      ansatz10 = Orig0[j];
+      ansatz01 = Orig1[j];
+      ansatz00 = Orig2[j];
+
+      val  = c0*(test10*ansatz10+test01*ansatz01);
+      val += (u1*ansatz10+u2*ansatz01)*test00;
+      MatrixRow[j] += Mult * val;
+    }                            // endfor j
+  }                              // endfor i
+
+}
+
+

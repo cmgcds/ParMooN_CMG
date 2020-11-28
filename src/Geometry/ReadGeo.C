@@ -45,7 +45,6 @@
 
 int TDomain::ReadGeo(char *GeoFile)
 {
-	cout<<"hey bro: Readgeo"<<endl;
   char line[100];
   int i, j, N_Vertices, NVpF, NVE, NBCT;
   double *DCORVG;

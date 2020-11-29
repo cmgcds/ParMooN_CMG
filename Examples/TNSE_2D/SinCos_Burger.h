@@ -141,13 +141,9 @@ void LinCoeffs(int n_points, double *X, double *Y,
     u2y = -Pi*cos(Pi*x)*t1;
     u2lap = Pi*Pi*Pi*y*cos(Pi*x)*t1;
     
-    px =  Pi*cos(Pi*x)*cos(Pi*y)*t1;
-    py = -Pi*sin(Pi*x)*sin(Pi*y)*t1;
-    
-    
     coeff[0] = nu; // D(u):D(v) term 
-    coeff[1] = -nu*u1lap + px + u1t + u1*u1x + u2*u1y;
-    coeff[2] = -nu*u2lap + py + u2t + u1*u2x + u2*u2y;
+    coeff[1] = -nu*u1lap  + u1t + u1*u1x + u2*u1y;
+    coeff[2] = -nu*u2lap  + u2t + u1*u2x + u2*u2y;
 
     
     

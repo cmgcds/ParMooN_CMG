@@ -1,11 +1,7 @@
 // =======================================================================
-//
 // Purpose:     main program for solving a time-dependent Burger's equation in ParMooN
-//
 // Author:      Sashikumaar Ganesan
-//
 // History:     Implementation started on 28.11.2020
-
 // =======================================================================
 #include <Domain.h>
 #include <Database.h>
@@ -25,14 +21,12 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
 // =======================================================================
 // include current example
 // =======================================================================
-// #include "../Examples/TNSE_2D/DrivenCavity.h" //   in unit square
-// #include "../Examples/TNSE_2D/Bsp3.h" // smooth sol in unit square
-// #include "../Examples_All/TNSE_2D/Benchmark2.h"  
-// #include "../Examples/TNSE_2D/SinCos.h" // smooth sol in unit square
 #include "../Examples/TNSE_2D/SinCos_Burger.h" // smooth sol in unit square
+
 // =======================================================================
 // main program
 // =======================================================================
@@ -56,8 +50,6 @@ int main(int argc, char* argv[])
   TFEFunction2D *u1_mean, *u2_mean, *fefct[2];
   TOutput2D *Output;
   TSystemTBE2D *SystemMatrix_Mean;
-  // TAuxParam2D *aux, *NSEaux_error;
-  // MultiIndex2D AllDerivatives[3] = { D00, D10, D01 };
      
   const char vtkdir[] = "VTK"; 
   char *PsBaseName, *VtkBaseName, *GEO;
@@ -155,8 +147,6 @@ int main(int argc, char* argv[])
     u2_mean->Interpolate(InitialU2Mean);
 
     // Sol_DO_Coeff = new double[N_Realiz*N_modes]
-
-
 //======================================================================
 // SystemMatrix construction and solution
 //======================================================================  
@@ -201,7 +191,7 @@ int main(int argc, char* argv[])
    end_time = TDatabase::TimeDB->ENDTIME; 
    limit = TDatabase::ParamDB->SC_NONLIN_RES_NORM_MIN_SADDLE;
    Max_It = TDatabase::ParamDB->SC_NONLIN_MAXIT_SADDLE;        
-  //  memset(AllErrors, 0, 7.*SizeOfDouble);
+   memset(AllErrors, 0, 7.*SizeOfDouble);
    
    // time loop starts
    while(TDatabase::TimeDB->CURRENTTIME< end_time)
@@ -255,67 +245,48 @@ int main(int argc, char* argv[])
       {   
        // Solve the NSE system
        SystemMatrix_Mean->Solve(sol);
-      
-//        if(TDatabase::ParamDB->INTERNAL_PROJECT_PRESSURE)
-//         IntoL20FEFunction(sol+2*N_U, N_P, Pressure_FeSpace, velocity_space_code, pressure_space_code);   
-
-//        //no nonlinear iteration for Stokes problem  
-//        if(TDatabase::ParamDB->FLOW_PROBLEM_TYPE==STOKES)
-//         break;
-     
-//         // restore the mass matrix for the next nonlinear iteration      
-//         SystemMatrix->RestoreMassMat();     
     
-//         // assemble the system matrix with given aux, sol and rhs 
-//         SystemMatrix->AssembleANonLinear(sol, rhs);    
+       // restore the mass matrix for the next nonlinear iteration      
+       SystemMatrix_Mean->RestoreMassMat();     
+    
+       // assemble the system matrix with given aux, sol and rhs 
+       SystemMatrix_Mean->AssembleANonLinear(sol, rhs);    
           
-//         // assemble system mat, S = M + dt\theta_1*A
-//         SystemMatrix->AssembleSystMatNonLinear();        
+       // assemble system mat, S = M + dt\theta_1*A
+       SystemMatrix_Mean->AssembleSystMatNonLinear();        
 
-//         // get the residual
-//         memset(defect, 0, N_TotalDOF*SizeOfDouble);
-//         SystemMatrix->GetTNSEResidual(sol, defect);       
-             
-//         //correction due to L^2_O Pressure space 
-//         if(TDatabase::ParamDB->INTERNAL_PROJECT_PRESSURE)
-//          IntoL20Vector2D(defect+2*N_U, N_P, pressure_space_code);
+       // get the residual
+       memset(defect, 0, N_TotalDOF*SizeOfDouble);
+       SystemMatrix_Mean->GetTBEResidual(sol, defect);       
+ 
     
-//         residual =  Ddot(N_TotalDOF, defect, defect);
-//         impuls_residual = Ddot(2*N_U, defect, defect);
-//         OutPut("nonlinear iteration step " << setw(3) << j);
-//         OutPut(setw(14) << impuls_residual);
-//         OutPut(setw(14) << residual-impuls_residual);
-//         OutPut(setw(14) << sqrt(residual) << endl); 
+       residual =  Ddot(N_Total_MeanDOF, defect, defect);
+       OutPut("nonlinear iteration step " << setw(3) << j);
+       OutPut(setw(14) << sqrt(residual) << endl); 
 	
-//         if(sqrt(residual)<=limit)
-//          break;
+       if(sqrt(residual)<=limit)
+       break;
 
-       } // for(j=1;j<=Max_It;j++)
-// /*           cout << " test VHM main " << endl;
-// exit(0);      */  
-//        // restore the mass matrix for the next time step          
-//        SystemMatrix->RestoreMassMat();     
+      } // for(j=1;j<=Max_It;j++)
+ 
+      // restore the mass matrix for the next time step          
+      SystemMatrix_Mean->RestoreMassMat();     
        
-      } // for(l=0;l<N_SubSteps;
-// //====================================================================== 
-// // measure errors to known solution
-// //======================================================================    
-//     if(TDatabase::ParamDB->MEASURE_ERRORS)
-//      {   
-// //        u1->Interpolate(ExactU1);
-// //        u2->Interpolate(ExactU2);
-// //        Pressure->Interpolate(ExactP); 
-       
-//       SystemMatrix->MeasureTNSEErrors(ExactU1, ExactU2, ExactP, AllErrors);
+   } // for(l=0;l<N_SubSteps;
+//====================================================================== 
+// measure errors to known solution
+//======================================================================    
+    if(TDatabase::ParamDB->MEASURE_ERRORS)
+     {          
+      SystemMatrix_Mean->MeasureErrors(ExactU1, ExactU2, AllErrors);
 
-//        OutPut("L2(u): " <<   AllErrors[0] << endl);
-//        OutPut("H1-semi(u): " <<  AllErrors[1] << endl);
-//        OutPut("L2(p): " <<  AllErrors[2] << endl);
-//        OutPut("H1-semi(p): " <<  AllErrors[3]   << endl); 
-//        OutPut(AllErrors[4] <<  " l_infty(L2(u)) " <<AllErrors[5] << endl);
-//        OutPut(TDatabase::TimeDB->CURRENTTIME << " L2(0,t,L2)(u) : " <<   sqrt(AllErrors[6]) << endl); 
-      
-//      } // if(TDatabase::ParamDB->MEASURE_ERRORS)
+       OutPut("L2(u): " <<   AllErrors[0] << endl);
+       OutPut("H1-semi(u): " <<  AllErrors[1] << endl);
+       OutPut("L2(p): " <<  AllErrors[2] << endl);
+       OutPut("H1-semi(p): " <<  AllErrors[3]   << endl); 
+       OutPut(AllErrors[4] <<  " l_infty(L2(u)) " <<AllErrors[5] << endl);
+       OutPut(TDatabase::TimeDB->CURRENTTIME << " L2(0,t,L2)(u) : " <<   sqrt(AllErrors[6]) << endl); 
+     } // if(TDatabase::ParamDB->MEASURE_ERRORS)
 
 //======================================================================
 // produce outout
@@ -335,20 +306,20 @@ int main(int argc, char* argv[])
                 
     } // while(TDatabase::TimeDB->CURRENTTIME< e
 
-// //======================================================================
-// // produce final outout
-// //======================================================================
-//     if(TDatabase::ParamDB->WRITE_VTK)
-//      {
-//       os.seekp(std::ios::beg);
-//        if(img<10) os <<  "VTK/"<<VtkBaseName<<".0000"<<img<<".vtk" << ends;
-//          else if(img<100) os <<  "VTK/"<<VtkBaseName<<".000"<<img<<".vtk" << ends;
-//           else if(img<1000) os <<  "VTK/"<<VtkBaseName<<".00"<<img<<".vtk" << ends;
-//            else if(img<10000) os <<  "VTK/"<<VtkBaseName<<".0"<<img<<".vtk" << ends;
-//             else  os <<  "VTK/"<<VtkBaseName<<"."<<img<<".vtk" << ends;
-//       Output->WriteVtk(os.str().c_str());
-//       img++;
-//      }     
+//======================================================================
+// produce final outout
+//======================================================================
+    if(TDatabase::ParamDB->WRITE_VTK)
+     {
+      os.seekp(std::ios::beg);
+       if(img<10) os <<  "VTK/"<<VtkBaseName<<".0000"<<img<<".vtk" << ends;
+         else if(img<100) os <<  "VTK/"<<VtkBaseName<<".000"<<img<<".vtk" << ends;
+          else if(img<1000) os <<  "VTK/"<<VtkBaseName<<".00"<<img<<".vtk" << ends;
+           else if(img<10000) os <<  "VTK/"<<VtkBaseName<<".0"<<img<<".vtk" << ends;
+            else  os <<  "VTK/"<<VtkBaseName<<"."<<img<<".vtk" << ends;
+      Output->WriteVtk(os.str().c_str());
+      img++;
+     }     
 
   CloseFiles();
   

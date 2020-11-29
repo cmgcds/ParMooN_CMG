@@ -13,6 +13,7 @@
 
 #include <SquareMatrix2D.h>
 #include <AssembleMat2D.h>
+#include <DirectSparseLinearSolver.h>
 
 /**class for 2D Burgers system matrix */
 class TSystemTBE2D
@@ -36,7 +37,10 @@ class TSystemTBE2D
     
     /** Solver type */
     int SOLVER;
-       
+
+    /** sparse direct solver */
+    TDirectSparseLinearSolver  *DirectSolver;
+
     /** number of matrices in the system matrix*/
     int N_Matrices;
 
@@ -54,7 +58,7 @@ class TSystemTBE2D
     double *RHSs[2], gamma, *B;   
    
     /** to store defect */
-    double *defect; 
+    double *defect, olderror_l_2_l_2u; 
 
     /** Boundary conditon */
     BoundCondFunct2D *BoundaryConditions[2];
@@ -72,7 +76,7 @@ class TSystemTBE2D
     TDiscreteForm2D *DiscreteFormNL; 
 
     /** BE_Rhsaux is used to for assembling rhs only*/
-    TAuxParam2D *BEaux;
+    TAuxParam2D *BEaux, *BEaux_error;
     
     /** Systmat assemble indicator */
     bool SystMatAssembled;
@@ -102,8 +106,17 @@ class TSystemTBE2D
     /** solve the system matrix */
     void  Solve(double *sol);
     
-    // /** mass and volume */
-    // void GetMassAndArea(TFEFunction2D *fefunction, double *parameters);  
+    /** restore mass mat */
+    void RestoreMassMat();
+
+    /** aeesble A mat */
+    void AssembleANonLinear(double *sol, double *rhs);
+
+    /** assemble system mat in nonlinear iteration*/
+    void AssembleSystMatNonLinear();
+    
+    /** measure errors */
+    void MeasureErrors(DoubleFunct2D *ExactU1, DoubleFunct2D *ExactU2, double *AllErrors);
 
     // // Return Function for Square Matrix
     // TSquareMatrix2D* ReturnSquareMatrixPointer()

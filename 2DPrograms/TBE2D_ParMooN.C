@@ -9,10 +9,12 @@
 #include <LinAlg.h>
 #include <FESpace2D.h>
 #include <SystemTBE2D.h>
+#include <SystemTBE_Mode2D.h>
 #include <SquareStructure2D.h>
 #include <Output2D.h>
 #include <MainUtilities.h>
 #include <TimeDiscRout.h>
+#include <TNSE2D_ParamRout.h>
 
 #include <string.h>
 #include <sstream>
@@ -45,12 +47,15 @@ int main(int argc, char* argv[])
   TDatabase *Database = new TDatabase();
   TFEDatabase2D *FEDatabase = new TFEDatabase2D(); 
   TCollection *coll, *mortarcoll = NULL;
-  TFESpace2D *Velocity_FeSpace, *VelocityMode_FeSpace, *fesp[2];
+  TFESpace2D *Velocity_FeSpace, *VelocityMode_FeSpace, *fesp[2], *fesp_mode[2];
   TFEVectFunct2D *Velocity_Mean, *Velocity_Mode;
   TFEFunction2D *u1_mean, *u2_mean, *fefct[2];
   TOutput2D *Output;
   TSystemTBE2D *SystemMatrix_Mean;
-     
+  TSystemTBE_Mode2D *SystemMatrix_Mode;
+  TFEFunction2D *FeFct[2], *FeFct_Mode[4];
+  TAuxParam2D *BEaux, *BE_Modeaux, *BEaux_error;
+
   const char vtkdir[] = "VTK"; 
   char *PsBaseName, *VtkBaseName, *GEO;
   char UString[] = "u_mean";
@@ -71,7 +76,6 @@ int main(int argc, char* argv[])
   OpenFiles();
   OutFile.setf(std::ios::scientific);
 
-  Database->CheckParameterConsistencyNSE();
   Database->WriteParamDB(argv[0]);
   Database->WriteTimeDB();
   ExampleFile();
@@ -97,7 +101,6 @@ int main(int argc, char* argv[])
 // construct all finite element spaces
 //=========================================================================
   ORDER = TDatabase::ParamDB->ANSATZ_ORDER;
-  NSEType = TDatabase::ParamDB->NSTYPE;
   Disctype = TDatabase::ParamDB->DISCTYPE;
 
   N_Modes = TDatabase::ParamDB->P10;
@@ -137,14 +140,14 @@ int main(int argc, char* argv[])
     Velocity_Mean = new TFEVectFunct2D(Velocity_FeSpace, UString,  UString,  sol, N_U, 2);
     u1_mean = Velocity_Mean->GetComponent(0);
     u2_mean = Velocity_Mean->GetComponent(1);
-    
-    /** mode velo */
-    sol_mode = sol+2*N_U;    
-    Velocity_Mode = new TFEVectFunct2D(VelocityMode_FeSpace, UString,  UString,  sol_mode, N_M, 2*N_Modes);
 
     //interpolate the initial solution
     u1_mean->Interpolate(InitialU1Mean);
     u2_mean->Interpolate(InitialU2Mean);
+
+    /** mode velo */
+    sol_mode = sol+2*N_U;    
+    Velocity_Mode = new TFEVectFunct2D(VelocityMode_FeSpace, UString,  UString,  sol_mode, N_M, 2*N_Modes);
 
     // Sol_DO_Coeff = new double[N_Realiz*N_modes]
 //======================================================================
@@ -154,13 +157,55 @@ int main(int argc, char* argv[])
     // Solver: AMG_SOLVE (or) GMG  (or) DIRECT
     SystemMatrix_Mean = new TSystemTBE2D(Velocity_FeSpace, Velocity_Mean, sol, rhs, Disctype, DIRECT);
 
+
+    // 2 parameters are needed for assembling (u1_old, u2_old)
+    FeFct[0] = u1_mean;
+    FeFct[1] = u2_mean; 
+    fesp[0] = Velocity_FeSpace;
+    BEaux = new TAuxParam2D(TimeNSN_FESpaces2, TimeNSN_Fct2, TimeNSN_ParamFct2,
+                            TimeNSN_FEValues2, fesp, FeFct, TimeNSFct2, TimeNSFEFctIndex2, 
+                            TimeNSFEMultiIndex2, TimeNSN_Params2, TimeNSBeginParam2);  
+  
+     // aux for calculating the error
+    if(TDatabase::ParamDB->MEASURE_ERRORS)
+     {
+      BEaux_error =  new TAuxParam2D(TimeNSN_FESpaces2, TimeNSN_Fct2,
+                             TimeNSN_ParamFct2,
+                             TimeNSN_FEValues2,
+                             fesp, FeFct,
+                             TimeNSFct2,
+                             TimeNSFEFctIndex2, TimeNSFEMultiIndex2,
+                             TimeNSN_Params2, TimeNSBeginParam2);     
+      }
     // initilize the system matrix with the functions defined in Example file
-    // last argument is aux that is used to pass additional fe functions (eg. mesh velocity)    
-    SystemMatrix_Mean->Init(LinCoeffs, BoundCondition, U1BoundValue, U2BoundValue);
+    // last argument is aux that is used to pass additional fe functions (eg. mesh velocity)   
+    SystemMatrix_Mean->Init(LinCoeffs, BoundCondition, U1BoundValue, U2BoundValue, BEaux, BEaux_error);
     
     // assemble M, A matrices and rhs 
     SystemMatrix_Mean->Assemble(sol, rhs);
   
+    // system for Mode
+    // Disc type: GALERKIN 
+    // Solver: AMG_SOLVE (or) GMG  (or) DIRECT
+    SystemMatrix_Mode = new TSystemTBE_Mode2D(Velocity_FeSpace, Velocity_Mode, sol, rhs, Disctype, DIRECT, Velocity_Mean);
+
+    // initilize the system matrix with the functions defined in Example file
+    // 2 parameters are needed for assembling (u1_old, u2_old)
+    FeFct_Mode[0] = u1_mean;
+    FeFct_Mode[1] = u2_mean; 
+    FeFct_Mode[2] = Velocity_Mode->GetComponent(0);
+    FeFct_Mode[3] = Velocity_Mode->GetComponent(1); 
+
+    fesp_mode[0] = VelocityMode_FeSpace;    
+    fesp_mode[1] = Velocity_FeSpace;    
+    BE_Modeaux = new TAuxParam2D(TimeNSN_FESpaces_Mode, TimeNSN_Fct_Mode, TimeNSN_ParamFct_Mode,
+                          TimeNSN_FEValues_Mode, fesp_mode, FeFct_Mode, TimeNSFct_Mode, TimeNSFEFctIndex_Mode, 
+                          TimeNSFEMultiIndex_Mode, TimeNSN_Params_Mode, TimeNSBeginParam_Mode);  
+
+    // last argument is aux that is used to pass additional fe functions (eg. mesh velocity)    
+    SystemMatrix_Mode->Init(LinCoeffs_Mode, BoundCondition, U1BoundValue, U2BoundValue, BEaux, BEaux_error);
+
+
 //======================================================================
 // produce outout
 //======================================================================

@@ -140,7 +140,9 @@ struct TParaDB
   //======================================================================
   int ANSATZ_ORDER;
   int TEST_ORDER;
-
+  int ANSATZ_ORDER_INTL;
+  int TEST_ORDER_INTL;
+  
   int VELOCITY_SPACE;
   int PRESSURE_SPACE;
   int PRESSURE_SEPARATION;

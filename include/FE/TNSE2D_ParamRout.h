@@ -33,6 +33,22 @@ ParamFct *TimeNSFct2[1] = { TimeNSParams2 };
 int TimeNSBeginParam2[1] = { 0 };
 
 
+// ========================================================================
+// parameters: u1old, u2old, u1mean, u2mean
+// ========================================================================
+
+void TimeNSParams_Mode(double *in, double *out);
+
+int TimeNSN_FESpaces_Mode = 2;
+int TimeNSN_Fct_Mode = 4; // \tilde(u,v), \bar(u,v)
+int TimeNSN_ParamFct_Mode = 1;
+int TimeNSN_FEValues_Mode = 8;
+int TimeNSN_Params_Mode = 8;
+int TimeNSFEFctIndex_Mode[8] = {0, 1, 2, 3, 2, 3, 2, 3};  
+MultiIndex2D TimeNSFEMultiIndex_Mode[8] = {D00, D00, D00, D00, D10, D10, D01, D01};
+ParamFct *TimeNSFct_Mode[1] = { TimeNSParams_Mode };
+int TimeNSBeginParam_Mode[1] = { 0 };
+
 
 // ========================================================================
 // Rosenbrock Methods

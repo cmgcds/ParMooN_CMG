@@ -66,7 +66,7 @@ class TFEFunction1D
 
 
     /** calculate the interpolation of an exact function */
-    void Interpolate(DoubleFunct2D *Exact);
+    void Interpolate(DoubleFunctND *Exact);
 
     /** calculate the interpolation of an exact function */
     void Interpolate(int ConstCoord, double x, DoubleFunct2D *Exact);

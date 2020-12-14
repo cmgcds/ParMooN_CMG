@@ -90,7 +90,7 @@ class TSystemTBE2D
     
     // /** Initilize the discrete forms and the matrices */
     void Init(CoeffFct2D *lincoeffs, BoundCondFunct2D *BoundCond, BoundValueFunct2D *U1BoundValue,  
-                        BoundValueFunct2D *U2BoundValue);
+                        BoundValueFunct2D *U2BoundValue, TAuxParam2D *beaux, TAuxParam2D *beaux_error);
  
     /** assemble the system matrix */
     void Assemble(double *sol, double *rhs);

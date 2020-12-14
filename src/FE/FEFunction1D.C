@@ -36,21 +36,21 @@ TFEFunction1D::TFEFunction1D(TFESpace1D *fespace1D, char *name,
 }
 
 /** calculate the interpolation of an exact function */
-void TFEFunction1D::Interpolate(DoubleFunct2D *Exact)
+void TFEFunction1D::Interpolate(DoubleFunctND *Exact)
 {
   int i,j,k,l;
   int N_Cells;
   int N_DOFs, N_LocalDOFs;
   int *BeginIndex, *GlobalNumbers;
   int N_Points;
-  int *DOF;
+  int *DOF, N_Coord=1;
 
   double *xi, *eta;
   double X[MaxN_PointsForNodal1D], Y[MaxN_PointsForNodal1D];
   double AbsDetjk[MaxN_PointsForNodal1D];
   double PointValues[MaxN_PointsForNodal1D];
   double FunctionalValues[MaxN_PointsForNodal1D];
-  double FctVal[4];
+  double FctVal[4], coord[2];
 
   TBaseCell *cell;
   TCollection *Coll;
@@ -61,8 +61,11 @@ void TFEFunction1D::Interpolate(DoubleFunct2D *Exact)
   TRefTrans1D *rt;
   TBaseFunct1D *bf;
 
-
   RefTrans1D RefTrans, *RefTransArray;
+
+#ifdef __2D__
+     N_Coord = 2;
+#endif
 
   Coll = FESpace1D->GetCollection();
   N_Cells = Coll->GetN_Cells();
@@ -94,7 +97,11 @@ void TFEFunction1D::Interpolate(DoubleFunct2D *Exact)
     for(j=0;j<N_Points;j++)
     {
       FctVal[0] = double(cell->GetRegionID());
-      Exact(X[j], Y[j], FctVal);
+      coord[0] = X[j];
+#ifdef __2D__
+      coord[1] = Y[j];
+#endif
+      Exact(N_Coord, coord, FctVal);
       PointValues[j] = FctVal[0];
     }
 
@@ -283,11 +290,14 @@ void TFEFunction1D::InterpolateNodalPts(int N_Coord, double *Coords, DoubleFunct
   TBaseFunct1D *bf;
   RefTrans1D RefTrans, *RefTransArray;
 
+ if(N_Coord>0)
+ {
   x = Coords[0];
   y = Coords[1];
 #ifdef __3D__  
   z = Coords[2];
 #endif  
+ }
   N_Coord++; // this 1D Coord
   
   Coll = FESpace1D->GetCollection();
@@ -319,7 +329,7 @@ void TFEFunction1D::InterpolateNodalPts(int N_Coord, double *Coords, DoubleFunct
 
     for(j=0;j<N_Points;j++)
      {
-      //       Exact(x, y, Z[j], FctVal);
+  //     //       Exact(x, y, Z[j], FctVal);
       Coords[N_Coord-1] = Z[j];
       Exact(N_Coord, Coords, FctVal);
       k = NodalPtIndex[disp + j];

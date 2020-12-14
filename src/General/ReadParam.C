@@ -206,6 +206,18 @@ int TDomain::ReadParam(char *ParamFile)
       N_Param++;
     }
 
+    if (!strcmp(line, "ANSATZ_ORDER_INTL:"))
+    {
+      dat >> TDatabase::ParamDB->ANSATZ_ORDER_INTL;
+      N_Param++;
+    }
+
+    if (!strcmp(line, "TEST_ORDER_INTL:"))
+    {
+      dat >> TDatabase::ParamDB->TEST_ORDER_INTL;
+      N_Param++;
+    }
+    
     if (!strcmp(line, "VELOCITY_SPACE:"))
     {
       dat >> TDatabase::ParamDB->VELOCITY_SPACE;

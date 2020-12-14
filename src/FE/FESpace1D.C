@@ -87,7 +87,6 @@ TFESpace1D::TFESpace1D(TCollection *coll, char *name, char *description,
 
   // construct space
   ConstructSpace();
-  
   DGSpace=0;
 }
 

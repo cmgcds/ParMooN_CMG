@@ -17,7 +17,7 @@
 #include <DirectSolver.h>
 #include <MainUtilities.h>
 #include <Upwind.h>
-#include <TNSE2D_ParamRout.h>
+// #include <TNSE2D_ParamRout.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -83,8 +83,9 @@ TSystemTBE2D::~TSystemTBE2D()
 }
 
 void TSystemTBE2D::Init(CoeffFct2D *lincoeffs, BoundCondFunct2D *BoundCond, BoundValueFunct2D *U1BoundValue,  
-                        BoundValueFunct2D *U2BoundValue)
+                        BoundValueFunct2D *U2BoundValue, TAuxParam2D *beaux, TAuxParam2D *beaux_error)
 {
+  
   TDiscreteForm2D *DiscreteFormGalerkin;
   TDiscreteForm2D *DiscreteFormSDFEM;
   TDiscreteForm2D *DiscreteFormUpwind;
@@ -105,25 +106,8 @@ void TSystemTBE2D::Init(CoeffFct2D *lincoeffs, BoundCondFunct2D *BoundCond, Boun
   // save the nse bilinear coefficient   
   LinCoeffs[0] = lincoeffs;
   
-  // 2 parameters are needed for assembling (u1_old, u2_old)
-  BEaux = new TAuxParam2D(TimeNSN_FESpaces2, TimeNSN_Fct2, TimeNSN_ParamFct2,
-                          TimeNSN_FEValues2, fesp, FeFct, TimeNSFct2, TimeNSFEFctIndex2, 
-                          TimeNSFEMultiIndex2, TimeNSN_Params2, TimeNSBeginParam2);  
-  
-  // aux for calculating the error
-   //   BEaux_error = nseaux_error;
-     // aux for calculating the error
-  if(TDatabase::ParamDB->MEASURE_ERRORS)
-   {
-    BEaux_error =  new TAuxParam2D(TimeNSN_FESpaces2, TimeNSN_Fct2,
-                             TimeNSN_ParamFct2,
-                             TimeNSN_FEValues2,
-                             fesp, FeFct,
-                             TimeNSFct2,
-                             TimeNSFEFctIndex2, TimeNSFEMultiIndex2,
-                             TimeNSN_Params2, TimeNSBeginParam2);     
-   }
-
+  BEaux = beaux;
+  BEaux_error=beaux_error;
 
   // set the Discreteforms
   InitializeDiscreteFormsBurgers(DiscreteFormGalerkin, DiscreteFormSDFEM, DiscreteFormUpwind, DiscreteFormNLGalerkin,

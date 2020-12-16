@@ -193,6 +193,17 @@ if(CMAKE_VERBOSE_MAKEFILE)
 endif()
 message("==================Searching TECPLOT in the System - end====================================================")
 
+message("==================Add mlpack from EXT_LIB - begin====================================================")
+list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR/EXT_LIB/mlpack}")
+find_package(MLPACK REQUIRED)
+include_directories(${MLPACK_INCLUDE_DIRS})
+  if(MLPACK_FOUND)
+      message("MLPACK_LIB (read from EXT_LIB/mlpack) = ${MLPACK_LIBRARIES}")
+  elseif(NOT MLPACK_FOUND)
+    message(FATAL_ERROR "MLPACK_NOT_FOUND in your system or in the ParMooN")
+  endif()
+message("==================Add mlpack from EXT_LIB - end====================================================")
+
 
 # select the compiler type,
 # CMAKE_BUILD_TYPE [DEBUG|RELEASE|RELWITHDEBINFO|MINSIZEREL]
@@ -315,16 +326,16 @@ add_executable(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe  ${AParMooN
 if( "${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "HYBRID" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI" )
    target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "solver" "sys" "par" "geo"  "fe" "gen" "geo" "fe" "gen"  
                       "amg"  "quad" "ref" "geo" "fe" "quad" "geo"  ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
-                      ${MPIBLACS_LIBRARIES}  ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  ${MUMPS_LIBRARIES}   ${BLAS_LIBRARIES} ${MPI_LIBS})  
+                      ${MPIBLACS_LIBRARIES}  ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  ${MUMPS_LIBRARIES}   ${BLAS_LIBRARIES} ${MPI_LIBS} "${MLPACK_LIBRARIES}")  
 elseif( "${AParMooN_PARALLEL_TYPE}" STREQUAL "SEQUENTIAL"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "OMPONLY")
    target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "solver" "sys" "geo"  "fe" "gen" "geo" "fe" "gen" "fe"
                       "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "solver" "sys" "fe" "geo"  ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
-                      ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}   )
+                      ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES} "${MLPACK_LIBRARIES}"   )
 
 elseif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
 target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "solver" "sys" "geo"  "fe" "gen" "geo" "fe" "gen" "fe"
                     "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "solver" "sys" "fe" "geo" "cudaSpLinSolver" ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
-                    ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  -lcusparse -lculibos -lcublas -lcusolver -lnvToolsExt  )
+                    ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  -lcusparse -lculibos -lcublas -lcusolver -lnvToolsExt   "${MLPACK_LIBRARIES}")
 endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "HYBRID" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI")
 
 message("============================================================================================================"  )  

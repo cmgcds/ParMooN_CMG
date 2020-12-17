@@ -495,7 +495,7 @@ void TSystemCD1D::AssembleARhs_SUPG()
   double D_L =  TDatabase::ParamDB->REACTOR_P3;
   double delta0 = TDatabase::ParamDB->DELTA0;
   double delta1 = TDatabase::ParamDB->DELTA1;
-  
+  int order = TDatabase::ParamDB->ANSATZ_ORDER;
   if(D_L<1.e-12) D_L = 1.e-12;
 
   Coll = FESpace1D->GetCollection();
@@ -575,10 +575,18 @@ void TSystemCD1D::AssembleARhs_SUPG()
       c1 = Coeff[2]; // reaction term
       rhsval = Coeff[3]; //rhs
 
+
+      // double D_L =  TDatabase::ParamDB->REACTOR_P3;
+      // double delta0 = TDatabase::ParamDB->DELTA0;
+      // double delta1 = TDatabase::ParamDB->DELTA1;
+  
       if(fabs(g0)>0)
        {
-        Pe_K = hE*g0/(2.*D_L);
 
+        // Based on Paper  
+        // https://www.wias-berlin.de/people/john/ELECTRONIC_PAPERS/JKS11.CMAME.pdf
+
+        Pe_K = hE*fabs(g0)/(2.*c0*order);
  // 	beta based on Lutz book
  //         if(Pe_K>1.)
  //           beta = delta0 * hE/g0;
@@ -586,7 +594,7 @@ void TSystemCD1D::AssembleARhs_SUPG()
  //           beta = delta1 *hE*hE/D_L ;
  // 	
         // beta based on 1d Green's formula
-        beta = hE*(1./tanh(Pe_K) - 1./Pe_K)/(2.*fabs(g0));
+        beta = hE*(1./tanh(Pe_K) - 1./Pe_K)/(2.*fabs(g0)*order);
        }
       else
       { beta = 0.0; }

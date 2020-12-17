@@ -32,7 +32,7 @@ void BoundCondition_LminLMax(BoundCond &cond_Lmin, BoundCond &cond_Lmax)
 void BoundVales(int N_Inputs, double *Inn, double *Out) 
 {
  Out[0] = 0; // L_min
- Out[1] = 1; // L_max
+ Out[1] = 0; // L_max
 }
 
 void BilinearCoeffs(int n_points, int N_Dim, double **Coords,
@@ -58,13 +58,13 @@ void BilinearCoeffs(int n_points, int N_Dim, double **Coords,
     coeff[0] = eps_L;
     
     // convection
-    coeff[1] = 0;
+    coeff[1] = 1;
     
     // reaction term
     coeff[2] = 0;
     
     //rhs  
-    coeff[3] = 0.;
+    coeff[3] = 1;
     // coeff[3] =  -k*(exp(-k*t))*sin(Pi*ld)*cos(Pi*lv)*cos(Pi*la) 
     //              + Pi*(exp(-k*t))*cos(Pi*ld)*cos(Pi*lv)*cos(Pi*la);
     // coeff[3] =  -k*ekt*sin(Pi*ld)  + Pi*ekt*cos(Pi*ld) + eps_L*Pi*Pi*sin(Pi*ld);

@@ -92,6 +92,30 @@ int TDomain::ReadParam(char *ParamFile)
       N_Param++;
     }
     
+    //THIVIN - For 1D Formulation
+    if (!strcmp(line, "N_ELEMENTS_1D:"))
+    {
+      dat >> TDatabase::ParamDB->N_ELEMENTS_1D;
+      N_Param++;
+    }
+
+          if (!strcmp(line, "START_X:"))
+    {
+      dat >> TDatabase::ParamDB->START_X;
+      N_Param++;
+    }
+
+          if (!strcmp(line, "END_X:"))
+    {
+      dat >> TDatabase::ParamDB->END_X;
+      N_Param++;
+    }
+
+          if (!strcmp(line, "GLOBAL_TAU:"))
+    {
+      dat >> TDatabase::ParamDB->GLOBAL_TAU;
+      N_Param++;
+    }
     
     
     if (!strcmp(line, "DOF_Reorder:"))

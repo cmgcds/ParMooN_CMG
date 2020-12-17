@@ -31,8 +31,8 @@ void BoundCondition_LminLMax(BoundCond &cond_Lmin, BoundCond &cond_Lmax)
 
 void BoundVales(int N_Inputs, double *Inn, double *Out) 
 {
- Out[0] = 1; // L_min
- Out[1] = 0; // L_max
+ Out[0] = 0; // L_min
+ Out[1] = 1; // L_max
 }
 
 void BilinearCoeffs(int n_points, int N_Dim, double **Coords,
@@ -72,3 +72,4 @@ void BilinearCoeffs(int n_points, int N_Dim, double **Coords,
         // cout << "ld: " << ld << " "<< coeff[3]  <<endl;
   }
 }
+

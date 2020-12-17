@@ -612,6 +612,15 @@ struct TParaDB
   int PHASE1_TYPE;                      // 1 - Newtonian, 2 - Oldroyd, 3- Giesekus
   int PHASE2_TYPE;                      // 1 - Newtonian, 2 - Oldroyd, 3- Giesekus
   
+
+ //========================================================================
+ // **  Parameters for 1D FEM Formualtion */
+ //========================================================================
+  int N_ELEMENTS_1D;
+  double START_X;
+  double END_X;
+  double GLOBAL_TAU;
+
   //======================================================================
   /** parameters for free surface calculation */
   //======================================================================

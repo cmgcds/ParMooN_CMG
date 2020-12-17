@@ -49,6 +49,18 @@ class TSystemCD1D : public TSystem1D
   /** set BC */
   void SetDirichletBc();
 
+  //** Print the Solution **/
+  void printSolution();
+
+  //** Generate the Solution to VTK **/
+  void generateVTK();
+
+
+  // ** Generate Output in GNUPLOT ** //
+  void plotGNU();
+
+
+
     /** destrcutor */
     ~TSystemCD1D();
 

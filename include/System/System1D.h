@@ -42,6 +42,15 @@ class TSystem1D
     /** fe function, needed for interpolation */
     TFEFunction1D *FE_Function;
 
+    /**  Fe Space for computing the mean value of the Cell  **/
+    TFESpace1D *FESpaceMean1D;
+
+    /** Fe functions to store the mean Values in the domain **/
+    TFEFunction1D *MeanSolution , *MeanSolutionGradient;
+  
+    /** FEVectFunction to store both the mean value of solution and Gradients **/
+    TFEVectFunct1D *MeanFEVectFunction;
+
     /** data for Bilinear  */
     CoeffFctND *Bilinear;
 
@@ -67,6 +76,9 @@ class TSystem1D
 
     /** rhs vector for each QuadPt in internal direction [N_V]*/
     double *Sol, *Rhs;
+
+    /** Arrays to Store the mean values of Solution and gradient */
+    double *meanSolution, *meanSolutionGrad;
 
     /** working rhs: if we have, we no need to allocate & deallocate for each Intl poin in internal direction */
     double *defect, *B;

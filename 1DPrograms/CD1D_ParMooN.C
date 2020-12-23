@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
   TDatabase *Database = new TDatabase();
   TSystemCD1D *SystemCD;
   TFEDatabase2D *FEDatabase = new TFEDatabase2D(); 
+
  
   std::ostringstream os;
   os << " ";   
@@ -49,7 +50,7 @@ int main(int argc, char* argv[])
   // CD1D System construction 
   //======================================================================  
   SystemCD = new TSystemCD1D(N_Elements, Start_X, End_X, BoundCondition_LminLMax, BoundVales, argv[1]);
-  
+
   // initiaize system
   SystemCD->Init(BilinearCoeffs);
 
@@ -58,6 +59,9 @@ int main(int argc, char* argv[])
  
   // interpolate (if needed)
   SystemCD->Solve();
+
+  // Get the Mean Value of Derivatives
+  SystemCD->getMeanValueDerivatives();
 
   // Print the Solution to terminal
   SystemCD->printSolution();

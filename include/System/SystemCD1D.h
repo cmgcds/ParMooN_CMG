@@ -55,7 +55,8 @@ class TSystemCD1D : public TSystem1D
   //** Generate the Solution to VTK **/
   void generateVTK();
 
-
+  // ** Get The mean Values of the gradient of the solution and the Gradient **//
+  void getMeanValueDerivatives();
   // ** Generate Output in GNUPLOT ** //
   void plotGNU();
 

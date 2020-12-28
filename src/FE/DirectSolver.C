@@ -14,7 +14,10 @@
 #include <Database.h>
 #include "stdlib.h"
 #include <LinAlg.h>
+
+#ifdef  INTELMKLBLAS
 #include <mkl.h>
+#endif
 #include <omp.h>
 
 #include <fstream>

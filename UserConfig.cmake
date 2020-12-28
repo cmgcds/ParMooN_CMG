@@ -28,7 +28,7 @@ set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimension
 set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TBE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 
 # selection of architect type (LINUX64 MAC64 INTEL64 TYRONE64 CRAY64)
-set(AParMooN_ARCH "INTEL64" CACHE STRING "select the machine type")
+set(AParMooN_ARCH "LINUX64" CACHE STRING "select the machine type")
 
 #  selection of program type (SEQUENTIAL SMPI MPI OMPONLY HYBRID SCUDA)
 set(AParMooN_PARALLEL_TYPE "SEQUENTIAL" CACHE STRING "select the parallel type")
@@ -121,14 +121,15 @@ endif()
     set(PARMOON_PRG_DEFINE "-D_SEQ -D_SMPI")
  endif()
 
- if("${AParMooN_ARCH}" STREQUAL "LINUX64")
-   set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -fopenmp -std=c++11 -lmkl_rt -lmkl_intel_thread -lpthread -liomp5")
-   set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -DREDUCED -DNO_TIMER -m64  -lmkl_rt -lmkl_intel_thread  ")
+ if("${AParMooN_ARCH}" STREQUAL "LINUX64")  
+   set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -fopenmp -std=c++11 ")
+   set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -DREDUCED -DNO_TIMER -m64    ")
    set(PARMOON_CUDA_DEF "${PARMOON_CUDA_DEF} -arch=sm_70 -Xcompiler -fopenmp -w ")
    
  elseif("${AParMooN_ARCH}" STREQUAL "MAC64")
    set(PARMOON_CXX_DEF " -stdlib=libc++ ${PARMOON_CXX_DEF}  -fapple-pragma-pack -Wdeprecated-register  ")
    set(PARMOON_C_DEF "  ${PARMOON_C_DEF}  -DREDUCED -DNO_TIMER -DMKL_ILP64 -m64 -fapple-pragma-pack ")
+
  elseif("${AParMooN_ARCH}" STREQUAL "INTEL64")
    set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -std=c++11   -qopenmp ")
    set(PARMOON_C_DEF "  ${PARMOON_C_DEF}   -DREDUCED -DNO_TIMER -DMKL_ILP64 -m64  ")
@@ -137,12 +138,29 @@ endif()
  elseif("${AParMooN_ARCH}" STREQUAL "TYRONE64")
    set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -DREDUCED -DNO_TIMER")
    set(PARMOON_C_DEF "  ${PARMOON_C_DEF}  -DREDUCED -DNO_TIMER  -DMPICH_IGNORE_CXX_SEEK ")  
+
  elseif("${AParMooN_ARCH}" STREQUAL "CRAY64")
    set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -DMPICH_IGNORE_CXX_SEEK ")  
    set(PARMOON_C_DEF "  ${PARMOON_C_DEF}  -DREDUCED -DNO_TIMER -DMPICH_IGNORE_CXX_SEEK  ")
    set(PARMOON_CUDA_DEF "${PARMOON_CUDA_DEF} -arch=sm_70 -Xcompiler -fopenmp -w ")
 
  endif()
+
+#### SET UP MKL BLAS VARIABLES ######
+if ("${MKLBLASFOUND}" STREQUAL "TRUE")
+  if("${AParMooN_ARCH}" STREQUAL "LINUX64")  
+    set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -lmkl_rt -lmkl_intel_thread -lpthread -liomp5 ")
+    set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -lmkl_rt -lmkl_intel_thread")
+  endif("${AParMooN_ARCH}" STREQUAL "LINUX64") 
+
+  if("${AParMooN_ARCH}" STREQUAL "INTEL64")  
+    set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -lmkl_rt -lmkl_intel_thread")
+    set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -lmkl_rt -lmkl_intel_thread")
+  endif("${AParMooN_ARCH}" STREQUAL "INTEL64") 
+
+endif ("${MKLBLASFOUND}" STREQUAL "TRUE")
+####  --END-- SET UP MKL BLAS VARIABLES ######
+
 
 
 set(PARMOON_C_DEF " ${PARMOON_C_DEF} -D__${AParMooN_GEO}__ -D__${AParMooN_ARCH}__  -DTRILIBRARY -DTETLIBRARY  ${PARMOON_PRG_DEFINE} ${USE_PARMOON_DEFINE}") 

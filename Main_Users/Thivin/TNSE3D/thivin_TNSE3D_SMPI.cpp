@@ -21,9 +21,12 @@
 #include "DeformMesh3D.h"
 #include <FE3D_ALE.h>   
 #include <omp.h>
+
+#ifdef  INTELMKLBLAS
 #include "mkl.h"
 #include "mkl_spblas.h"
 #include "mkl_types.h"
+#endif
 
 #ifdef _SMPI
 #include "mpi.h"

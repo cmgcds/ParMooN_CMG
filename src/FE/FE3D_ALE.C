@@ -47,7 +47,9 @@
 #include <FEFunction3D.h>
 #include <InterfaceJoint3D.h>
 #include <NodalFunctional3D.h>
-#include <mkl.h>
+#ifdef  INTELMKLBLAS
+	#include <mkl.h>
+#endif
 #include <bits/stdc++.h>
 #ifdef  _CUDA
 	#include<cuda.h>

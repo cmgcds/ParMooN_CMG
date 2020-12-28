@@ -33,9 +33,9 @@
 #include "mpi.h"
 #include <MeshPartition.h>
 #endif
+#include <omp.h>
 
 #ifdef  INTELMKLBLAS
-#include <omp.h>
 #include "mkl.h"
 #include "mkl_spblas.h"
 #include "mkl_types.h"

@@ -72,30 +72,31 @@ if(AParMooN_USE_SYSTEM_MKLBLAS)
     if(CMAKE_VERBOSE_MAKEFILE)
       if(BLAS_FOUND)
         message("Available system BLAS_LIB =${BLAS_LIBRARIES}")
-        # Declare a private Variable for _INTELMKLBLAS_ in order to include Header Files
       elseif(NOT BLAS_FOUND)
         message("MKL BLAS_NOT_FOUND in your system, searching ...")
       endif(BLAS_FOUND)
     endif(CMAKE_VERBOSE_MAKEFILE)  
 
     # add a User parameter to be passed to parmoon to inform the usage of MKL header files
+    # Declare a private Variable for _INTELMKLBLAS_ in order to include Header Files
     if(BLAS_FOUND)
     set(PARMOON_C_DEF " ${PARMOON_C_DEF} -DINTELMKLBLAS")
     set(PARMOON_CXX_DEF " ${PARMOON_CXX_DEF} -DINTELMKLBLAS")
-
+    # Set the Variable ISMKLBLASUSED to true
+    set(MKLBLASFOUND "TRUE")
     endif(BLAS_FOUND)
 endif(AParMooN_USE_SYSTEM_MKLBLAS)
 
 if(NOT BLAS_FOUND)
 # if(AParMooN_USE_SYSTEM_BLAS)
-message("hey bro<< blas not found bro ...")
+message("Intel MKL Blas not found..! Switiching to ACML BLAS ")
   find_package(BLAS)
   include_directories(${BLAS_INCLUDE_DIRS})
   if(CMAKE_VERBOSE_MAKEFILE)
     if(BLAS_FOUND)
       message("Available system BLAS_LIB =${BLAS_LIBRARIES}")
     elseif(NOT BLAS_FOUND)
-       message("BLAS_NOT_FOUND in your system, BLAS must be linked before compiling")
+       message("ERROR :   BLAS_NOT_FOUND in your system, BLAS must be linked before compiling")
     endif()
   endif()
 # endif(AParMooN_USE_SYSTEM_BLAS)

@@ -68,7 +68,10 @@
 #include <HexaIsoparametric.h>
 #include <TetraAffin.h>
 #include <TetraIsoparametric.h>
+
+#ifdef  INTELMKLBLAS
 #include <mkl.h>
+#endif
 
 void merge(double *a, int low, int mid, int high,int * a2,int max)
 {

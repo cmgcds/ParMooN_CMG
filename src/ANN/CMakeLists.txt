@@ -2,5 +2,8 @@
 include_directories("${CMAKE_SOURCE_DIR}/include/ANN")
 
 list(APPEND ANN_SOURCES "${PROJECT_SOURCE_DIR}/src/ANN/ANN.C")
+list(APPEND ANN_SOURCES "${PROJECT_SOURCE_DIR}/src/ANN/ANNFunctions.C")
+list(APPEND ANN_SOURCES "${PROJECT_SOURCE_DIR}/src/ANN/ANNLayer.C")
+list(APPEND ANN_SOURCES "${PROJECT_SOURCE_DIR}/src/ANN/ANNParamReader.C")
 
 add_library(ann STATIC ${ANN_SOURCES})

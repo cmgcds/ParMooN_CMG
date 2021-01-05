@@ -38,8 +38,19 @@ class TANN
 
   int nLayers; // total number of layers
 
+  int ipDataDim; // Number of inputs per neuron at the input layer
+
   mlpack::ann::FFN<> model; // mlpack model for feed forward network
 
+
+  private:
+  /** Methods */
+
+  // Function to set up the mlpack model
+  void setupModel();
+
+  // Function to apply the activation function
+  void applyActivation(int activation);
 
 
   private:

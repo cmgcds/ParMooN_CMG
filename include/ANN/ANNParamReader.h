@@ -27,11 +27,17 @@ class TANNParamReader
     /** number of hidden layers in FFN */
     int nHL;
 
+    /** number of inputs to each input neuron. i.e. size of the data per perceptron at input. This could be considered as r,g,b,intensity values per neuron at input. */
+    int ipDataDim;
+
     /** array storing dim of each layer (from IP to OP) */
     int *layerDim;
 
     /** array storing type of each layer (from IP to OP) */
     std::string *layerType;
+
+    /** array storing int code for the layer type */
+    int *layerTypeInt;
 
   private:
     /** flags */

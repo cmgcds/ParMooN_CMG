@@ -55,7 +55,7 @@ add_library(mlpack::mlpack SHARED IMPORTED)
 
 set_target_properties(mlpack::mlpack PROPERTIES
   INTERFACE_COMPILE_FEATURES "cxx_decltype;cxx_alias_templates;cxx_auto_type;cxx_lambdas;cxx_constexpr;cxx_rvalue_references;cxx_static_assert;cxx_template_template_parameters;cxx_delegating_constructors;cxx_variadic_templates;cxx_nullptr;cxx_noexcept"
-  INTERFACE_LINK_LIBRARIES "/usr/lib/libarmadillo.so;/usr/lib/x86_64-linux-gnu/libboost_unit_test_framework.so;/usr/lib/x86_64-linux-gnu/libboost_serialization.so"
+  INTERFACE_LINK_LIBRARIES "/home/subodh/bin/Armadillo/lib/libarmadillo.so;/usr/lib/x86_64-linux-gnu/libboost_unit_test_framework.so;/usr/lib/x86_64-linux-gnu/libboost_serialization.so"
 )
 
 if(CMAKE_VERSION VERSION_LESS 2.8.12)

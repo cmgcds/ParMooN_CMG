@@ -23,7 +23,7 @@ class TANNLayer
   TANNLayer();
 
   /** constructor 2 */
-  TANNLayer(int rankArg, int dimArg, std::string typeArg);
+  TANNLayer(int rankArg, int dimArg, std::string typeArg, int typeIntArg);
 
   /** destrcutor */
   ~TANNLayer();
@@ -43,6 +43,8 @@ class TANNLayer
    * Supported types are: IP, OP, HIDDEN  */
   std::string type;
 
+  /** Int code for the type of the network */
+  int typeInt;
 };
 
 #endif

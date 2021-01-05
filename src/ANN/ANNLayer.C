@@ -13,7 +13,7 @@
 TANNLayer::TANNLayer(){};
 
 /** Constructor 2 */
-TANNLayer::TANNLayer(int rankArg, int dimArg, std::string typeArg){
+TANNLayer::TANNLayer(int rankArg, int dimArg, std::string typeArg, int typeIntArg){
 
   // Set rank
   this->rank = rankArg;
@@ -24,6 +24,8 @@ TANNLayer::TANNLayer(int rankArg, int dimArg, std::string typeArg){
   // Set the type of the layer
   this->type = typeArg;
 
+  // Set the int code for the type of the layer
+  this->typeInt = typeIntArg;
 };
 
 TANNLayer::~TANNLayer(){};

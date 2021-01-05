@@ -24,6 +24,7 @@ TANNParamReader::~TANNParamReader(){
 
   delete[] layerDim;
   delete[] layerType;
+  delete[] layerTypeInt;
 
 };
 
@@ -63,9 +64,25 @@ void TANNParamReader::readParamFile(char *paramFile){
 
       // Create an array to store the type of the layer (string , "IP", "OP" or "HIDDEN")
       this->layerType = new std::string[nHL+2];
+
+      // Create and array to store integer code for the layer type
+      this->layerTypeInt = new int[nHL+2];
       layerTypeFlag = true;
 
+
+
     }
+
+    // Set the dim of the IP data to input layer
+    // This could be considered as number of inputs to each input neuron 
+    if (!strcmp(line, "ANN_IPDATADIM:"))
+    {
+      assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+      // Set input layer dim
+      dat >> ipDataDim;
+      N_Param++;
+    }
+
 
     // Set the dim of the IP layer
     if (!strcmp(line, "ANN_IPLDIM:"))
@@ -84,6 +101,7 @@ void TANNParamReader::readParamFile(char *paramFile){
       int layerTypeNumber;
       dat >> layerTypeNumber;
       layerType[0] = getLayerType(layerTypeNumber);
+      layerTypeInt[0] = layerTypeNumber;
       N_Param++;
     }
 
@@ -102,6 +120,7 @@ void TANNParamReader::readParamFile(char *paramFile){
       int layerTypeNumber;
       dat >> layerTypeNumber;
       layerType[nHL+2-1] = getLayerType(layerTypeNumber);
+      layerTypeInt[nHL+2-1] = layerTypeNumber;
       N_Param++;
     }
 
@@ -127,6 +146,7 @@ void TANNParamReader::readParamFile(char *paramFile){
         int layerTypeNumber;
         dat >> layerTypeNumber;
         layerType[i+1] = getLayerType(layerTypeNumber);
+        layerTypeInt[i+1] = layerTypeNumber;
         N_Param++;
       };
     };
@@ -164,38 +184,9 @@ std::string TANNParamReader::getLayerType(int number){
       return "SoftplusLayer";
       break;
 
-    case 5:
-      return "HardSigmoidLayer";
-      break;
-
-    case 6:
-      return "SwishLayer";
-      break;
-
-    case 7:
-      return "MishLayer";
-      break;
-
-    case 8:
-      return "LiSHTLayer";
-      break;
-
-    case 9:
-      return "GELULayer";
-      break;
-
-    case 10:
-      return "ELiSHLayer";
-      break;
-
-    case 11:
-      return "ElliotLayer";
-      break;
-
-    case 12:
-      return "GaussianLayer";
+    default:
+      return "SigmoidLayer";
       break;
 
   };
 };
-

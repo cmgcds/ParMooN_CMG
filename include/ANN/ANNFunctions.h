@@ -6,9 +6,13 @@
 #ifndef OTHERFUNCTIONS_H
 #define OTHERFUNCTIONS_H
 
-#include "ANNIncludes.h"
-
-
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <assert.h>
+#include <string>
+#include <unistd.h>
+#include <cstring>
 
 /// Converts a given datatype to a std::string;
 template<typename var>

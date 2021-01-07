@@ -10,10 +10,14 @@
 //
 // =======================================================================
 
-#ifndef __TANNParamReader__
-#define __TANNParamReader__
+#ifndef __TANNPARAMREADER__
+#define __TANNPARAMREADER__
 
-#include <ANNIncludes.h>
+#include <ANNFunctions.h>
+
+#ifdef _MPI
+#include "mpi.h"
+#endif
 
 class TANNParamReader
 {
@@ -39,6 +43,20 @@ class TANNParamReader
     /** array storing int code for the layer type */
     int *layerTypeInt;
 
+    /** Int code storing the error type (loss function) */
+    int lossFunctionInt;
+
+    /** loss function */
+    std::string lossFunction;
+
+    /** Dataset name */
+    std::string datasetName;
+
+    /** Training data percentage of the total data */
+    double trainingDataPercentage;
+
+    int epochs;
+
   private:
     /** flags */
     bool layerDimFlag;
@@ -48,12 +66,17 @@ class TANNParamReader
   public:
     /** Class methods **/
 
+    /** read total number of layers */
+    void readNumberOfLayers(char *paramFile);
+
     /** read param file */
     void readParamFile(char *paramFile);
 
   private:
     /** Class methods private */
     std::string getLayerType(int number);
+
+    std::string getLossFunction(int number);
 };
 
 #endif

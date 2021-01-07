@@ -5,18 +5,8 @@
 // History:     Implementation started on 12.12.2020
 // =======================================================================
 
-#include <Domain.h>
-#include <Database.h>
-#include <SystemCD1D.h>
-#include <FEDatabase2D.h>
-
-// =======================================================================
-// include current example
-// =======================================================================
-
-#include "../Examples/CD_1D/cd1d.h"
-
 #include <ANN.h>
+#include <ANNDatasetHandler.h>
 // main program
 
 int main(int argc, char* argv[])
@@ -24,10 +14,13 @@ int main(int argc, char* argv[])
 
   TANNParamReader paramReader(argv[1]);
 
-  TANN ann(&paramReader);
+  TANNDatasetHandler datasetHandler(&paramReader);
 
-  for (int i=0; i<paramReader.nHL+2; i++){
-    std::cout << ann.layers[i].rank << "   " << ann.layers[i].dim << "   " << ann.layers[i].type << std::endl; 
-  };
+  TANN<NEGATIVE_LOG_LIKELIHOOD, RANDOM_INITIALIZATION> ann(&paramReader);
+  //TANN<MEAN_SQUARED_ERROR, RANDOM_INITIALIZATION> ann(&paramReader);
+
+  ann.trainNetwork(&datasetHandler);
+  ann.testNetwork(&datasetHandler);
+
 return 0;
 } // end main

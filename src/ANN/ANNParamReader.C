@@ -16,6 +16,20 @@ TANNParamReader::TANNParamReader(char *paramFile){
   this->layerFlag = false;
 
   /** Read the param file */
+  this->readNumberOfLayers(paramFile);
+  assert(layerFlag == true);
+
+  // Create an array to store the dimension of each layer (nHL + 2 for IP and OP resp.)
+  this->layerDim = new int[nHL + 2];
+  layerDimFlag = true;
+
+  // Create an array to store the type of the layer (string , "IP", "OP" or "HIDDEN")
+  this->layerType = new std::string[nHL+2];
+
+  // Create and array to store integer code for the layer type
+  this->layerTypeInt = new int[nHL+2];
+  layerTypeFlag = true;
+
   this->readParamFile(paramFile);
 };
 
@@ -29,136 +43,151 @@ TANNParamReader::~TANNParamReader(){
 };
 
 
+void TANNParamReader::readNumberOfLayers(char *paramFile){
+
+  std::ifstream file(paramFile);
+
+  std::string line;
+  std::string word1;
+  std::string delimiter;
+  int numberInt;
+  double numberDouble;
+
+  delimiter = ":";
+
+
+  if (file.is_open()){
+    while(std::getline(file, line)){
+      word1 = line.substr(0,line.find(delimiter));
+      line = line.erase(0,word1.length()+1);
+      word1.erase(word1.find_last_not_of(" \r\t")+1);
+      if(word1 == "ANN_NHL"){
+        numberInt = stringToInt(line);
+        this->nHL = numberInt;
+      }
+    };
+  };
+
+  // Set the layerFlag to true
+  this->layerFlag = true;
+  file.close();
+};
+
+
 void TANNParamReader::readParamFile(char *paramFile){
-#ifdef _MPI
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-#endif
+  assert (layerFlag == true);
 
-  char line[100];
-  int N_Param = 0;
-  std::ifstream dat(paramFile);
+  std::ifstream file(paramFile);
 
-  if (!dat)
-  {
-#ifdef _MPI
-  if(rank==0)
-#endif
-    std::cout << "cannot open '" << paramFile << "' for input" << std::endl;
-    exit(-1);
-  }
+  std::string line;
+  std::string word1;
+  std::string delimiter;
+  int numberInt;
+  double numberDouble;
 
-  while (!dat.eof())
-  {
-    dat >> line;
-
-    if (!strcmp(line, "ANN_NHL:"))
-    {
-      // Store value of the number of hidden layers (nHL)
-      dat >> nHL;
-      N_Param++;
-
-      // Create an array to store the dimension of each layer (nHL + 2 for IP and OP resp.)
-      this->layerDim = new int[nHL+2];
-      layerDimFlag = true;
-
-      // Create an array to store the type of the layer (string , "IP", "OP" or "HIDDEN")
-      this->layerType = new std::string[nHL+2];
-
-      // Create and array to store integer code for the layer type
-      this->layerTypeInt = new int[nHL+2];
-      layerTypeFlag = true;
+  delimiter = ":";
 
 
+  if (file.is_open()){
+    while(std::getline(file, line)){
+      word1 = line.substr(0,line.find(delimiter));
+      line = line.erase(0,word1.length()+1);
+      word1.erase(word1.find_last_not_of(" \r\t")+1);
 
-    }
-
-    // Set the dim of the IP data to input layer
-    // This could be considered as number of inputs to each input neuron 
-    if (!strcmp(line, "ANN_IPDATADIM:"))
-    {
-      assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
-      // Set input layer dim
-      dat >> ipDataDim;
-      N_Param++;
-    }
-
-
-    // Set the dim of the IP layer
-    if (!strcmp(line, "ANN_IPLDIM:"))
-    {
-      assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
-      // Set input layer dim
-      dat >> layerDim[0];
-      N_Param++;
-    }
-
-    // Set the type of the IP layer
-    if (!strcmp(line, "ANN_IPLTYPE:"))
-    {
-      assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
-      // Set input layer type
-      int layerTypeNumber;
-      dat >> layerTypeNumber;
-      layerType[0] = getLayerType(layerTypeNumber);
-      layerTypeInt[0] = layerTypeNumber;
-      N_Param++;
-    }
-
-    // Set the dim of the OP layer
-    if (!strcmp(line, "ANN_OPLDIM:"))
-    {
-      assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
-      dat >> layerDim[nHL+2-1];
-      N_Param++;
-    }
-
-    // Set the dim of the OP layer
-    if (!strcmp(line, "ANN_OPLTYPE:"))
-    {
-      assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
-      int layerTypeNumber;
-      dat >> layerTypeNumber;
-      layerType[nHL+2-1] = getLayerType(layerTypeNumber);
-      layerTypeInt[nHL+2-1] = layerTypeNumber;
-      N_Param++;
-    }
-
-    // Set the dim of the hidden layers
-    for (int i=0; i<nHL; i++){
-      std::string name = "ANN_HL_"+varToString(i)+"_DIM:";
-      const char *iChar = name.c_str();
-
-      if (!strcmp(line,iChar)){
+      if (word1 == "ANN_IPDATADIM"){
         assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
-        dat >> layerDim[1+i];
-        N_Param++;
-      };
-    };
- 
-    // Set the type of the hidden layers
-    for (int i=0; i<nHL; i++){
-      std::string name = "ANN_HL_"+varToString(i)+"_TYPE:";
-      const char *iChar = name.c_str();
+        // Set input layer dim
+        numberInt = stringToInt(line);
+        ipDataDim = numberInt;
+      }
+      
 
-      if (!strcmp(line,iChar)){
+      if (word1 == "ANN_IPLDIM"){
         assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
-        int layerTypeNumber;
-        dat >> layerTypeNumber;
-        layerType[i+1] = getLayerType(layerTypeNumber);
-        layerTypeInt[i+1] = layerTypeNumber;
-        N_Param++;
+        // Set input layer dim
+        numberInt = stringToInt(line);
+        layerDim[0] = numberInt;
+      }
+
+
+      if (word1 == "ANN_IPLTYPE"){
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        // Set input layer dim
+        numberInt = stringToInt(line);
+        layerTypeInt[0] = numberInt;
+        layerType[0] = getLayerType(numberInt);
+      }
+
+
+      if (word1 == "ANN_OPLDIM"){
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        // Set input layer dim
+        numberInt = stringToInt(line);
+        layerDim[nHL+2-1] = numberInt;
+      }
+
+
+      if (word1 == "ANN_OPLTYPE"){
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        // Set input layer dim
+        numberInt = stringToInt(line);
+        layerTypeInt[nHL+2-1] = numberInt;
+        layerType[nHL+2-1] = getLayerType(numberInt);
+      }
+
+
+      // Set the dim of the hidden layers
+      for (int i=0; i<nHL; i++){
+        std::string name = "ANN_HL_"+varToString(i)+"_DIM";
+        if (word1 == name){
+          assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+          numberInt = stringToInt(line);
+          layerDim[1+i] = numberInt;
+        };
       };
+
+
+      // Set the type of the hidden layers
+      for (int i=0; i<nHL; i++){
+        std::string name = "ANN_HL_"+varToString(i)+"_TYPE";
+        if (word1 == name){
+          assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+          numberInt = stringToInt(line);
+          layerTypeInt[1+i] = numberInt;
+          layerType[i+1] = getLayerType(numberInt);
+        };
+      };
+
+
+      if (word1 == "ANN_DATASET_NAME"){
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        // Set input layer dim
+        line.erase(0,line.find_first_of(" \r\t")+1);
+        this->datasetName = line;
+      }
+
+
+      // Read the percentage of the training date out of the total data
+      if (word1 == "ANN_TRAINING_DATA_PERCENTAGE")
+      {
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        numberDouble = stringToDouble(line);
+        trainingDataPercentage = numberDouble;
+      }
+
+
+      if (word1 == "ANN_EPOCHS"){
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        // Set input layer dim
+        numberInt = stringToInt(line);
+        this->epochs = numberInt;
+      }
     };
- 
-   // read until end of line
-    dat.getline (line, 99);
-
-   // Set the layerFlag to true
-    this->layerFlag = true;
   }
-  dat.close();
-
+  else{
+    std::cout << " File " + varToString(paramFile) + " can not be opened" << std::endl;
+  };
+  file.close();
 };
 
 
@@ -188,5 +217,23 @@ std::string TANNParamReader::getLayerType(int number){
       return "SigmoidLayer";
       break;
 
+  };
+};
+
+std::string TANNParamReader::getLossFunction(int number){
+  switch(number){
+    case 0:
+      // Mean squared error
+      return "MeanSquaredError";
+      break;
+
+    case 1:
+      // Cross entropy error
+      return "CrossEntropyError";
+      break;
+
+    default:
+      return "MeanSquaredError";
+      break;
   };
 };

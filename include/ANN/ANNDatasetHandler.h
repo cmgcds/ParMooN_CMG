@@ -10,19 +10,35 @@
 //
 // =======================================================================
 
-#ifndef __TANNDatasetHandler__
-#define __TANNDatasetHandler__
+#ifndef __TANNDATASETHANDLER__
+#define __TANNDATASETHANDLER__
 
 #include <ANNIncludes.h>
 
-class ANNDadasetHandler
+
+class TANNDatasetHandler
 {
   public:
     /** Constructor */
-    ANNDatasetHandler(string nameArg);
+    TANNDatasetHandler(TANNParamReader *paramReader);
 
     /** Destructor */
-    ~ANNDatasetHandler();
+    ~TANNDatasetHandler();
+
+  public:
+
+    int totalNumberOfSamples;
+
+    int numberOfTrainingSamples;
+
+    int numberOfTestingSamples;
+
+    int epochs;
+
+    int ipDataDim;
+
+    /** Armadillo matrix storing raw data */
+    arma::mat allData;
 
     /** Armadillo matrix storing training data */
     arma::mat trainData;
@@ -31,10 +47,10 @@ class ANNDadasetHandler
     arma::mat testData;
 
     /** Armadillo matrix storing the training lables */
-    arma::mat trainLables;
+    arma::mat trainLabels;
 
     /** Armadillo matrix storing the testing lables */
-    arma::mat testLables;
+    arma::mat testLabels;
 
     /** Armadillo matrix storing the temperory (unprocessed)
      * prediction values */
@@ -44,6 +60,20 @@ class ANNDadasetHandler
      * prediction values */
     arma::mat prediction;
 
+    /** error */
+    double errorL1Absolute;
+    double errorL2Absolute;
+    double errorLInfAbsolute;
+
+    double errorL1Relative;
+    double errorL2Relative;
+    double errorLInfRelative;
+
+  public:
+    /** Methods of the class */
+    void postProcessResults();
+
+    double computeError(arma::mat referenceValue, arma::mat numericalValue, std::string norm, std::string type);
 };
 
 #endif

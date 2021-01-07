@@ -1,0 +1,146 @@
+/** ************************************************************************ 
+* @brief     source file for TANNDatasetHandler
+* @author    Subodh M. Joshi
+* @date      06.01.21
+* @History   Implementation started 24.12.20 (Subodh M. Joshi) 
+ ************************************************************************  */
+
+/** Class declaration is done in include/ANN/ANNDatasetHandler.h */
+
+#include <ANNDatasetHandler.h>
+
+TANNDatasetHandler::TANNDatasetHandler(TANNParamReader *paramReader){
+
+  // Load the data
+  mlpack::data::Load(paramReader->datasetName.c_str(), this->allData, true);
+
+  
+
+  // Find the total number of samples in the dataset
+  this->totalNumberOfSamples = allData.n_cols;
+
+  // Number of training samples based on the user input
+  this->numberOfTrainingSamples = this->totalNumberOfSamples * paramReader->trainingDataPercentage / 100.;
+
+  // Find the testing dataset
+  this->numberOfTestingSamples = this->totalNumberOfSamples - this->numberOfTrainingSamples;
+
+  // Set the number of epochs for training
+  this->epochs = paramReader->epochs;
+
+  // Dimension of the input data (number of features at the input layer per perceptron)
+  this->ipDataDim = paramReader->ipDataDim;
+
+  // Create the training dataset
+  this->trainData = this->allData.submat(0,0, ipDataDim-1, numberOfTrainingSamples-1);
+
+  // Create the training labels
+  this->trainLabels = this->allData.submat(this->allData.n_rows-1,0, this->allData.n_rows-1,  numberOfTrainingSamples-1);
+
+
+  // Create the testing dataset
+  this->testData = this->allData.submat(0,numberOfTrainingSamples, ipDataDim-1, totalNumberOfSamples-1);
+
+  // Create the testing labels
+  this->testLabels = this->allData.submat(this->allData.n_rows-1,numberOfTrainingSamples, this->allData.n_rows-1,  totalNumberOfSamples-1);
+
+};
+
+TANNDatasetHandler::~TANNDatasetHandler(){};
+
+void TANNDatasetHandler::postProcessResults(){
+  if (predictionTemp.n_rows == 1){
+    // Regression problem
+    prediction = predictionTemp;
+
+    errorL1Absolute = this->computeError(testLabels, prediction, "L1","ABS");
+    errorL1Relative = this->computeError(testLabels, prediction, "L1","REL");
+    errorL2Absolute = this->computeError(testLabels, prediction, "L2","ABS");
+    errorL2Relative = this->computeError(testLabels, prediction, "L2","REL");
+    errorLInfAbsolute = this->computeError(testLabels, prediction, "LInf","ABS");
+    errorLInfRelative = this->computeError(testLabels, prediction, "LInf","REL");
+  }
+  else{
+    // Classification problem 
+      
+    std::cout << "Classification problem " << std::endl;
+    prediction = arma::zeros<arma::mat>(1, predictionTemp.n_cols);
+      // Find index of max prediction for each data point and store in "prediction"
+    for (int i = 0; i < predictionTemp.n_cols; ++i)
+    {
+      // we add 1 to the max index, so that it matches the actual test labels.
+      prediction(i) = arma::as_scalar(arma::find(
+          arma::max(predictionTemp.col(i)) == predictionTemp.col(i), 1)) + 1;
+    };
+
+    // Find the error
+      /*
+      Compute the error between predictions and testLabels,
+      now that we have the desired predictions.
+    */
+    
+    int correct = arma::accu(prediction == testLabels);
+
+    this->errorL1Relative = 1 - double(correct) / testData.n_cols;
+  };
+
+};
+
+double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat numericalValue, std::string norm = "L1", std::string type = "ABS"){
+
+  double numerator, denominator, temp;
+  double error;
+  // L1 norm of the error 
+  if (norm == "L1"){
+    numerator = 0.0;
+    denominator = 0.0;
+    for (int i=0; i < numberOfTestingSamples; i++){
+      numerator += abs(referenceValue(i) - numericalValue(i));
+      if (type == "ABS"){
+        denominator = 1;
+      }
+      else if (type == "REL"){
+        denominator += abs(referenceValue(i));
+      }
+      else{
+        std::cout << "Wrong argument in computeError for type" << std::endl;
+      };
+    };
+
+    error = numerator / denominator;
+  }
+  else if (norm == "L2"){
+    numerator = 0.0;
+    denominator = 0.0;
+    for (int i=0; i < numberOfTestingSamples; i++){
+      numerator += pow(referenceValue(i) - numericalValue(i), 2);
+      if (type == "ABS"){
+        denominator = 1;
+      }
+      else if (type == "REL"){
+        denominator += pow(referenceValue(i), 2);
+      }
+      else{
+        std::cout << "Wrong argument in computeError for type" << std::endl;
+      };
+    };
+
+    error = sqrt(numerator / denominator);
+  }
+  else if (norm == "LInf"){
+    numerator = 0.0;
+    denominator = 0.0;
+    for (int i=0; i < numberOfTestingSamples; i++){
+      if (numerator <= abs(referenceValue(i) - numericalValue(i))){
+        numerator = abs(referenceValue(i) - numericalValue(i));
+      };
+    };
+
+    error = numerator;
+  };
+
+  return error;
+};
+    
+
+

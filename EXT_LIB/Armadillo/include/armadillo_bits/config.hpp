@@ -50,7 +50,7 @@
 #endif
 
 #if !defined(ARMA_SUPERLU_INCLUDE_DIR)
-#define ARMA_SUPERLU_INCLUDE_DIR /usr/include/superlu/
+#define ARMA_SUPERLU_INCLUDE_DIR /usr/local/include/
 //// If you're using SuperLU and want to explicitly include the SuperLU headers,
 //// uncomment the above define and specify the appropriate include directory.
 //// Make sure the directory has a trailing /

@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
   double End_X    =  TDatabase::ParamDB->END_X;
 
   int FE_Order      =  TDatabase::ParamDB->ANSATZ_ORDER ;
-  int N_DOF         =  N_Elements*(FE_Order ) + 1;
+  int N_DOF         =  N_Elements*(FE_Order) + 1;
 
   // cout << " NELEM : " << N_Elements<<endl;
   // cout << " Start : " << Start_X<<endl;

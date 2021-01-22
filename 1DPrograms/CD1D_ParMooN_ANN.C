@@ -11,16 +11,19 @@
 
 int main(int argc, char* argv[])
 {
-
+  // scout << " HELOOOOOOOOOO "<<endl;
   TANNParamReader paramReader(argv[1]);
 
   TANNDatasetHandler datasetHandler(&paramReader);
 
-  TANN<NEGATIVE_LOG_LIKELIHOOD, RANDOM_INITIALIZATION> ann(&paramReader);
+  TANN<MEAN_SQUARED_ERROR,RANDOM_INITIALIZATION> ann(&paramReader);
   //TANN<MEAN_SQUARED_ERROR, RANDOM_INITIALIZATION> ann(&paramReader);
 
   ann.trainNetwork(&datasetHandler);
+
+  // Save the model 
+  // datasetHandler.saveModel();
   ann.testNetwork(&datasetHandler);
 
-return 0;
+  return 0;
 } // end main

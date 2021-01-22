@@ -46,23 +46,39 @@ TANNDatasetHandler::TANNDatasetHandler(TANNParamReader *paramReader){
 
 };
 
+
+// Export the Data 
+// void TANNDatasetHandler::saveModel(){
+
+//   // Load the data
+//   mlpack::data::Save("model.xml", "model",  this->allData, false);
+
+// }
+
 TANNDatasetHandler::~TANNDatasetHandler(){};
 
 void TANNDatasetHandler::postProcessResults(){
   if (predictionTemp.n_rows == 1){
     // Regression problem
     prediction = predictionTemp;
-
     errorL1Absolute = this->computeError(testLabels, prediction, "L1","ABS");
     errorL1Relative = this->computeError(testLabels, prediction, "L1","REL");
     errorL2Absolute = this->computeError(testLabels, prediction, "L2","ABS");
     errorL2Relative = this->computeError(testLabels, prediction, "L2","REL");
     errorLInfAbsolute = this->computeError(testLabels, prediction, "LInf","ABS");
     errorLInfRelative = this->computeError(testLabels, prediction, "LInf","REL");
+
+    std::cout << " errorL1Absolute : " << errorL1Absolute << std::endl;
+    std::cout << " errorL1Relative : " << errorL1Relative << std::endl;
+    std::cout << " errorL2Absolute : " << errorL2Absolute << std::endl;
+    std::cout << " errorL2Relative : " << errorL2Relative << std::endl;
+    std::cout << " errorLInfAbsolute : " << errorLInfAbsolute << std::endl;
+    std::cout << " errorLInfRelative : " << errorLInfRelative << std::endl;
+    
   }
   else{
     // Classification problem 
-      
+      std::cout << " PRED TEMP : " << predictionTemp.n_rows <<std::endl;
     std::cout << "Classification problem " << std::endl;
     prediction = arma::zeros<arma::mat>(1, predictionTemp.n_cols);
       // Find index of max prediction for each data point and store in "prediction"
@@ -128,15 +144,20 @@ double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat nume
     error = sqrt(numerator / denominator);
   }
   else if (norm == "LInf"){
-    numerator = 0.0;
+    std::ofstream file;
+    file.open("result.txt");
+    file << "Reference" << "," << "Actual" << "," << "Error" <<std::endl;
+    numerator = 1000;
     denominator = 0.0;
     for (int i=0; i < numberOfTestingSamples; i++){
-      if (numerator <= abs(referenceValue(i) - numericalValue(i))){
+      file << referenceValue(i) <<","<< numericalValue(i) << "," << abs(referenceValue(i) - numericalValue(i)) <<std::endl;
+      if ( abs(referenceValue(i) - numericalValue(i))  <= numerator){
         numerator = abs(referenceValue(i) - numericalValue(i));
       };
     };
 
     error = numerator;
+    file.close();
   };
 
   return error;

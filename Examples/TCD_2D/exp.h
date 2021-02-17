@@ -43,7 +43,12 @@ void Exact(double x, double y, double *values)
 // kind of boundary condition (for FE space needed)
 void BoundCondition(int BdComp, double t, BoundCond &cond)
 {
- cond = DIRICHLET;
+//  cond = NEUMANN;
+
+//  if(BdComp == 1 || BdComp == 3 || BdComp == 2 )
+//  {
+   cond = DIRICHLET;
+//  }
 }
 
 // value of boundary condition
@@ -58,7 +63,7 @@ void InitialCondition(double x, double y, double *values)
   double t;
 
   t = TDatabase::TimeDB->CURRENTTIME;
-  values[0] = exp(t)*(sin(2*Pi*x)*sin(2*Pi*y));
+  // values[0] = exp(t)*(sin(2*Pi*x)*sin(2*Pi*y));
 }
 
 
@@ -79,16 +84,12 @@ void BilinearCoeffs(int n_points, double *X, double *Y,
     x = X[i];
     y = Y[i];
 
-    coeff[0] = eps;
-    coeff[1] = b1;
-    coeff[2] = b2;
-    coeff[3] = c;
+    coeff[0] = 2;
+    coeff[1] = 10;
+    coeff[2] = 0.1;
+    coeff[3] = 0;
 
-    coeff[4] = exp(t)*(sin(2*Pi*x)*sin(2*Pi*y))
-	- eps * exp(t)*4*Pi*Pi*(-sin(2*Pi*x)*sin(2*Pi*y)-sin(2*Pi*x)*sin(2*Pi*y))
-       + b1 * exp(t)*2*Pi*cos(2*Pi*x)*sin(2*Pi*y)
-       + b2 * exp(t)*2*Pi*sin(2*Pi*x)*cos(2*Pi*y)
-	+ c *  exp(t)*(sin(2*Pi*x)*sin(2*Pi*y));
+    coeff[4] = 0.01;
   }
 }
 

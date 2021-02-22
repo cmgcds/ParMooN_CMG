@@ -1,0 +1,14 @@
+----------------------------------------------------------------------
+# ANN
+----------------------------------------------------------------------
+ANN_NHL: 1
+ANN_IPDATADIM: 21
+ANN_IPLDIM: 8
+ANN_IPLTYPE: 0
+ANN_OPLDIM: 3
+ANN_OPLTYPE: 0
+ANN_HL_0_DIM: 10
+ANN_HL_0_TYPE: 0
+ANN_DATASET_NAME: thyroid.csv
+ANN_TRAINING_DATA_PERCENTAGE: 70
+ANN_EPOCHS: 4

@@ -78,7 +78,7 @@ void TANNDatasetHandler::postProcessResults(){
   }
   else{
     // Classification problem 
-      std::cout << " PRED TEMP : " << predictionTemp.n_rows <<std::endl;
+    // std::cout << " PRED TEMP : " << predictionTemp.n_rows <<std::endl;
     std::cout << "Classification problem " << std::endl;
     prediction = arma::zeros<arma::mat>(1, predictionTemp.n_cols);
       // Find index of max prediction for each data point and store in "prediction"

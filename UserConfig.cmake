@@ -15,7 +15,7 @@ set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimension
 # select this line accordingly to include your main program
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/CD2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TCD2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
-set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/SPADE/TCD2D_ParMooN_Spade.C" CACHE STRING "Enter to select the Main file of the model") 
+# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/SPADE/TCD2D_ParMooN_Spade.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TCD2D_ParMooN_ALE.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/NSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TNSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
@@ -29,6 +29,7 @@ set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/SPADE/TCD2D_ParMooN_
 
 #set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TBE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/1DPrograms/CD1D_ParMooN_ANN.C" CACHE STRING "Enter to select the Main file of the model") 
+set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_Thyroid.C" CACHE STRING "Enter to select the Main file of the model") 
 
 # selection of architect type (LINUX64 MAC64 INTEL64 TYRONE64 CRAY64)
 set(AParMooN_ARCH "LINUX64" CACHE STRING "select the machine type")

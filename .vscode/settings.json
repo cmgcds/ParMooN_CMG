@@ -114,6 +114,8 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "valarray": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "MainUtilities.C": "cpp",
+        "SystemTNSE3D_ALE.C": "cpp"
     }
 }

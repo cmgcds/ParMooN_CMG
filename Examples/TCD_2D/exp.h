@@ -84,12 +84,12 @@ void BilinearCoeffs(int n_points, double *X, double *Y,
     x = X[i];
     y = Y[i];
 
-    coeff[0] = 2;
-    coeff[1] = 10;
-    coeff[2] = 0.1;
+    coeff[0] = 0;
+    coeff[1] = -0.1;
+    coeff[2] = 0.05;
     coeff[3] = 0;
 
-    coeff[4] = 0.01;
+    coeff[4] = 0.0;
   }
 }
 

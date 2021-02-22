@@ -15,10 +15,10 @@
 #include "stdlib.h"
 #include <LinAlg.h>
 
-#ifdef _MPI
+// #ifdef _MPI
   #include <mkl.h>
   #include <omp.h>
-#endif
+// #endif
 
 
 #include <fstream>

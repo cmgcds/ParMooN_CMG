@@ -12,6 +12,6 @@ endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA"  OR  "${AParMooN_PARALLEL_TYP
 if("${AParMooN_GEO}" STREQUAL "2D")
 list(APPEND SYST_SOURCES "${PROJECT_SOURCE_DIR}/src/Solvers/DirectSparseLinearSolver.C")
 elseif("${AParMooN_GEO}" STREQUAL "3D")
-
+list(APPEND SYST_SOURCES "${PROJECT_SOURCE_DIR}/src/Solvers/DirectSparseLinearSolver.C")
 endif("${AParMooN_GEO}" STREQUAL "2D")
 add_library(solver STATIC ${SYST_SOURCES})

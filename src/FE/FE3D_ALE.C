@@ -62,19 +62,19 @@
 const uint32_t colors[] = { 0xff00ff00, 0xff0000ff, 0xffffff00, 0xffff00ff, 0xff00ffff, 0xffff0000, 0xffffffff };
 const int num_colors = sizeof(colors)/sizeof(uint32_t);
 
-#define PUSH_RANGE(name,cid) { \
-    int color_id = cid; \
-    color_id = color_id%num_colors;\
-    nvtxEventAttributes_t eventAttrib = {0}; \
-    eventAttrib.version = NVTX_VERSION; \
-    eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE; \
-    eventAttrib.colorType = NVTX_COLOR_ARGB; \
-    eventAttrib.color = colors[color_id]; \
-    eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII; \
-    eventAttrib.message.ascii = name; \
-    nvtxRangePushEx(&eventAttrib); \
-}
-#define POP_RANGE nvtxRangePop();
+// #define PUSH_RANGE(name,cid) { \
+//     int color_id = cid; \
+//     color_id = color_id%num_colors;\
+//     nvtxEventAttributes_t eventAttrib = {0}; \
+//     eventAttrib.version = NVTX_VERSION; \
+//     eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE; \
+//     eventAttrib.colorType = NVTX_COLOR_ARGB; \
+//     eventAttrib.color = colors[color_id]; \
+//     eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII; \
+//     eventAttrib.message.ascii = name; \
+//     nvtxRangePushEx(&eventAttrib); \
+// }
+// #define POP_RANGE nvtxRangePop();
 
 using namespace std::chrono; 
 // 
@@ -2187,7 +2187,7 @@ void FE3D_ALE::constructGlobalStiffness(TSquareMatrix3D **sqmatrices, int*& RowP
 
 void FE3D_ALE::AssembleMeshMatrix(TFESpace3D* fespace, TFEVectFunct3D* MeshVelocityVectFunction3D, int FactoriseFlag)
 {
-	PUSH_RANGE("Mesh Matrix Assemble", 5);
+	// PUSH_RANGE("Mesh Matrix Assemble", 5);
 	char UString[] = "T";
 	char NameString[] = "name";
 	char CString[] = "C";
@@ -2277,7 +2277,7 @@ void FE3D_ALE::AssembleMeshMatrix(TFESpace3D* fespace, TFEVectFunct3D* MeshVeloc
 	// Assign the u.n boundary Condition for the Free Slip Slides
 	impose_FreeSlip_BoundaryCondition(sqstructure,SqmatrixG11->GetEntries(),SqmatrixG12->GetEntries(),SqmatrixG13->GetEntries(),SqmatrixG21->GetEntries(),SqmatrixG22->GetEntries()
 									,SqmatrixG23->GetEntries(),SqmatrixG31->GetEntries(),SqmatrixG32->GetEntries(),SqmatrixG33->GetEntries(),GlobRhs,N_DOF,N_ActiveBoundary);
-	POP_RANGE;
+	// POP_RANGE;
 
 
 	#ifdef _CUDA
@@ -2331,7 +2331,7 @@ void FE3D_ALE::FactoriseGlobalMeshMatrix(TSquareMatrix3D **sqmatrices, int n_row
 #endif  // _CUDA
 
 
-#ifdef _CUDA
+
 void FE3D_ALE::SolveMeshMatrix(TFESpace3D* fespace, TFEVectFunct3D* MeshVelocityVectFunction3D)
 {
 	TFESpace3D* Meshfespace = MeshVelocityVectFunction3D->GetFESpace3D();
@@ -2383,30 +2383,32 @@ void FE3D_ALE::SolveMeshMatrix(TFESpace3D* fespace, TFEVectFunct3D* MeshVelocity
 	// cout<<" COUNTERRRRRRR : " << cnt <<endl;
 	// cout<<" COUNTERRRRRRR : " << cnt2 <<endl;
 
+	auto start = high_resolution_clock::now(); 
 
-	// USe Direct Solver
-	if(TDatabase::ParamDB->CUDASOLVERFLAG == 0)
-	{
-		auto start = high_resolution_clock::now(); 
-
-		PardisoDirectSolver_without_removing_dirichlet(SQMATRICES_GRID, 3, 3, sol, GlobRhs);
+	PardisoDirectSolver_without_removing_dirichlet(SQMATRICES_GRID, 3, 3, sol, GlobRhs);
 		
-		auto end = high_resolution_clock::now(); 
+	auto end = high_resolution_clock::now(); 
 
-		auto duration = duration_cast<milliseconds>(end - start); 
+	auto duration = duration_cast<milliseconds>(end - start); 
 	
 		// cout << " Mesh Velocity Solution Norm : " <<Ddot(3*N_DOF,sol,sol)<<endl;
 		// cout << " Mesh Velocity Solution Time(Direct) : " <<duration.count() << " ms" <<endl;
 
 
-		memcpy( MeshVelocityVectFunction3D->GetValues(), sol , SizeOfDouble*3*N_DOF);
+	memcpy( MeshVelocityVectFunction3D->GetValues(), sol , SizeOfDouble*3*N_DOF);
 
 		// Release the Matrix Storage Parameters
-		for ( int i = 0 ; i < 9 ; i++)
-			SQMATRICES_GRID[i]->Reset();
+	for ( int i = 0 ; i < 9 ; i++)
+		SQMATRICES_GRID[i]->Reset();
 
-		for (int i_rhs = 0; i_rhs < 3*N_DOF; i_rhs++)
-			GlobRhs[i_rhs] = 0;
+	for (int i_rhs = 0; i_rhs < 3*N_DOF; i_rhs++)
+		GlobRhs[i_rhs] = 0;
+
+#ifdef _CUDA
+	// USe Direct Solver
+	if(TDatabase::ParamDB->CUDASOLVERFLAG == 0)
+	{
+
 
 	}
 
@@ -2481,12 +2483,12 @@ void FE3D_ALE::SolveMeshMatrix(TFESpace3D* fespace, TFEVectFunct3D* MeshVelocity
 	
 	
 
-
+	#endif //_CUDA
 	if(GlobRhs) delete[] GlobRhs;
 	if(sol) delete[] sol;
 }
 
-#endif //_CUDA
+
 
 double FE3D_ALE::getMaximumElevation(TFEVectFunct3D* MeshVelocityVectFunction3D)
 {

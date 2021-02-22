@@ -49,6 +49,277 @@
 // #include "../Examples_All/TCD_2D/exp_1.h"
 // #include "../Main_Users/Sashi/TCD_2D/Hemker.h"
 
+
+void printMatrix(double* C, int m, int n)
+{
+   
+    cout <<endl;
+    for ( int i=0 ; i < m;i++)
+    {
+        for ( int j=0 ; j < n;j++)
+        {
+            cout << setw(9) << C[i*n + j] << setw(9) << "  ";
+        }
+        cout<<endl;
+        
+    }
+
+    cout <<endl;
+}
+
+
+
+double* RealisationGenerator(TFESpace2D* Scalar_FeSpace,int N_DOF)
+{
+    int N_Realisations  = TDatabase::ParamDB->SDFEM_TYPE ;
+    double LengthScale  = TDatabase::ParamDB->DELTA1;
+    double EigenPercent = TDatabase::ParamDB->DELTA0;
+
+
+
+    double *org_x_coord     = new double[N_DOF];
+    double *org_y_coord     = new double[N_DOF];
+    double *x_coord         = new double[N_DOF];
+    double *y_coord         = new double[N_DOF];
+    int *mappingArray       = new int[N_DOF];
+
+
+    int i=0;
+    int N = pow(2,TDatabase::ParamDB->UNIFORM_STEPS  ) + 1;
+    for ( int i = 0 ; i < N_DOF; i++)
+    {
+        int local_i = i/N;
+        int local_j = i%N;
+       
+        x_coord[i] =  double(1.0/(N-1)) * local_i;
+        y_coord[i] =  double(1.0/(N-1)) * local_j;
+    }
+
+
+    cout << " End File Read" <<endl;
+
+    Scalar_FeSpace->GetDOFPosition(org_x_coord,org_y_coord);
+
+    for ( int i=0 ; i < N_DOF; i++)   // Generated Values
+    {  
+        // get the generated Value
+        double xx = x_coord[i];
+        double yy = y_coord[i];
+        bool foundFlag = false;
+
+        for ( int j=0 ; j<N_DOF;j++)  // Actual parmooN Co-ordinates
+        {  
+            if(abs(xx - org_x_coord[j]) < 1e-10 &&  abs(yy - org_y_coord[j]) < 1e-10 )
+            {
+                mappingArray[i] = j;
+                foundFlag = true;
+            }
+        }
+
+        if(!foundFlag) cerr<< " DOF NOT FOUND FOR " << i << " position : " << setw(8) << org_x_coord[i]<<setw(8) <<org_y_coord[i] <<endl;
+    }
+     
+
+    // int N_DOF =  N * N;
+    double* x  =  new double[N_DOF];
+    double* y  =  new double[N_DOF];
+
+    for ( int i = 0 ; i < N_DOF; i++ )
+    {
+        int local_i = i/N;
+        int local_j = i%N;
+
+        x[i] =  double(1.0/(N-1)) * local_j;
+        y[i] =  double(1.0/(N-1)) * local_i;
+    }
+
+   
+    double *C = new double[N_DOF*N_DOF];  //MATRIX
+
+    double norm = 0;
+    for( int i =0  ; i < N_DOF ; i++ )
+    {
+        double actual_x = x[i];
+        double actual_y = y[i];
+
+        for ( int j=0 ; j < N_DOF ; j++)
+        {
+            double local_x = x[j];
+            double local_y = y[j];
+
+            double r = sqrt( pow((actual_x - local_x),2 ) + pow((actual_y - local_y),2 ));
+            
+            // CO -Relation
+            C[j*N_DOF + i] = exp ( (- 1.0 * r )/ (LengthScale) );
+
+
+            if(TDatabase::ParamDB->WRITE_PS == 0)
+            {
+                double sig_r1 = exp (-1.0/(1.0 - pow(( 2*actual_x - 1),4) ) )  * exp ( -1.0/ ( 1 - pow(( 2*actual_y - 1),4) ) ) ;
+                double sig_r2 = exp (-1.0/(1.0 - pow(( 2*local_x - 1),4) ) )  * exp ( -1.0/ ( 1 - pow(( 2*local_y - 1),4) ) ) ; 
+            
+                // Co Variance
+                C[j*N_DOF + i] *= sig_r1 * sig_r2 ;
+            }
+
+            else if(TDatabase::ParamDB->WRITE_PS == 1)
+            {
+                double E = 0.03;
+                double disp = 0.3;
+                double power = 2;
+                double sig_r1 = ( exp ( - pow( ( 2*actual_x - 1 - disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E)) )  * exp ( - pow(( 2*actual_x - 1-disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E)) ;
+                double sig_r2 = exp ( - pow(( 2*local_x - 1 -disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E))  * exp ( - pow(( 2*local_y - 1-disp),power)  / (E) ) / (2*3.14159265359 * sqrt(E)); 
+            
+                // Co Variance
+                C[j*N_DOF + i] *= sig_r1 * sig_r2 *0.2;
+            }
+
+            else{
+                cout << "Error " <<endl;
+                exit(0);
+            }
+
+            norm += C[j*N + i]*C[j*N + i];
+        }
+
+    }
+
+
+    std::ofstream fileo;
+    // fileo.open("Corelation.txt");
+
+    // for ( int i=0 ; i < N_DOF ; i++)
+    // {
+    //     for ( int j=0 ; j < N_DOF ; j++)
+    //     {
+    //         fileo << C[i*N_DOF + j] ;
+    //         if(j!= N_DOF-1 ) fileo<<",";
+    //     }
+    //     fileo<<endl;
+    // }
+
+    // fileo.close();
+
+     fileo.open("CoVariance.txt");
+
+    for ( int i=0 ; i < N_DOF ; i++)
+    {
+        for ( int j=0 ; j < N_DOF ; j++)
+        {
+            fileo << C[i*N_DOF + j] ;
+            if(j!= N_DOF-1 ) fileo<<",";
+        }
+        fileo<<endl;
+    }
+
+    fileo.close();
+
+
+    exit(0);
+    // Declare SVD parameters
+    MKL_INT m1 = N_DOF, n = N_DOF, lda = N_DOF, ldu = N_DOF, ldvt = N_DOF, info;
+    double superb[std::min(N_DOF,N_DOF)-1];
+
+    double* S = new double[N_DOF];
+    double* U = new double[N_DOF*N_DOF];
+    double* Vt = new double[N_DOF*N_DOF];
+    cout << " REALISATIONS COMPUTED " <<endl;
+    info = LAPACKE_dgesvd( LAPACK_ROW_MAJOR, 'A', 'A', m1, n, C, lda,
+                        S, U, ldu, Vt, ldvt, superb );
+
+    cout << endl <<endl;
+
+    if( info > 0 ) {
+                printf( "The algorithm computing SVD failed to converge.\n" );
+                exit( 1 );
+    }
+   cout << " REALISATIONS COMPUTED " <<endl;
+    int energyVal = 0;
+
+    double sumSingularVal = 0;
+    for( int i=0;i<N_DOF;i++) sumSingularVal += S[i];
+
+    double val = 0;
+    for( energyVal =0 ; energyVal< N_DOF; energyVal++)
+    {
+        val += S[energyVal];
+        if(val/sumSingularVal > 0.8) break;
+    }
+
+    cout << " MODES : "  << energyVal+1 <<endl;
+    
+    int modDim = energyVal+1;
+       
+    double* Ut = new double[N_DOF*modDim]();
+    double* Z  = new double[N_Realisations*modDim]();
+
+    double* SolutionVector = new double[N_DOF * N_Realisations]();
+
+    // -------------- Generate Random Number Based on Normal Distribution -------------------------//
+    int k=0;
+    int skip = N_DOF - modDim;
+    int count =0;
+    for ( int i = 0 ; i < N_DOF*N_DOF ; i++ )
+    {  
+        // cout << "i val " << i <<endl;
+        if(count < modDim )
+        {
+            Ut[k] =  U[i];
+
+            count++;
+            k++;
+        }
+        else
+        {
+            i += skip;
+            count = 0;
+            i--;
+        }
+       
+    }
+
+
+    for( int k = 0 ; k < modDim ; k++)
+    {  
+        std::random_device rd{};
+        std::mt19937 gen{rd()};
+        std::normal_distribution<> d{0,1};
+
+        for(int n=0; n<N_Realisations; ++n) {
+            Z[k*N_Realisations + n] =  S[k] * d(gen);
+        }
+    }
+
+    cout << " N_Realisations : " << N_Realisations <<endl;
+    cout << " MULT START "<<endl;
+    cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,N_DOF,N_Realisations, modDim , 1.0, Ut,modDim,Z,N_Realisations,0.0,SolutionVector,N_Realisations);
+    cout << " MULT DONE "<<endl;
+    // printMatrix(SolutionVector, N_DOF,N_Realisations);
+
+    // mkl_dimatcopy('R','T', N_DOF,N_Realisations,1.0,SolutionVector,N_DOF,N_Realisations);
+    cout << " COPY DONE "<<endl;
+
+    cout << " REALISATIONS COMPUTED " <<endl;
+
+
+    delete[] C;
+    delete[] Z;
+    delete[] Ut;
+    delete[] S;
+    delete[] U;
+    delete[] Vt;
+    delete[] org_x_coord;
+    delete[] org_y_coord;
+    delete[] x_coord;
+    delete[] y_coord;
+    delete[] mappingArray;
+
+    return SolutionVector;
+
+}
+
+
+
 int main(int argc, char *argv[])
 {
     int i, j, l, m, N_SubSteps, ORDER, N_Cells, N_DOF, img = 1, N_G;
@@ -160,7 +431,16 @@ int main(int argc, char *argv[])
 
     Scalar_FeFunction = new TFEFunction2D(Scalar_FeSpace, (char *)"sol", (char *)"sol", sol, N_DOF);
 
-    //     // --- Get the list from the co-ordinates
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    ////////// -------- REALISATION DATA GENERATION ----------------------------------------- //////
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    int N_Realisations  = TDatabase::ParamDB->SDFEM_TYPE ;
+    double LengthScale  = TDatabase::ParamDB->DELTA1;
+    double EigenPercent = TDatabase::ParamDB->DELTA0;
+
+
+
     double *org_x_coord     = new double[N_DOF];
     double *org_y_coord     = new double[N_DOF];
     double *x_coord         = new double[N_DOF];
@@ -175,7 +455,6 @@ int main(int argc, char *argv[])
         int local_i = i/N;
         int local_j = i%N;
        
-        //  i=0, 0, i=1, 0.3, i=2, 0.6 i=3 = 0.99
         x_coord[i] =  double(1.0/(N-1)) * local_i;
         y_coord[i] =  double(1.0/(N-1)) * local_j;
     }
@@ -185,14 +464,14 @@ int main(int argc, char *argv[])
 
     Scalar_FeSpace->GetDOFPosition(org_x_coord,org_y_coord);
 
-    for ( int i=0 ; i < N_DOF; i++)
+    for ( int i=0 ; i < N_DOF; i++)   // Generated Values
     {  
         // get the generated Value
         double xx = x_coord[i];
         double yy = y_coord[i];
         bool foundFlag = false;
 
-        for ( int j=0 ; j<N_DOF;j++)
+        for ( int j=0 ; j<N_DOF;j++)  // Actual parmooN Co-ordinates
         {  
             if(abs(xx - org_x_coord[j]) < 1e-10 &&  abs(yy - org_y_coord[j]) < 1e-10 )
             {
@@ -205,26 +484,17 @@ int main(int argc, char *argv[])
     }
      
 
-    // for (int i = 0; i < N_DOF; i++)
-    // {
-    //     cout << i << setw(8)<< mappingArray[i]<<endl;
-    // }
-   
-   
-    // ---------------------- GENERATE DATA FOR ALL REALISATIONS ------------------------------------ //
-    // int N = pow(2,TDatabase::ParamDB->UNIFORM_STEPS  ) + 1;
-    int N_Realisations = 4000;
     // int N_DOF =  N * N;
     double* x  =  new double[N_DOF];
     double* y  =  new double[N_DOF];
 
     for ( int i = 0 ; i < N_DOF; i++ )
     {
-        int local_i = i/N + 1;
-        int local_j = i%N + 1;
+        int local_i = i/N;
+        int local_j = i%N;
 
-        x[((local_i-1) * N) + (local_j-1)] = local_j;
-        y[((local_i-1) * N) + (local_j-1)] = local_i;
+        x[i] =  double(1.0/(N-1)) * local_j;
+        y[i] =  double(1.0/(N-1)) * local_i;
     }
 
    
@@ -233,9 +503,6 @@ int main(int argc, char *argv[])
     double norm = 0;
     for( int i =0  ; i < N_DOF ; i++ )
     {
-        int local_i = i/N;
-        int local_j = i%N;
-
         double actual_x = x[i];
         double actual_y = y[i];
 
@@ -245,13 +512,57 @@ int main(int argc, char *argv[])
             double local_y = y[j];
 
             double r = sqrt( pow((actual_x - local_x),2 ) + pow((actual_y - local_y),2 ));
-            C[j*N_DOF + i] = exp(-1 * r );
-            norm += C[j*N + i]*C[j*N + i];
+            
+            // CO -Relation
+            C[j*N_DOF + i] = exp ( (- 1.0 * r )/ (LengthScale) );
 
+
+            if(TDatabase::ParamDB->WRITE_PS == 0)
+            {
+                double sig_r1 = exp (-1.0/(1.0 - pow(( 2*actual_x - 1),4) ) )  * exp ( -1.0/ ( 1 - pow(( 2*actual_y - 1),4) ) ) ;
+                double sig_r2 = exp (-1.0/(1.0 - pow(( 2*local_x - 1),4) ) )  * exp ( -1.0/ ( 1 - pow(( 2*local_y - 1),4) ) ) ; 
+            
+                // Co Variance
+                C[j*N_DOF + i] *= sig_r1 * sig_r2 * 5.0;
+            }
+
+            else if(TDatabase::ParamDB->WRITE_PS == 1)
+            {
+      double E = 0.03;
+                double disp = 0.3;
+                double power = 2;
+                double sig_r1 = exp ( - pow( ( 2*actual_x - 1 - disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E))  * exp ( - pow(( 2*actual_x - 1-disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E)) ;
+                double sig_r2 = exp ( - pow(( 2*local_x - 1 -disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E))  * exp ( - pow(( 2*local_y - 1-disp),power)  / (E) ) / (2*3.14159265359 * sqrt(E)); 
+                // Co Variance
+                C[j*N_DOF + i] *= sig_r1 * sig_r2 ;
+            }
+
+            else{
+                cout << "Error " <<endl;
+                exit(0);
+            }
+
+            norm += C[j*N + i]*C[j*N + i];
         }
 
     }
 
+
+    // std::ofstream fileo;
+    // fileo.open("Corelation.txt");
+
+    // for ( int i=0 ; i < N_DOF ; i++)
+    // {
+    //     for ( int j=0 ; j < N_DOF ; j++)
+    //     {
+    //         fileo << C[i*N_DOF + j] ;
+    //         if(j!= N_DOF-1 ) fileo<<",";
+    //     }
+    //     fileo<<endl;
+    // }
+
+    // fileo.close();
+    // exit(0);
     // Declare SVD parameters
     MKL_INT m1 = N_DOF, n = N_DOF, lda = N_DOF, ldu = N_DOF, ldvt = N_DOF, info;
     double superb[std::min(N_DOF,N_DOF)-1];
@@ -259,7 +570,7 @@ int main(int argc, char *argv[])
     double* S = new double[N_DOF];
     double* U = new double[N_DOF*N_DOF];
     double* Vt = new double[N_DOF*N_DOF];
-
+    cout << " REALISATIONS COMPUTED " <<endl;
     info = LAPACKE_dgesvd( LAPACK_ROW_MAJOR, 'A', 'A', m1, n, C, lda,
                         S, U, ldu, Vt, ldvt, superb );
 
@@ -269,7 +580,7 @@ int main(int argc, char *argv[])
                 printf( "The algorithm computing SVD failed to converge.\n" );
                 exit( 1 );
     }
-   
+   cout << " REALISATIONS COMPUTED " <<endl;
     int energyVal = 0;
 
     double sumSingularVal = 0;
@@ -282,8 +593,8 @@ int main(int argc, char *argv[])
         if(val/sumSingularVal > 0.8) break;
     }
 
-    cout << energyVal <<endl;
-
+    cout << " MODES : "  << energyVal+1 <<endl;
+    
     int modDim = energyVal+1;
        
     double* Ut = new double[N_DOF*modDim]();
@@ -328,14 +639,14 @@ int main(int argc, char *argv[])
         }
     }
 
-
-
+    cout << " N_Realisations : " << N_Realisations <<endl;
+    cout << " MULT START "<<endl;
     cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,N_DOF,N_Realisations, modDim , 1.0, Ut,modDim,Z,N_Realisations,0.0,SolutionVector,N_Realisations);
-
+    cout << " MULT DONE "<<endl;
     // printMatrix(SolutionVector, N_DOF,N_Realisations);
 
-    mkl_dimatcopy('R','T', N_DOF,N_Realisations,1.0,SolutionVector,N_DOF,N_Realisations);
-
+    // mkl_dimatcopy('R','T', N_DOF,N_Realisations,1.0,SolutionVector,N_DOF,N_Realisations);
+    cout << " COPY DONE "<<endl;
 
     cout << " REALISATIONS COMPUTED " <<endl;
 
@@ -363,16 +674,16 @@ int main(int argc, char *argv[])
     // initilize the system matrix with the functions defined in Example file
     SystemMatrix->Init(BilinearCoeffs, BoundCondition, BoundValue);
 
-    for ( int RealNo=0 ; RealNo < 1; RealNo++)
+    for ( int RealNo=0 ; RealNo < N_Realisations; RealNo++)
     {
         // cout << " ============================================================================================================= " <<endl;
-        cout << RealNo  <<endl;
+        cout <<  " Real no " <<  RealNo  <<endl;
         // cout << " ============================================================================================================= " <<endl;
 
         // Scalar_FeFunction->Interpolate(InitialCondition);
         std::string str= std::to_string(RealNo);
         for ( int i=0 ; i < N_DOF; i++)
-            sol[mappingArray[i]] = SolutionVector[RealNo*N_DOF + i];
+            sol[mappingArray[i]] = SolutionVector[RealNo  +  N_Realisations * i];
         
 
         if (TDatabase::ParamDB->WRITE_VTK)
@@ -467,7 +778,32 @@ int main(int argc, char *argv[])
                     SystemMatrix->RestoreMassMat();
                 }
 
-                      if (TDatabase::ParamDB->WRITE_VTK)
+                if (TDatabase::ParamDB->WRITE_VTK)
+                {
+                    os.seekp(std::ios::beg);
+                    if (img < 10)
+                        os << "VTK/" << VtkBaseName << ".0000" << img << ".vtk" << ends;
+                    else if (img < 100)
+                        os << "VTK/" << VtkBaseName << ".000" << img << ".vtk" << ends;
+                    else if (img < 1000)
+                        os << "VTK/" << VtkBaseName << ".00" << img << ".vtk" << ends;
+                    else if (img < 10000)
+                        os << "VTK/" << VtkBaseName << ".0" << img << ".vtk" << ends;
+                    else
+                        os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
+                    Output->WriteVtk(os.str().c_str());
+                    img++;
+                }
+
+            } // for(l=0;l< N_SubSteps;l++)
+
+        } // while(TDatabase::TimeDB->CURRENTTIME< end_time)
+
+        //======================================================================
+        // produce final outout
+        //======================================================================
+
+        if (TDatabase::ParamDB->WRITE_VTK)
         {
             os.seekp(std::ios::beg);
             if (img < 10)
@@ -483,31 +819,6 @@ int main(int argc, char *argv[])
             Output->WriteVtk(os.str().c_str());
             img++;
         }
-
-            } // for(l=0;l<N_SubSteps;l++)
-
-        } // while(TDatabase::TimeDB->CURRENTTIME< end_time)
-
-        //======================================================================
-        // produce final outout
-        //======================================================================
-
-        // if (TDatabase::ParamDB->WRITE_VTK)
-        // {
-        //     os.seekp(std::ios::beg);
-        //     if (img < 10)
-        //         os << "VTK/" << VtkBaseName << ".0000" << img << ".vtk" << ends;
-        //     else if (img < 100)
-        //         os << "VTK/" << VtkBaseName << ".000" << img << ".vtk" << ends;
-        //     else if (img < 1000)
-        //         os << "VTK/" << VtkBaseName << ".00" << img << ".vtk" << ends;
-        //     else if (img < 10000)
-        //         os << "VTK/" << VtkBaseName << ".0" << img << ".vtk" << ends;
-        //     else
-        //         os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
-        //     Output->WriteVtk(os.str().c_str());
-        //     img++;
-        // }
 
         // cout << " Solution Norm After: " << Ddot(N_DOF,sol,sol) <<endl;
 

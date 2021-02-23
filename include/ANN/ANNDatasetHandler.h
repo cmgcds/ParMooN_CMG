@@ -31,6 +31,8 @@ class TANNDatasetHandler
 
     int numberOfTrainingSamples;
 
+    int numberOfValidationSamples;
+
     int numberOfTestingSamples;
 
     int epochs;
@@ -43,11 +45,17 @@ class TANNDatasetHandler
     /** Armadillo matrix storing training data */
     arma::mat trainData;
 
+    /** Armadillo matrix storing validation data */
+    arma::mat validationData;
+
     /** Armadillo matrix storing testing data */
     arma::mat testData;
 
     /** Armadillo matrix storing the training lables */
     arma::mat trainLabels;
+
+    /** Armadillo matrix storing the validation lables */
+    arma::mat validationLabels;
 
     /** Armadillo matrix storing the testing lables */
     arma::mat testLabels;

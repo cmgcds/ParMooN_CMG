@@ -37,7 +37,9 @@ class TANNParamReader
     /** array storing dim of each layer (from IP to OP) */
     int *layerDim;
 
-    /** array storing type of each layer (from IP to OP) */
+    /** Array storing types of each layer i.e. activation functions
+     * NOTE: for the input layer, the activation function is 'dummy'
+     * */
     std::string *layerType;
 
     /** array storing int code for the layer type */
@@ -55,6 +57,28 @@ class TANNParamReader
     /** Training data percentage of the total data */
     double trainingDataPercentage;
 
+    /** Validation data percentage of the total data */
+    double validationDataPercentage;
+
+    /** Optimizer code */
+    /** 0: Default (RMSProp)
+     *  1: SGD
+     *  2: Adam
+     *  **/
+    int optimizerCode;
+
+    /** Step size for the optimizer */
+    double optimizerStepSize;
+
+    /** Stochastic GD batch size */
+    int sgdBatchSize;
+
+    /** Max number of iterations */
+    int maxIterations;
+
+    /** Constant used for feature scaling */
+    double featureScalingConstant;
+
     int epochs;
 
   private:
@@ -71,6 +95,9 @@ class TANNParamReader
 
     /** read param file */
     void readParamFile(char *paramFile);
+
+    /** Print the data */
+    void print();
 
   private:
     /** Class methods private */

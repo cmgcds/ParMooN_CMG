@@ -52,6 +52,24 @@ class TANN
 
   mlpack::ann::FFN<OutputLayerType, InitializationRuleType> model; // mlpack model for feed forward network, initialized with proper arguments in the constructor of this class
 
+  /** Optimizer code */
+  /** 0: Default (RMSProp)
+   *  1: SGD
+   *  2: Adam
+   *  **/
+  int optimizerCode;
+
+  /** Step size for the optimizer */
+  double optimizerStepSize;
+
+  /** Stochastic GD batch size */
+  int sgdBatchSize;
+
+  /** Max number of iterations */
+  int maxIterations;
+
+  int epochs;
+
   public:
   /** Methods */
   void trainNetwork(TANNDatasetHandler *datasetHandler); 
@@ -67,6 +85,8 @@ class TANN
   // Function to apply the activation function
   void applyActivation(int activation);
 
+  // Verify results with training and validation datasets
+  void verifyModel(TANNDatasetHandler *datasetHandler);
 
   private:
   /** Flags */
@@ -112,7 +132,18 @@ TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::TANN(TANNParamRe
 
   // Call constructor for each layer
   for (int i=0; i<nLayers; i++){
-    layers[i] = TANNLayer(i, paramReader->layerDim[i], paramReader->layerType[i], paramReader->layerTypeInt[i]);
+    int effectiveLayerDim;
+    if (i == 0){
+      // INPUT Layer
+      effectiveLayerDim = ipDataDim * paramReader->layerDim[0];
+    }
+    else{
+      // Next layers
+      effectiveLayerDim =  paramReader->layerDim[i];
+    };
+
+    // Note: for i=0, the activation 'Dummy' will be automatically set
+    layers[i] = TANNLayer(i, effectiveLayerDim, paramReader->layerType[i], paramReader->layerTypeInt[i]);
   };
 
   layerFlag = true;
@@ -124,6 +155,16 @@ TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::TANN(TANNParamRe
 
   /** Set up the model */
   this->setupModel();
+
+  this->optimizerCode = paramReader->optimizerCode;
+
+  this->optimizerStepSize = paramReader->optimizerStepSize;
+
+  this->sgdBatchSize = paramReader->sgdBatchSize;
+
+  this->maxIterations = paramReader->maxIterations;
+
+  this->epochs = paramReader->epochs;
 
 };
 
@@ -147,20 +188,55 @@ template<
 void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::setupModel(){
 
   int inSize, outSize;
-  for (int i=0; i<nLayers; i++){
+  // Create the activation layers
+  /**
+   *              
+   *   i = 0       1           2         3
+   *
+   *          |    O     |          | 
+   *     O    |    O     |     O    | 
+   *     O    |    O     |          |    O
+   *     O    |    O     |     O    | 
+   *          |    O     |          | 
+   *    ______________________________________
+   *    IP    |    H1    |     H2   |    OP  
+   *          |          |          | 
+   *          |          |          | 
+   *       First       Second     Third 
+   *       Activation            
+   *
+   * Assume that all the activation functions are ReLU except for the last one.
+   * For the above example, the arrays woule look like:
+   * layers[:].dim = [3, 5, 2, 1]
+   * layers[:].type = [Dummy, ReLU, ReLU, LogSoftMax]
+   * lyaers[:].typeInt = [Dummy, 2, 2, 5]
+   *
+   * **/
+                                      
+  for (int i=0; i<nLayers-1; i++){
 
-    if (i == 0){
-      inSize = ipDataDim;
-    }
-    else {
-      inSize = this->layers[i-1].dim;
+    // inSize is the dim of the Neural layer on the LHS of the activation layer
+    inSize = this->layers[i].dim;
+
+    // outSize is the dim of the Neural Layer on the RHS of the activation layer 
+    outSize = this->layers[i+1].dim;
+
+
+    // Add regularization before the output layer
+    if (i == nLayers-2){
+      this->model.template Add<mlpack::ann::Dropout<>>(0.2);
     };
 
-    outSize = this->layers[i].dim;
-
+    // Add a linear Layer (i.e. Sum(x_i * omega_i) )
     this->model.template Add<mlpack::ann::Linear<> >(inSize, outSize);
-    this->applyActivation(this->layers[i].typeInt);
 
+    // Apply the nonlinear activation function
+    // Note: 
+    // For the first layer (Input), the activation Type and TypeInt were set to
+    // a dummy value (refer the constructor as well as the diagram above)
+    // Hence we skip the first entry from this->layers[0].typeInt and start reading 
+    // from i+1
+    this->applyActivation(this->layers[i+1].typeInt);
   };
 
 };
@@ -193,6 +269,10 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::applyActiva
       this->model.template Add<mlpack::ann::SoftPlusLayer<> >();
       break;
 
+    case 5:
+      this->model.template Add<mlpack::ann::LogSoftMax<> >();
+      break;
+
     default:
       this->model.template Add<mlpack::ann::SigmoidLayer<> >();
       break;
@@ -206,10 +286,125 @@ template<
   typename InitializationRuleType, 
   typename... CustomLayers
 >
+void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::verifyModel(TANNDatasetHandler *datasetHandler){
+      // Test the predictions on the training data
+      arma::mat predOutTrain;
+      this->model.template Predict(datasetHandler->trainData, predOutTrain);
+
+      if (predOutTrain.n_rows == 1){
+          // Regression model
+
+          double errorTrain = datasetHandler->computeError(datasetHandler->trainLabels, predOutTrain, "L2", "REL");
+          std::cout << " Train error (L2, Rel) : " << errorTrain << std::endl;
+
+          arma::mat predOutValid;
+
+          this->model.template Predict(datasetHandler->validationData, predOutValid);
+
+          double errorValid = datasetHandler->computeError(datasetHandler->validationLabels, predOutValid, "L2", "REL");
+          std::cout << " Validation error (L2, Rel) : " << errorValid << std::endl;
+
+      }
+      else{
+          // Classification model
+            
+          // Get the prediction results in a single column vector
+          arma::mat predictionTrain = arma::zeros<arma::mat>(1, predOutTrain.n_cols);
+          for (int i = 0; i < predOutTrain.n_cols; ++i){
+            // +1 because the labels start from 1 and not 0
+            predictionTrain(i) = predOutTrain.col(i).index_max() + 1;
+          };
+          // Calculating accuracy on training data points.
+          double trainAccuracy =
+              arma::accu(predictionTrain == datasetHandler->trainLabels) / (double) datasetHandler->trainLabels.n_elem * 100;
+
+          // Test the predictions on the validation data
+          arma::mat predOutValid;
+          this->model.template Predict(datasetHandler->validationData, predOutValid);
+          // Get the prediction results in a single column vector
+          arma::mat predictionValid = arma::zeros<arma::mat>(1, predOutValid.n_cols);
+          for (int i = 0; i < predOutValid.n_cols; ++i){
+            // +1 because the labels start from 1 and not 0
+            predictionValid(i) = predOutValid.col(i).index_max() + 1;
+          };
+          // Calculating accuracy on validation data points.
+          double validAccuracy =
+              arma::accu(predictionValid == datasetHandler->validationLabels) / (double) datasetHandler->validationLabels.n_elem * 100;
+
+          std::cout << "Accuracy: train = " << trainAccuracy << "%," << "\t valid = " << validAccuracy << "%" << std::endl;
+      };
+};
+  
+
+template<
+  typename OutputLayerType ,
+  typename InitializationRuleType, 
+  typename... CustomLayers
+>
 void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::trainNetwork(TANNDatasetHandler *datasetHandler){
   
-  for (int i=0; i<datasetHandler->epochs; i++){
-    this->model.template Train(datasetHandler->trainData, datasetHandler->trainLabels);
+  switch(this->optimizerCode){
+    case 0:
+    {
+      // Default optimizer (i.e. RMSProp)
+      this->model.template Train(datasetHandler->trainData, datasetHandler->trainLabels, ens::PrintLoss(), ens::ProgressBar());
+      this->verifyModel(datasetHandler);
+
+      break;
+    };
+
+    case 1:
+    {
+      // SGD optimizer 
+      // Set parameters for the SGD optimizer.
+      ens::StandardSGD optimizer(this->optimizerStepSize, this->sgdBatchSize, this->maxIterations);
+      // Declare callback to store best training weights.
+      ens::StoreBestCoordinates<arma::mat> bestCoordinates;
+
+      // Train neural network. If this is the first iteration, weights are
+      // random, using current values as starting point otherwise.
+      model.Train(datasetHandler->trainData,
+                  datasetHandler->trainLabels,
+                  optimizer,
+                  //ens::PrintLoss(),
+                  ens::ProgressBar(),
+                  ens::EarlyStopAtMinLoss(),
+                  bestCoordinates);
+
+      // Save the best training weights into the model.
+      model.Parameters() = bestCoordinates.BestCoordinates();
+
+      this->verifyModel(datasetHandler);
+
+      break;
+    };
+
+    case 2:
+    {
+      // Adam optimizer
+      // Set parameters for the Adam optimizer.
+      ens::Adam optimizer(this->optimizerStepSize, this->sgdBatchSize, this->maxIterations);
+      // Declare callback to store best training weights.
+      ens::StoreBestCoordinates<arma::mat> bestCoordinates;
+
+      // Train neural network. If this is the first iteration, weights are
+      // random, using current values as starting point otherwise.
+      model.Train(datasetHandler->trainData,
+                  datasetHandler->trainLabels,
+                  optimizer,
+                  //ens::PrintLoss(),
+                  ens::ProgressBar(),
+                  ens::EarlyStopAtMinLoss(),
+                  bestCoordinates);
+
+      // Save the best training weights into the model.
+      model.Parameters() = bestCoordinates.BestCoordinates();
+
+      this->verifyModel(datasetHandler);
+
+      break;
+    };
+
   };
 };
 

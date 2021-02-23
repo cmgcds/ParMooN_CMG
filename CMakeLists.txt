@@ -222,15 +222,6 @@ include_directories(${MLPACK_INCLUDE_DIRS})
     message(FATAL_ERROR "MLPACK_NOT_FOUND in your system or in the ParMooN")
   endif()
 
-  list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR/EXT_LIB/mlpack}")
-find_package(MLPACK REQUIRED)
-include_directories(${MLPACK_INCLUDE_DIRS})
-  if(MLPACK_FOUND)
-      message("MLPACK_LIB (read from EXT_LIB/mlpack) = ${MLPACK_LIBRARIES}")
-  elseif(NOT MLPACK_FOUND)
-    message(FATAL_ERROR "MLPACK_NOT_FOUND in your system or in the ParMooN")
-  endif()
-
 
 message("==================Add mlpack from EXT_LIB - end====================================================")
 

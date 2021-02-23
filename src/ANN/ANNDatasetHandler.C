@@ -22,8 +22,14 @@ TANNDatasetHandler::TANNDatasetHandler(TANNParamReader *paramReader){
   // Number of training samples based on the user input
   this->numberOfTrainingSamples = this->totalNumberOfSamples * paramReader->trainingDataPercentage / 100.;
 
+  // Number of validation samples based on the user input
+  this->numberOfValidationSamples = this->totalNumberOfSamples * paramReader->validationDataPercentage / 100.;
+
+
   // Find the testing dataset
-  this->numberOfTestingSamples = this->totalNumberOfSamples - this->numberOfTrainingSamples;
+  this->numberOfTestingSamples = this->totalNumberOfSamples - (this->numberOfTrainingSamples + this->numberOfValidationSamples);
+
+  int numberOfTrainingAndValidationSamples = this->numberOfTrainingSamples + this->numberOfValidationSamples;
 
   // Set the number of epochs for training
   this->epochs = paramReader->epochs;
@@ -31,18 +37,25 @@ TANNDatasetHandler::TANNDatasetHandler(TANNParamReader *paramReader){
   // Dimension of the input data (number of features at the input layer per perceptron)
   this->ipDataDim = paramReader->ipDataDim;
 
+  int totalInputLayerDim = this->ipDataDim * paramReader->layerDim[0];
+
   // Create the training dataset
-  this->trainData = this->allData.submat(0,0, ipDataDim-1, numberOfTrainingSamples-1);
+  this->trainData = this->allData.submat(0,0, totalInputLayerDim-1, numberOfTrainingSamples-1)/paramReader->featureScalingConstant;
 
   // Create the training labels
   this->trainLabels = this->allData.submat(this->allData.n_rows-1,0, this->allData.n_rows-1,  numberOfTrainingSamples-1);
 
+  // Create validation dataset
+  this->validationData = this->allData.submat(0,numberOfTrainingSamples, totalInputLayerDim-1, numberOfTrainingAndValidationSamples-1)/paramReader->featureScalingConstant;
+
+  // Create the validation labels
+  this->validationLabels = this->allData.submat(this->allData.n_rows-1,numberOfTrainingSamples, this->allData.n_rows-1,  numberOfTrainingAndValidationSamples-1);
 
   // Create the testing dataset
-  this->testData = this->allData.submat(0,numberOfTrainingSamples, ipDataDim-1, totalNumberOfSamples-1);
+  this->testData = this->allData.submat(0,numberOfTrainingAndValidationSamples, totalInputLayerDim-1, totalNumberOfSamples-1)/paramReader->featureScalingConstant;
 
   // Create the testing labels
-  this->testLabels = this->allData.submat(this->allData.n_rows-1,numberOfTrainingSamples, this->allData.n_rows-1,  totalNumberOfSamples-1);
+  this->testLabels = this->allData.submat(this->allData.n_rows-1,numberOfTrainingAndValidationSamples, this->allData.n_rows-1,  totalNumberOfSamples-1);
 
 };
 

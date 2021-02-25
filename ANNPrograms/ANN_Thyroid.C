@@ -15,17 +15,19 @@ int main(int argc, char* argv[])
   // Create a new parameter reader (takes argument .dat file)
   TANNParamReader paramReader(argv[1]);
 
+
   // Create a new dataset handler (to create train and test datasets and labels)
   TANNDatasetHandler datasetHandler(&paramReader);
 
   // Create a new ANN model (template arguments can be found in ./include/ANN/ANNIncludes.h)
-  //TANN<NEGATIVE_LOG_LIKELIHOOD,RANDOM_INITIALIZATION> ann(&paramReader);
+  TANN<NEGATIVE_LOG_LIKELIHOOD,RANDOM_INITIALIZATION> ann(&paramReader);
 
   // Train
-  //ann.trainNetwork(&datasetHandler);
+  ann.trainNetwork(&datasetHandler);
 
   // Test
-  //ann.testNetwork(&datasetHandler);
+  ann.testNetwork(&datasetHandler);
 
+  paramReader.print();
   return 0;
 } // end main

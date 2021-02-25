@@ -67,5 +67,6 @@
 #define RANDOM_INITIALIZATION mlpack::ann::RandomInitialization
 #define GAUSSIAN_INITIALIZATION mlpack::ann::GaussianInitialization
 #define CONST_INITIALIZATION mlpack::ann::ConstInitialization
+#define GLOROT_INITIALIZATION mlpack::ann::GlorotInitialization
 
 #endif

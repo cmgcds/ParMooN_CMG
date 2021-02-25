@@ -79,14 +79,16 @@ void TANNDatasetHandler::postProcessResults(){
     errorL2Absolute = this->computeError(testLabels, prediction, "L2","ABS");
     errorL2Relative = this->computeError(testLabels, prediction, "L2","REL");
     errorLInfAbsolute = this->computeError(testLabels, prediction, "LInf","ABS");
-    errorLInfRelative = this->computeError(testLabels, prediction, "LInf","REL");
+    errorL0Absolute = this->computeError(testLabels, prediction, "L0","ABS");
+
+    std::cout << " Test results: " << std::endl;
 
     std::cout << " errorL1Absolute : " << errorL1Absolute << std::endl;
     std::cout << " errorL1Relative : " << errorL1Relative << std::endl;
     std::cout << " errorL2Absolute : " << errorL2Absolute << std::endl;
     std::cout << " errorL2Relative : " << errorL2Relative << std::endl;
     std::cout << " errorLInfAbsolute : " << errorLInfAbsolute << std::endl;
-    std::cout << " errorLInfRelative : " << errorLInfRelative << std::endl;
+    std::cout << " Min Error Absolute : " << errorL0Absolute << std::endl;
     
   }
   else{
@@ -117,13 +119,14 @@ void TANNDatasetHandler::postProcessResults(){
 
 double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat numericalValue, std::string norm = "L1", std::string type = "ABS"){
 
+  int arraySize = referenceValue.n_elem;
   double numerator, denominator, temp;
   double error;
   // L1 norm of the error 
   if (norm == "L1"){
     numerator = 0.0;
     denominator = 0.0;
-    for (int i=0; i < numberOfTestingSamples; i++){
+    for (int i=0; i < arraySize; i++){
       numerator += abs(referenceValue(i) - numericalValue(i));
       if (type == "ABS"){
         denominator = 1;
@@ -141,7 +144,7 @@ double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat nume
   else if (norm == "L2"){
     numerator = 0.0;
     denominator = 0.0;
-    for (int i=0; i < numberOfTestingSamples; i++){
+    for (int i=0; i < arraySize; i++){
       numerator += pow(referenceValue(i) - numericalValue(i), 2);
       if (type == "ABS"){
         denominator = 1;
@@ -156,15 +159,28 @@ double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat nume
 
     error = sqrt(numerator / denominator);
   }
-  else if (norm == "LInf"){
+  else if (norm == "L0"){
     std::ofstream file;
-    file.open("result.txt");
-    file << "Reference" << "," << "Actual" << "," << "Error" <<std::endl;
+    file.open("result.csv");
+    file << "#Reference" << "," << "Actual" << "," << "Error" <<std::endl;
     numerator = 1000;
     denominator = 0.0;
-    for (int i=0; i < numberOfTestingSamples; i++){
+    for (int i=0; i < arraySize; i++){
       file << referenceValue(i) <<","<< numericalValue(i) << "," << abs(referenceValue(i) - numericalValue(i)) <<std::endl;
       if ( abs(referenceValue(i) - numericalValue(i))  <= numerator){
+        numerator = abs(referenceValue(i) - numericalValue(i));
+      };
+    };
+
+    error = numerator;
+    file.close();
+  }
+  else if (norm == "LInf"){
+    std::ofstream file;
+    numerator = 1000;
+    denominator = 0.0;
+    for (int i=0; i < arraySize; i++){
+      if ( abs(referenceValue(i) - numericalValue(i))  > numerator){
         numerator = abs(referenceValue(i) - numericalValue(i));
       };
     };

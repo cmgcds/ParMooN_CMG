@@ -69,9 +69,10 @@ class TANNDatasetHandler
     arma::mat prediction;
 
     /** error */
-    double errorL1Absolute;
-    double errorL2Absolute;
-    double errorLInfAbsolute;
+    double errorL1Absolute; // L1 norm
+    double errorL2Absolute; // L2 norm
+    double errorLInfAbsolute; // max error
+    double errorL0Absolute; // min error
 
     double errorL1Relative;
     double errorL2Relative;

@@ -49,6 +49,44 @@ TANNParamReader::TANNParamReader(char *paramFile){
   this->layerTypeInt = new int[nHL+2];
   layerTypeFlag = true;
 
+
+  // ___________________________________________
+  // Set the default values 
+  // ___________________________________________
+    
+  // Set the default value of the training set to 63
+  this->trainingDataPercentage = 63;
+    
+  // Set the default value of the validation set to 7
+  this->validationDataPercentage = 63;
+
+  // Set the default value for optimizerCode to 0
+  this->optimizerCode = 0;
+
+  // Set the default value for the optimizer step size to 0.01
+  this->optimizerStepSize = 0.001;
+
+  // Set the default value of the batch size to 32
+  this->sgdBatchSize = 32;
+
+  // Set the default value for epochs to 1
+  this->epochs = 1;
+
+  // Set the default value for the maximum iterations of optimizer to 100000
+  this->maxIterations = 100000;
+
+  // Pre-set the feature Scaling constant to 1.0
+  this->featureScalingConstant = 1.0;
+
+  // Set the default value for the dropout ratio to 0.2
+  this->dropoutRatio = 0.2;
+
+  // Set the default value for the tolerance to 1e-5
+  this->tolerance = 1e-5;
+
+  //_________________________________________
+  //Read the param file
+
   this->readParamFile(paramFile);
 };
 
@@ -204,8 +242,10 @@ void TANNParamReader::readParamFile(char *paramFile){
         assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
         // Optimizer codes:
         // 0: default (RMSProp)
-        // 1: SGD
-        // 2: Adam
+        // 1: Gradient Descent
+        // 2: SGD
+        // 3: Adam
+        // 4: L-BFGS
         numberInt = stringToInt(line);
         this->optimizerCode = numberInt;
       }
@@ -236,6 +276,22 @@ void TANNParamReader::readParamFile(char *paramFile){
         // Set input layer dim
         numberInt = stringToInt(line);
         this->epochs = numberInt;
+      }
+
+      // Read the parameter used for feature scaling
+      if (word1 == "ANN_DROPOUT_RATIO")
+      {
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        numberDouble = stringToDouble(line);
+        dropoutRatio = numberDouble;
+      }
+
+      // Read the parameter used for feature scaling
+      if (word1 == "ANN_TOLERANCE")
+      {
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        numberDouble = stringToDouble(line);
+        tolerance = numberDouble;
       }
 
       // Read the parameter used for feature scaling
@@ -270,14 +326,16 @@ void TANNParamReader::print(){
   };
   std::cout << "___________________________\n";
 
-  std::cout << " Training Data Percentage   " << this->trainingDataPercentage  << std::endl;
-  std::cout << " Validation Data Percentage   " << this->validationDataPercentage  << std::endl;
-  std::cout << " Optimizer Code:  " <<  this->optimizerCode << "   NOTE 0: default (RMSProp), 1:SGD, 2: Adam " << std::endl;
-  std::cout << " Optimizer step size " << this->optimizerStepSize  << std::endl;
-  std::cout << " SGD batch size " << this->sgdBatchSize  << std::endl;
-  std::cout << " Epochs " << this->epochs  << std::endl;
-  std::cout << " Max Iterations " << this->maxIterations  << std::endl;
-  std::cout << " Feature Scaling Parameter " << this->featureScalingConstant  << std::endl;
+  std::cout << " Training Data Percentage   " << this->trainingDataPercentage  << "    Default value: 63 " << std::endl;
+  std::cout << " Validation Data Percentage   " << this->validationDataPercentage  << "    Default value: 7" << std::endl;
+  std::cout << " Optimizer Code:  " <<  this->optimizerCode << "   NOTE 0: default (RMSProp), 1:GD, 2:SGD, 3: Adam " << std::endl;
+  std::cout << " Optimizer step size " << this->optimizerStepSize  << "    Default value: 0.001" <<  std::endl;
+  std::cout << " SGD batch size " << this->sgdBatchSize  << "    Default value: 32" << std::endl;
+  std::cout << " Epochs " << this->epochs  << "    Default value: 1" << std::endl;
+  std::cout << " Max Iterations " << this->maxIterations  << "    Default value: 100000" << std::endl;
+  std::cout << " Feature Scaling Parameter " << this->featureScalingConstant  << "    Default value: 1.0 " << std::endl;
+  std::cout << " Dropout Ratio " << this->dropoutRatio  << "    Default value: 0.2 " << std::endl;
+  std::cout << " Tolerance " << this->tolerance << "    Default value: 1e-5 " << std::endl;
   std::cout << "___________________________________________________\n";
 };
 

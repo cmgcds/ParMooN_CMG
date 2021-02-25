@@ -62,8 +62,10 @@ class TANNParamReader
 
     /** Optimizer code */
     /** 0: Default (RMSProp)
-     *  1: SGD
-     *  2: Adam
+     *  1: Gradient Descent
+     *  2: SGD
+     *  3: Adam
+     *  4: L-BFGS
      *  **/
     int optimizerCode;
 
@@ -80,6 +82,12 @@ class TANNParamReader
     double featureScalingConstant;
 
     int epochs;
+
+    // Parameter used for regularization before the output layer
+    double dropoutRatio;
+
+    // Tolerance for the optimizer
+    double tolerance;
 
   private:
     /** flags */

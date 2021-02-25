@@ -1,0 +1,63 @@
+The dat file should contain the following fields
+If some of the fields are not provided by the user, a default value will be set
+The default values are assigned in src/ANN/ANNParamReader.C constructor
+
+----------------------------------------------------------------------
+# ANN
+----------------------------------------------------------------------
+ANN_NHL: 2  #(Number of hidden layers >=0)
+
+ANN_IPDATADIM: 1  #(Dimension of the input data per neuron, >=1)
+ANN_IPLDIM: 2  #(Size of the input layer, >=1)
+# NOTE: The effective size of the input layer will be IPDATADIM * IPLDIM
+
+ANN_OPLDIM: 1  #(Dimension of the output layer. 1: regression problem, >1: classification problem )
+ANN_OPLTYPE: 1  #(Activation function for the output layer, see the list below)
+
+ANN_HL_0_DIM: 10  #(Dimension of the first hidden layer, i.e. 0th hidden layer )
+ANN_HL_0_TYPE: 1  #(Activation function for the hidden layer, see the list below )
+
+ANN_HL_1_DIM: 10  #(Dimension of the second hidden layer, i.e. 1st hidden layer )
+ANN_HL_1_TYPE: 1  #(Activation function for the hidden layer, see the list below )
+
+ANN_DATASET_NAME: training.csv  #(Name of the dataset. Include the .csv extension as shown )
+
+ANN_TRAINING_DATA_PERCENTAGE: 82  #(Percetage of the total data used for training, default 63 )
+ANN_VALIDATION_DATA_PERCENTAGE: 8  #(Percentage of the total data used for validation, default 7 )
+# Note: reminaing percentage will be used for testing
+
+ANN_OPTIMIZER_CODE: 1  #(Optimizer code, see below for details, default 0)
+ANN_OPTIMIZER_STEP_SIZE: 0.001  #( Optimizer step size, default value 0.001 )
+ANN_SGD_BATCH_SIZE: 32  #(SGD batch size if required, default value 32 ) 
+ANN_MAX_ITERATIONS: 100000  #(Max number of optimizer iterations, default value 100000 )
+ANN_TOLERANCE: 1e-5   #(Tolerance, default 1e-5)
+
+ANN_FEATURE_SCALING_CONSTANT: 1.0  #(Scaling constant for the data, default value 1.0. the data is divided by this )
+ANN_DROPOUT_RATIO: 0.2  #(Used for regularization, default value 0.2 )
+
+ANN_EPOCHS: 20  #(Number of epochs for training, default value 1 )
+
+
+#__________________________________________________________________
+# List of activation functions
+# Code       Name    
+# 0          Sigmoid  (default)
+# 1          Identity 
+# 2          ReLU
+# 3          TanH
+# 4          SoftPlus
+# 5          LogSoftMax
+#__________________________________________________________________
+
+
+#__________________________________________________________________
+# List of optimization routines 
+# Code       Name               Required arguments (else default will be taken)
+# 0          RMSProp            none (Default taken)
+# 1          Gradient Descent   step size, max iter, tolerance
+# 2          SGD                step size, batch size, max iter, tolerance
+# 3          Adam               step size, batch size
+# 4          L-BFGS             max iterations
+#__________________________________________________________________
+
+

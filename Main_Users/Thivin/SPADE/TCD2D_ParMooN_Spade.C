@@ -38,10 +38,12 @@
 #include<random>
 
 
+
 // =======================================================================
 // include current example
 // =======================================================================
-#include "../Examples/TCD_2D/exp.h"
+// #include "../Examples/TCD_2D/exp.h"
+#include "../Main_Users/Thivin/SPADE/advection.h"
 // #include "../Examples/TCD_2D/SinCos1.h"
 // #include "../Examples_All/TCD_2D/Time3.h"
 // #include "../Examples/TCD_2D/exp_0.h"
@@ -69,7 +71,7 @@ void printMatrix(double* C, int m, int n)
 
 
 
-double* RealisationGenerator(TFESpace2D* Scalar_FeSpace,int N_DOF)
+double* RealisationGenerator(TFESpace2D* Scalar_FeSpace,int N_DOF, double* solutionVector)
 {
     int N_Realisations  = TDatabase::ParamDB->SDFEM_TYPE ;
     double LengthScale  = TDatabase::ParamDB->DELTA1;
@@ -164,8 +166,8 @@ double* RealisationGenerator(TFESpace2D* Scalar_FeSpace,int N_DOF)
 
             else if(TDatabase::ParamDB->WRITE_PS == 1)
             {
-                double E = 0.03;
-                double disp = 0.3;
+                double E = 0.02;
+                double disp = 0.2;
                 double power = 2;
                 double sig_r1 = ( exp ( - pow( ( 2*actual_x - 1 - disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E)) )  * exp ( - pow(( 2*actual_x - 1-disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E)) ;
                 double sig_r2 = exp ( - pow(( 2*local_x - 1 -disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E))  * exp ( - pow(( 2*local_y - 1-disp),power)  / (E) ) / (2*3.14159265359 * sqrt(E)); 
@@ -215,7 +217,6 @@ double* RealisationGenerator(TFESpace2D* Scalar_FeSpace,int N_DOF)
     fileo.close();
 
 
-    exit(0);
     // Declare SVD parameters
     MKL_INT m1 = N_DOF, n = N_DOF, lda = N_DOF, ldu = N_DOF, ldvt = N_DOF, info;
     double superb[std::min(N_DOF,N_DOF)-1];
@@ -320,6 +321,7 @@ double* RealisationGenerator(TFESpace2D* Scalar_FeSpace,int N_DOF)
 
 
 
+
 int main(int argc, char *argv[])
 {
     int i, j, l, m, N_SubSteps, ORDER, N_Cells, N_DOF, img = 1, N_G;
@@ -397,8 +399,7 @@ int main(int argc, char *argv[])
         Domain->PS("Domain.ps", It_Finest, 0);
 
     // create output directory, if not already existing
-    if (TDatabase::ParamDB->WRITE_VTK)
-        mkdir(vtkdir, 0777);
+    mkdir(vtkdir, 0777);
 
     //=========================================================================
     // construct all finite element spaces
@@ -499,6 +500,7 @@ int main(int argc, char *argv[])
 
    
     double *C = new double[N_DOF*N_DOF];  //MATRIX
+    double *C1 = new double[N_DOF*N_DOF];  //MATRIX  - Corelation Matrix
 
     double norm = 0;
     for( int i =0  ; i < N_DOF ; i++ )
@@ -515,6 +517,7 @@ int main(int argc, char *argv[])
             
             // CO -Relation
             C[j*N_DOF + i] = exp ( (- 1.0 * r )/ (LengthScale) );
+            C1[j*N_DOF + i] = exp ( (- 1.0 * r )/ (LengthScale) );
 
 
             if(TDatabase::ParamDB->WRITE_PS == 0)
@@ -528,7 +531,7 @@ int main(int argc, char *argv[])
 
             else if(TDatabase::ParamDB->WRITE_PS == 1)
             {
-      double E = 0.03;
+                double E = 0.03;
                 double disp = 0.3;
                 double power = 2;
                 double sig_r1 = exp ( - pow( ( 2*actual_x - 1 - disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E))  * exp ( - pow(( 2*actual_x - 1-disp),power)  / (E) )  / (2*3.14159265359 * sqrt(E)) ;
@@ -548,20 +551,37 @@ int main(int argc, char *argv[])
     }
 
 
-    // std::ofstream fileo;
-    // fileo.open("Corelation.txt");
+    std::ofstream fileo;
+    fileo.open("Corelation.txt");
 
-    // for ( int i=0 ; i < N_DOF ; i++)
-    // {
-    //     for ( int j=0 ; j < N_DOF ; j++)
-    //     {
-    //         fileo << C[i*N_DOF + j] ;
-    //         if(j!= N_DOF-1 ) fileo<<",";
-    //     }
-    //     fileo<<endl;
-    // }
+    for ( int i=0 ; i < N_DOF ; i++)
+    {
+        for ( int j=0 ; j < N_DOF ; j++)
+        {
+            fileo << C1[i*N_DOF + j] ;
+            if(j!= N_DOF-1 ) fileo<<",";
+        }
+        fileo<<endl;
+    }
 
-    // fileo.close();
+    fileo.close();
+
+
+    std::ofstream fileo_r;
+    fileo.open("Covarriance.txt");
+
+    for ( int i=0 ; i < N_DOF ; i++)
+    {
+        for ( int j=0 ; j < N_DOF ; j++)
+        {
+            fileo_r << C[i*N_DOF + j] ;
+            if(j!= N_DOF-1 ) fileo_r<<",";
+        }
+        fileo_r<<endl;
+    }
+
+    fileo_r.close();
+
     // exit(0);
     // Declare SVD parameters
     MKL_INT m1 = N_DOF, n = N_DOF, lda = N_DOF, ldu = N_DOF, ldvt = N_DOF, info;
@@ -661,8 +681,12 @@ int main(int argc, char *argv[])
 
 
     std::ofstream fileout;
-    std::string name = "Sol1" ;
+    std::string name = "init" ;
     fileout.open(name);
+
+    std::ofstream fileout_final;
+    std::string name1 = "Final" ;
+    fileout_final.open(name1);
 
     //======================================================================
     // SystemMatrix construction and solution
@@ -673,6 +697,17 @@ int main(int argc, char *argv[])
 
     // initilize the system matrix with the functions defined in Example file
     SystemMatrix->Init(BilinearCoeffs, BoundCondition, BoundValue);
+
+
+
+    // Setup array for random number
+    srand(time(NULL));
+    int N_samples  = 100;
+    int* indexArray =  new int[N_samples];
+    for ( int i =0 ; i < N_samples;i++)
+        indexArray[i] = rand() % N_DOF;
+    
+
 
     for ( int RealNo=0 ; RealNo < N_Realisations; RealNo++)
     {
@@ -685,30 +720,26 @@ int main(int argc, char *argv[])
         for ( int i=0 ; i < N_DOF; i++)
             sol[mappingArray[i]] = SolutionVector[RealNo  +  N_Realisations * i];
         
+        os.seekp(std::ios::beg);
+        if (img < 10)
+            os << "VTK/" << VtkBaseName << ".0000" << img << ".vtk" << ends;
+        else if (img < 100)
+            os << "VTK/" << VtkBaseName << ".000" << img << ".vtk" << ends;
+        else if (img < 1000)
+            os << "VTK/" << VtkBaseName << ".00" << img << ".vtk" << ends;
+        else if (img < 10000)
+            os << "VTK/" << VtkBaseName << ".0" << img << ".vtk" << ends;
+        else
+            os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
+        Output->WriteVtk(os.str().c_str());
+        img++;
 
-        if (TDatabase::ParamDB->WRITE_VTK)
+        for ( int k = 0 ; k < N_samples;k++)
         {
-            os.seekp(std::ios::beg);
-            if (img < 10)
-                os << "VTK/" << VtkBaseName << ".0000" << img << ".vtk" << ends;
-            else if (img < 100)
-                os << "VTK/" << VtkBaseName << ".000" << img << ".vtk" << ends;
-            else if (img < 1000)
-                os << "VTK/" << VtkBaseName << ".00" << img << ".vtk" << ends;
-            else if (img < 10000)
-                os << "VTK/" << VtkBaseName << ".0" << img << ".vtk" << ends;
-            else
-                os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
-            Output->WriteVtk(os.str().c_str());
-            img++;
+            fileout << sol[indexArray[k]];
+            if(k != N_DOF - 1) fileout <<",";
         }
-        
-        double origSolVal = sol[500];
-        double origSolVal1 = sol[200];
-        double origSolVal2 = sol[900];
-        // cout << " Solution Norm : " << Ddot(N_DOF,sol,sol) <<endl;
-
-
+        fileout<<endl;
 
         // assemble the system matrix with given aux, sol and rhs
         // aux is used to pass  addition fe functions (eg. mesh velocity) that is nedded for assembling,
@@ -803,26 +834,28 @@ int main(int argc, char *argv[])
         // produce final outout
         //======================================================================
 
-        if (TDatabase::ParamDB->WRITE_VTK)
-        {
-            os.seekp(std::ios::beg);
-            if (img < 10)
-                os << "VTK/" << VtkBaseName << ".0000" << img << ".vtk" << ends;
-            else if (img < 100)
-                os << "VTK/" << VtkBaseName << ".000" << img << ".vtk" << ends;
-            else if (img < 1000)
-                os << "VTK/" << VtkBaseName << ".00" << img << ".vtk" << ends;
-            else if (img < 10000)
-                os << "VTK/" << VtkBaseName << ".0" << img << ".vtk" << ends;
-            else
-                os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
-            Output->WriteVtk(os.str().c_str());
-            img++;
-        }
+        os.seekp(std::ios::beg);
+        if (img < 10)
+            os << "VTK/" << VtkBaseName << ".0000" << img << ".vtk" << ends;
+        else if (img < 100)
+            os << "VTK/" << VtkBaseName << ".000" << img << ".vtk" << ends;
+        else if (img < 1000)
+            os << "VTK/" << VtkBaseName << ".00" << img << ".vtk" << ends;
+        else if (img < 10000)
+            os << "VTK/" << VtkBaseName << ".0" << img << ".vtk" << ends;
+        else
+            os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
+        Output->WriteVtk(os.str().c_str());
+        img++;
 
         // cout << " Solution Norm After: " << Ddot(N_DOF,sol,sol) <<endl;
 
-        fileout << sol[500]  << "," << origSolVal<< "," << sol[200] << "," <<origSolVal1 <<"," << sol[900] << "," <<origSolVal2 << endl;
+        for ( int k = 0 ; k < N_samples;k++)
+        {
+            fileout_final << sol[indexArray[k]];
+            if(k != N_DOF - 1) fileout_final <<",";
+        }
+        fileout_final<<endl;
         
 
         // set Current Time as Zero

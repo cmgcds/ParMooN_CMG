@@ -44,9 +44,10 @@ ANN_EPOCHS: 20  #(Number of epochs for training, default value 1 )
 # 0          Sigmoid  (default)
 # 1          Identity 
 # 2          ReLU
-# 3          TanH
-# 4          SoftPlus
-# 5          LogSoftMax
+# 3          LeakyReLU
+# 4          TanH
+# 5          SoftPlus
+# 6          LogSoftMax
 #__________________________________________________________________
 
 

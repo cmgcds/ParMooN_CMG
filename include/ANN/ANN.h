@@ -79,6 +79,15 @@ class TANN
   /** Tolerance (absolute) */
   double tolerance;
 
+  /** Save model to this file after training */
+  std::string saveModelFile;
+
+  /** Load model from this file if the loadModelFlag is 1 */
+  std::string loadModelFile;
+
+  /** Load model flag. If 1, load the model from a file instead of training */
+  std::string loadModelFlag;
+
   public:
   /** Methods */
   void trainNetwork(TANNDatasetHandler *datasetHandler); 
@@ -178,6 +187,12 @@ TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::TANN(TANNParamRe
   this->dropoutRatio = paramReader->dropoutRatio;
 
   this->tolerance = paramReader->tolerance;
+
+  this->saveModelFile = paramReader->saveModelFile;
+
+  this->loadModelFile = paramReader->loadModelFile;
+
+  this->loadModelFlag = paramReader->loadModelFlag;
 };
 
 /** Destructor */
@@ -274,14 +289,17 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::applyActiva
       break;
 
     case 3:
+      this->model.template Add<mlpack::ann::LeakyReLU<> >();
+
+    case 4:
       this->model.template Add<mlpack::ann::TanHLayer<> >();
       break;
 
-    case 4:
+    case 5:
       this->model.template Add<mlpack::ann::SoftPlusLayer<> >();
       break;
 
-    case 5:
+    case 6:
       this->model.template Add<mlpack::ann::LogSoftMax<> >();
       break;
 
@@ -306,15 +324,15 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::verifyModel
       if (predOutTrain.n_rows == 1){
           // Regression model
 
-          double errorTrain = datasetHandler->computeError(datasetHandler->trainLabels, predOutTrain, "L2", "REL");
-          std::cout << " Train error (L2, Rel) : " << errorTrain << std::endl;
+          double errorTrain = datasetHandler->computeError(datasetHandler->trainLabels, predOutTrain, "MSE", "ABS");
+          std::cout << " Train error (MSE) : " << errorTrain << std::endl;
 
           arma::mat predOutValid;
 
           this->model.template Predict(datasetHandler->validationData, predOutValid);
 
-          double errorValid = datasetHandler->computeError(datasetHandler->validationLabels, predOutValid, "L2", "REL");
-          std::cout << " Validation error (L2, Rel) : " << errorValid << std::endl;
+          double errorValid = datasetHandler->computeError(datasetHandler->validationLabels, predOutValid, "MSE", "ABS");
+          std::cout << " Validation error (MSE) : " << errorValid << std::endl;
 
       }
       else{
@@ -354,15 +372,19 @@ template<
   typename... CustomLayers
 >
 void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::trainNetwork(TANNDatasetHandler *datasetHandler){
+  // Set the max iterations based on epochs
+
+  if (this->maxIterations != 0){
+    if (this->maxIterations < datasetHandler->trainData.n_cols * this->epochs){
+      this->maxIterations = datasetHandler->trainData.n_cols * this->epochs;
+    };
+  };
   
   switch(this->optimizerCode){
     case 0:
     {
       // Default optimizer (i.e. RMSProp)
-      for (int i=0; i< this->epochs ; i++){
-        std::cout << " EPOCH: " << i << std::endl;
-        this->model.template Train(datasetHandler->trainData, datasetHandler->trainLabels);
-      };
+      this->model.template Train(datasetHandler->trainData, datasetHandler->trainLabels);
       this->verifyModel(datasetHandler);
 
       break;
@@ -375,13 +397,10 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::trainNetwor
 
       // Train neural network. If this is the first iteration, weights are
       // random, using current values as starting point otherwise.
-      for (int i=0; i< this->epochs ; i++){
-        std::cout << " EPOCH: " << i << std::endl;
-        model.Train(datasetHandler->trainData,
-                    datasetHandler->trainLabels,
-                    optimizer
-                    );
-      };
+      model.Train(datasetHandler->trainData,
+                  datasetHandler->trainLabels,
+                  optimizer
+                  );
 
       this->verifyModel(datasetHandler);
 
@@ -399,14 +418,11 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::trainNetwor
 
       // Train neural network. If this is the first iteration, weights are
       // random, using current values as starting point otherwise.
-      for (int i=0; i< this->epochs; i++){
-        std::cout << " EPOCH: " << i << std::endl;
-        model.Train(datasetHandler->trainData,
-                    datasetHandler->trainLabels,
-                    optimizer,
-                    ens::EarlyStopAtMinLoss(),
-                    bestCoordinates);
-      };
+      model.Train(datasetHandler->trainData,
+                  datasetHandler->trainLabels,
+                  optimizer,
+                  ens::EarlyStopAtMinLoss(),
+                  bestCoordinates);
 
       // Save the best training weights into the model.
       model.Parameters() = bestCoordinates.BestCoordinates();
@@ -420,20 +436,17 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::trainNetwor
     {
       // Adam optimizer
       // Set parameters for the Adam optimizer.
-      ens::Adam optimizer(this->optimizerStepSize, this->sgdBatchSize);
+      ens::Adam optimizer(this->optimizerStepSize, this->sgdBatchSize, 0.9, 0.999, 1e-8, this->maxIterations,this->tolerance,true);
       // Declare callback to store best training weights.
       ens::StoreBestCoordinates<arma::mat> bestCoordinates;
 
       // Train neural network. If this is the first iteration, weights are
       // random, using current values as starting point otherwise.
-      for (int i=0; i< this->epochs; i++){
-        std::cout << " EPOCH: " << i << std::endl;
-        model.Train(datasetHandler->trainData,
-                    datasetHandler->trainLabels,
-                    optimizer,
-                    ens::EarlyStopAtMinLoss(),
-                    bestCoordinates);
-      };
+      model.Train(datasetHandler->trainData,
+                  datasetHandler->trainLabels,
+                  optimizer,
+                  ens::EarlyStopAtMinLoss(20),
+                  bestCoordinates);
 
       // Save the best training weights into the model.
       model.Parameters() = bestCoordinates.BestCoordinates();
@@ -452,19 +465,18 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::trainNetwor
 
       // Train neural network. If this is the first iteration, weights are
       // random, using current values as starting point otherwise.
-      for (int i=0; i< this->epochs ; i++){
-        std::cout << " EPOCH: " << i << std::endl;
-        model.Train(datasetHandler->trainData,
-                    datasetHandler->trainLabels,
-                    optimizer
-                    );
-      };
+      model.Train(datasetHandler->trainData,
+                  datasetHandler->trainLabels,
+                  optimizer
+                  );
 
       this->verifyModel(datasetHandler);
 
       break;
     };
 
+    //std::cout << "\nNetwork training done. Saving the model in " << this->saveModelFile << std::endl;
+    //mlpack::data::Save(saveModelFile, "Feed Forward Neural Network",this->model);
   };
 };
 
@@ -476,6 +488,6 @@ template<
 void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::testNetwork(TANNDatasetHandler *datasetHandler){
   this->model.template Predict(datasetHandler->testData, datasetHandler->predictionTemp);
   datasetHandler->postProcessResults();
-  std::cout << "Test error (L2, Relative): " << datasetHandler->errorL2Relative << std::endl;
+  std::cout << "Test error (MSE): " << datasetHandler->errorMSE << std::endl;
 };
 #endif

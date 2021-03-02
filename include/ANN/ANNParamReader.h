@@ -89,6 +89,19 @@ class TANNParamReader
     // Tolerance for the optimizer
     double tolerance;
 
+    // File for saving the model
+    std::string saveModelFile;
+
+    // File for loading the model
+    std::string loadModelFile;
+
+    // Loading vs training flag
+    // This is set to 1 if the model is read from a file instead of training from scratch
+    int loadModelFlag;
+
+    // File for saving the data
+    std::string saveDataFile;
+
   private:
     /** flags */
     bool layerDimFlag;

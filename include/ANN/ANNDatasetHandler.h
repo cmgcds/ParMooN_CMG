@@ -39,6 +39,8 @@ class TANNDatasetHandler
 
     int ipDataDim;
 
+    std::string saveDataFile;
+
     /** Armadillo matrix storing raw data */
     arma::mat allData;
 
@@ -68,11 +70,19 @@ class TANNDatasetHandler
      * prediction values */
     arma::mat prediction;
 
+    /** training data scaler,i.e. betn [0,1] */
+    mlpack::data::MinMaxScaler dataScaler;
+
+    /** Training label scaler ,i.e. betn [0,1]*/
+    mlpack::data::MinMaxScaler labelScaler;
+
+
     /** error */
     double errorL1Absolute; // L1 norm
     double errorL2Absolute; // L2 norm
     double errorLInfAbsolute; // max error
     double errorL0Absolute; // min error
+    double errorMSE; // Mean Sq. error based on mlpack routines
 
     double errorL1Relative;
     double errorL2Relative;

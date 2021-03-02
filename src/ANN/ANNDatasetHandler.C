@@ -34,28 +34,66 @@ TANNDatasetHandler::TANNDatasetHandler(TANNParamReader *paramReader){
   // Set the number of epochs for training
   this->epochs = paramReader->epochs;
 
+  // Set the file name for storing the results for the tests
+  this->saveDataFile = paramReader->saveDataFile;
+
   // Dimension of the input data (number of features at the input layer per perceptron)
   this->ipDataDim = paramReader->ipDataDim;
 
   int totalInputLayerDim = this->ipDataDim * paramReader->layerDim[0];
 
+  //__________________________________________
+  //1. Create datasets 
+  //__________________________________________
+
   // Create the training dataset
-  this->trainData = this->allData.submat(0,0, totalInputLayerDim-1, numberOfTrainingSamples-1)/paramReader->featureScalingConstant;
+  this->trainData = this->allData.submat(0,0, totalInputLayerDim-1, numberOfTrainingSamples-1);
 
   // Create the training labels
   this->trainLabels = this->allData.submat(this->allData.n_rows-1,0, this->allData.n_rows-1,  numberOfTrainingSamples-1);
 
   // Create validation dataset
-  this->validationData = this->allData.submat(0,numberOfTrainingSamples, totalInputLayerDim-1, numberOfTrainingAndValidationSamples-1)/paramReader->featureScalingConstant;
+  this->validationData = this->allData.submat(0,numberOfTrainingSamples, totalInputLayerDim-1, numberOfTrainingAndValidationSamples-1);
 
   // Create the validation labels
   this->validationLabels = this->allData.submat(this->allData.n_rows-1,numberOfTrainingSamples, this->allData.n_rows-1,  numberOfTrainingAndValidationSamples-1);
 
   // Create the testing dataset
-  this->testData = this->allData.submat(0,numberOfTrainingAndValidationSamples, totalInputLayerDim-1, totalNumberOfSamples-1)/paramReader->featureScalingConstant;
+  this->testData = this->allData.submat(0,numberOfTrainingAndValidationSamples, totalInputLayerDim-1, totalNumberOfSamples-1);
 
   // Create the testing labels
   this->testLabels = this->allData.submat(this->allData.n_rows-1,numberOfTrainingAndValidationSamples, this->allData.n_rows-1,  totalNumberOfSamples-1);
+
+  //__________________________________________
+  //2. Train the scaler to scale the data
+  //__________________________________________
+  // Train the scaler based on the training data
+  this->dataScaler.Fit(this->trainData);
+
+  // Train the labelScaler 
+  this->labelScaler.Fit(this->trainLabels);
+
+  //__________________________________________
+  //3. Scale the dataset and the labels
+  //__________________________________________
+
+  // Scale the training data
+  this->dataScaler.Transform(this->trainData, this->trainData);
+
+  // Scale the training Labels
+  this->labelScaler.Transform(this->trainLabels, this->trainLabels);
+
+  // Scale the validation dataset
+  dataScaler.Transform(this->validationData, this->validationData);
+
+  // Scale the validation labels
+  this->labelScaler.Transform(this->validationLabels, this->validationLabels);
+
+  // Scale the test data
+  this->dataScaler.Transform(this->testData, this->testData);
+
+  // Scale the testing labels
+  this->labelScaler.Transform(this->testLabels, this->testLabels);
 
 };
 
@@ -74,12 +112,19 @@ void TANNDatasetHandler::postProcessResults(){
   if (predictionTemp.n_rows == 1){
     // Regression problem
     prediction = predictionTemp;
+
+    // First scale back the result values
+    // NOTE: The values were scaled when the arrays were created in the constructor.
+    this->labelScaler.InverseTransform(this->prediction, this->prediction);
+    this->labelScaler.InverseTransform(this->testLabels, this->testLabels);
+
     errorL1Absolute = this->computeError(testLabels, prediction, "L1","ABS");
     errorL1Relative = this->computeError(testLabels, prediction, "L1","REL");
     errorL2Absolute = this->computeError(testLabels, prediction, "L2","ABS");
     errorL2Relative = this->computeError(testLabels, prediction, "L2","REL");
     errorLInfAbsolute = this->computeError(testLabels, prediction, "LInf","ABS");
     errorL0Absolute = this->computeError(testLabels, prediction, "L0","ABS");
+    errorMSE = this->computeError(testLabels, prediction, "MSE", "ABS");
 
     std::cout << " Test results: " << std::endl;
 
@@ -122,8 +167,12 @@ double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat nume
   int arraySize = referenceValue.n_elem;
   double numerator, denominator, temp;
   double error;
-  // L1 norm of the error 
-  if (norm == "L1"){
+
+  if (norm == "MSE"){
+    return mlpack::metric::SquaredEuclideanDistance::Evaluate(referenceValue, numericalValue) / (numericalValue.n_elem);
+  }
+
+  else if (norm == "L1"){
     numerator = 0.0;
     denominator = 0.0;
     for (int i=0; i < arraySize; i++){
@@ -141,6 +190,7 @@ double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat nume
 
     error = numerator / denominator;
   }
+
   else if (norm == "L2"){
     numerator = 0.0;
     denominator = 0.0;
@@ -160,9 +210,10 @@ double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat nume
     error = sqrt(numerator / denominator);
   }
   else if (norm == "L0"){
+    // Print results into a file 
     std::ofstream file;
-    file.open("result.csv");
-    file << "#Reference" << "," << "Actual" << "," << "Error" <<std::endl;
+    file.open(this->saveDataFile);
+    file << "#Test results \n#Reference" << "," << "Actual" << "," << "Error" <<std::endl;
     numerator = 1000;
     denominator = 0.0;
     for (int i=0; i < arraySize; i++){
@@ -177,7 +228,7 @@ double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat nume
   }
   else if (norm == "LInf"){
     std::ofstream file;
-    numerator = 1000;
+    numerator = 0;
     denominator = 0.0;
     for (int i=0; i < arraySize; i++){
       if ( abs(referenceValue(i) - numericalValue(i))  > numerator){

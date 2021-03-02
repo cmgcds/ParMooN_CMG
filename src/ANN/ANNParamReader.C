@@ -84,6 +84,19 @@ TANNParamReader::TANNParamReader(char *paramFile){
   // Set the default value for the tolerance to 1e-5
   this->tolerance = 1e-5;
 
+  // Set the default value for the save model file
+  this->saveModelFile = "FFN.bin";
+
+  // Set the default value for the load model file
+  this->loadModelFile = "FFN.bin";
+
+  // Set the default value for the save data file
+  // The results for the testNetwork are stored in  this
+  this->saveDataFile = "Results.csv";
+
+  // Set the default flag for the load model file to zero
+  this->loadModelFlag = 0;
+
   //_________________________________________
   //Read the param file
 
@@ -302,6 +315,32 @@ void TANNParamReader::readParamFile(char *paramFile){
         featureScalingConstant = numberDouble;
       }
 
+      // Read the file name for storing the trained model after the training is over
+      if (word1 == "ANN_SAVE_MODEL_FILE"){
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        this->saveModelFile = line;
+      }
+
+      // Read the file name for storing the results data for the tests
+      if (word1 == "ANN_SAVE_DATA_FILE"){
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        this->saveDataFile = line;
+      }
+
+      // Read the file name for reading the trained model from that file
+      if (word1 == "ANN_LOAD_MODEL_FILE"){
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        this->loadModelFile = line;
+      }
+
+      // Flag for training new vs. loading existing model
+      if (word1 == "ANN_LOAD_FLAG"){
+        assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
+        // Set input layer dim
+        numberInt = stringToInt(line);
+        this->loadModelFlag = numberInt;
+      }
+
     };
   }
   else{
@@ -328,7 +367,7 @@ void TANNParamReader::print(){
 
   std::cout << " Training Data Percentage   " << this->trainingDataPercentage  << "    Default value: 63 " << std::endl;
   std::cout << " Validation Data Percentage   " << this->validationDataPercentage  << "    Default value: 7" << std::endl;
-  std::cout << " Optimizer Code:  " <<  this->optimizerCode << "   NOTE 0: default (RMSProp), 1:GD, 2:SGD, 3: Adam " << std::endl;
+  std::cout << " Optimizer Code:  " <<  this->optimizerCode << "   NOTE 0: default (RMSProp), 1:GD, 2:SGD, 3: Adam, 4:L-BFGS " << std::endl;
   std::cout << " Optimizer step size " << this->optimizerStepSize  << "    Default value: 0.001" <<  std::endl;
   std::cout << " SGD batch size " << this->sgdBatchSize  << "    Default value: 32" << std::endl;
   std::cout << " Epochs " << this->epochs  << "    Default value: 1" << std::endl;
@@ -354,14 +393,18 @@ std::string TANNParamReader::getLayerType(int number){
       break;
 
     case 3:
-      return "TanHLayer";
+      return "LeakyReLU";
       break;
 
     case 4:
-      return "SoftplusLayer";
+      return "TanHLayer";
       break;
 
     case 5:
+      return "SoftplusLayer";
+      break;
+
+    case 6:
       return "LogSoftMax";
 
     case 100:

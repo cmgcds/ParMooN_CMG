@@ -1,8 +1,8 @@
 // =======================================================================
-// Purpose:     main program for ANN model for Thyroid dataset (classification)
+// Purpose:     main program for ANN model for Regression problem
 // Author:      Subodh Joshi
 //
-// History:     Implementation started on 07.01.2020
+// History:     Implementation started on 25.02.2020
 // =======================================================================
 
 #include <ANN.h>

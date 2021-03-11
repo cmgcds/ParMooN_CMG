@@ -1,4 +1,7 @@
 This directory contains all the Python scripts for the sensitivity analysis.
+The scripts are stored in the following folders:
+
+1) ForwardRuns
 The Scripts RunExpt.py, Run1HL.py, Run2HL.py, Run3HL.py are used for running the
 forward experiments with different ANN architectures. Copy these scripts into
 the ParMooN Output directory (where the exe will be created). Make sure that the

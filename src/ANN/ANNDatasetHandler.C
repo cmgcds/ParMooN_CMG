@@ -135,6 +135,7 @@ void TANNDatasetHandler::postProcessResults(){
     std::cout << " errorLInfAbsolute : " << errorLInfAbsolute << std::endl;
     std::cout << " Min Error Absolute : " << errorL0Absolute << std::endl;
     
+    writeErrorFile(testLabels, prediction);
   }
   else{
     // Classification problem 
@@ -210,21 +211,15 @@ double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat nume
     error = sqrt(numerator / denominator);
   }
   else if (norm == "L0"){
-    // Print results into a file 
-    std::ofstream file;
-    file.open(this->saveDataFile);
-    file << "#Test results \n#Reference" << "," << "Actual" << "," << "Error" <<std::endl;
     numerator = 1000;
     denominator = 0.0;
     for (int i=0; i < arraySize; i++){
-      file << referenceValue(i) <<","<< numericalValue(i) << "," << abs(referenceValue(i) - numericalValue(i)) <<std::endl;
       if ( abs(referenceValue(i) - numericalValue(i))  <= numerator){
         numerator = abs(referenceValue(i) - numericalValue(i));
       };
     };
 
     error = numerator;
-    file.close();
   }
   else if (norm == "LInf"){
     std::ofstream file;
@@ -243,5 +238,18 @@ double TANNDatasetHandler::computeError(arma::mat referenceValue, arma::mat nume
   return error;
 };
     
+
+void TANNDatasetHandler::writeErrorFile(arma::mat referenceValue, arma::mat numericalValue){
+    // Print results into a file 
+    std::ofstream file;
+    file.open(this->saveDataFile);
+    file << "#Test results \n#Reference" << "," << "Actual" << "," << "Error" <<std::endl;
+    int arraySize = referenceValue.n_elem;
+    for (int i=0; i < arraySize; i++){
+      file << referenceValue(i) <<","<< numericalValue(i) << "," << abs(referenceValue(i) - numericalValue(i)) <<std::endl;
+      };
+
+    file.close();
+    };
 
 

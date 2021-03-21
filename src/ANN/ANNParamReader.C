@@ -54,11 +54,8 @@ TANNParamReader::TANNParamReader(char *paramFile){
   // Set the default values 
   // ___________________________________________
     
-  // Set the default value of the training set to 63
-  this->trainingDataPercentage = 63;
-    
   // Set the default value of the validation set to 7
-  this->validationDataPercentage = 63;
+  this->validationDataPercentage = 10;
 
   // Set the default value for optimizerCode to 0
   this->optimizerCode = 0;
@@ -226,22 +223,19 @@ void TANNParamReader::readParamFile(char *paramFile){
       };
 
 
-      if (word1 == "ANN_DATASET_NAME"){
+      if (word1 == "ANN_TRAINING_DATASET_NAME"){
         assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
         // Set input layer dim
         line.erase(0,line.find_first_of(" \r\t")+1);
-        this->datasetName = line;
+        this->trainingDatasetName = line;
       }
 
-
-      // Read the percentage of the training date out of the total data
-      if (word1 == "ANN_TRAINING_DATA_PERCENTAGE")
-      {
+      if (word1 == "ANN_TESTING_DATASET_NAME"){
         assert(layerDimFlag == true and layerTypeFlag == true and "Error in reading ANN_NHL: from the .dat file");
-        numberDouble = stringToDouble(line);
-        trainingDataPercentage = numberDouble;
+        // Set input layer dim
+        line.erase(0,line.find_first_of(" \r\t")+1);
+        this->testingDatasetName = line;
       }
-
 
       // Read the percentage of the training date out of the total data
       if (word1 == "ANN_VALIDATION_DATA_PERCENTAGE")
@@ -356,7 +350,9 @@ void TANNParamReader::print(){
   
   std:: cout << " Param Data: " << std::endl;
 
-  std::cout << " Dataset Name: " << this->datasetName << std::endl;
+  std::cout << " Training Dataset Name: " << this->trainingDatasetName << std::endl;
+
+  std::cout << " Testing Dataset Name: " << this->testingDatasetName << std::endl;
 
   std::cout << " Layers info: " << std::endl;
   std::cout << "___________________________\n";
@@ -365,8 +361,8 @@ void TANNParamReader::print(){
   };
   std::cout << "___________________________\n";
 
-  std::cout << " Training Data Percentage   " << this->trainingDataPercentage  << "    Default value: 63 " << std::endl;
-  std::cout << " Validation Data Percentage   " << this->validationDataPercentage  << "    Default value: 7" << std::endl;
+  std::cout << " Training Data Percentage   " << 100 - this->validationDataPercentage << "    Default value: 90 " << std::endl;
+  std::cout << " Validation Data Percentage   " << this->validationDataPercentage  << "    Default value: 10" << std::endl;
   std::cout << " Optimizer Code:  " <<  this->optimizerCode << "   NOTE 0: default (RMSProp), 1:GD, 2:SGD, 3: Adam, 4:L-BFGS " << std::endl;
   std::cout << " Optimizer step size " << this->optimizerStepSize  << "    Default value: 0.001" <<  std::endl;
   std::cout << " SGD batch size " << this->sgdBatchSize  << "    Default value: 32" << std::endl;

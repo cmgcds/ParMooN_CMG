@@ -51,13 +51,13 @@ class TANNParamReader
     /** loss function */
     std::string lossFunction;
 
-    /** Dataset name */
-    std::string datasetName;
+    /** Training Dataset name */
+    std::string trainingDatasetName;
 
-    /** Training data percentage of the total data */
-    double trainingDataPercentage;
+    /** Testing Dataset name */
+    std::string testingDatasetName;
 
-    /** Validation data percentage of the total data */
+    /** Validation data percentage of the total training data */
     double validationDataPercentage;
 
     /** Optimizer code */

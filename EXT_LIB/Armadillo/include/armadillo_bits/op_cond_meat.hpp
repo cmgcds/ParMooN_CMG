@@ -26,11 +26,14 @@ op_cond::cond(const Base<typename T1::elem_type, T1>& X)
   {
   arma_extra_debug_sigprint();
   
-  typedef typename T1::pod_type T;
+  typedef typename T1::elem_type eT;
+  typedef typename T1::pod_type   T;
+  
+  Mat<eT> A(X.get_ref());
   
   Col<T> S;
   
-  const bool status = auxlib::svd_dc(S, X);
+  const bool status = auxlib::svd_dc(S, A);
   
   if(status == false)
     {
@@ -58,11 +61,13 @@ op_cond::rcond(const Base<typename T1::elem_type, T1>& X)
     {
     const strip_trimat<T1> S(X.get_ref());
     
-    arma_debug_check( (S.M.is_square() == false), "rcond(): matrix must be square sized" );
+    const quasi_unwrap<typename strip_trimat<T1>::stored_type> U(S.M);
+    
+    arma_debug_check( (U.M.is_square() == false), "rcond(): matrix must be square sized" );
     
     const uword layout = (S.do_triu) ? uword(0) : uword(1);
     
-    return auxlib::rcond_trimat(S.M, layout);
+    return auxlib::rcond_trimat(U.M, layout);
     }
   
   Mat<eT> A = X.get_ref();

@@ -74,6 +74,12 @@
 // #define ARMA_BLAS_LONG_LONG
 //// Uncomment the above line if your BLAS and LAPACK libraries use "long long" instead of "int"
 
+// #define ARMA_BLAS_NOEXCEPT
+//// Uncomment the above line if you require BLAS functions to have the 'noexcept' specification
+
+// #define ARMA_LAPACK_NOEXCEPT
+//// Uncomment the above line if you require LAPACK functions to have the 'noexcept' specification
+
 #define ARMA_USE_FORTRAN_HIDDEN_ARGS
 //// Comment out the above line to call BLAS and LAPACK functions without using so-called "hidden" arguments.
 //// Fortran functions (compiled without a BIND(C) declaration) that have char arguments
@@ -128,7 +134,7 @@
   #define ARMA_OPTIMISE_SYMPD
   //// Comment out the above line if you don't want automatically optimised handling
   //// of symmetric/hermitian positive definite matrices by various functions:
-  //// solve(), inv(), expmat(), logmat(), sqrtmat(), rcond()
+  //// solve(), inv(), pinv(), expmat(), logmat(), sqrtmat(), rcond()
 #endif
 
 #define ARMA_USE_HDF5_ALT
@@ -309,4 +315,4 @@
 // ARMA_AUX_INCDIRS lists the include directories required by Armadillo on this system.
 // Do not use these unless you know what you are doing.
 #define ARMA_AUX_LIBS /opt/intel/compilers_and_libraries_2020.4.304/linux/mkl/lib/intel64/libmkl_rt.so;/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so;/usr/lib/x86_64-linux-gnu/libpthread.so;/usr/lib/x86_64-linux-gnu/libsz.so;/usr/lib/x86_64-linux-gnu/libz.so;/usr/lib/x86_64-linux-gnu/libdl.so;/usr/lib/x86_64-linux-gnu/libm.so;/usr/lib/x86_64-linux-gnu/libarpack.so;/usr/lib/x86_64-linux-gnu/libsuperlu.so
-#define ARMA_AUX_INCDIRS /usr/include/hdf5/serial;/usr/include/superlu
+#define ARMA_AUX_INCDIRS /usr/include/hdf5/serial;/usr/local/include

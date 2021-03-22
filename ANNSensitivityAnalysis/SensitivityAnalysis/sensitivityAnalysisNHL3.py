@@ -77,7 +77,7 @@ for n in range(numberOfSamples):
 outputData = np.vstack((L1Error, L2Error, MaxError, MinError)).T;
 
 print("Saving outputSpace...");
-np.savetxt("ouputSpace_NHL3.dat", outputData);
+np.savetxt("outputSpace_NHL3.dat", outputData);
 print("Done.");
 
 # make sure that we are in the run dir

@@ -1,21 +1,9 @@
 import numpy as np
 import os
 from dataFunctions import *
+from paramRange import *
 
 def runSimulations(thisRunDir):
-# Activation function array for output layer
-# Note: 0: sigmoid, 1:identity, 2:leakyReLU, 3:tanH
-    OPLTYPE_ARRAY = [0,1,3,4];
-
-# Dimension array for the hidden layer
-    HL_DIM_ARRAY = [5,7,10];
-
-# Activation function array for the hidden layer
-# Note: 0: sigmoid, 1:identity, 2:ReLU, 3:leakyReLU, 4:tanH
-    HL_TYPE_ARRAY = [ 0,3,4];
-
-# Epochs array
-    EPOCHS_ARRAY = [10,100];
 
 
 # Number of hidden layers fixed at 1 for this file
@@ -31,9 +19,9 @@ def runSimulations(thisRunDir):
     data["IPDATADIM"] = 1;
     data["IPLDIM"] = 3;
     data["OPLDIM"] = 1;
-    data["DATASET_NAME"] = "trainingData.csv";
-    data["TRAINING_DATA_PERCENTAGE"] = 73;
-    data["VALIDATION_DATA_PERCENTAGE"] = 7;
+    data["TRAINING_DATASET_NAME"] = "trainingData.csv";
+    data["TESTING_DATASET_NAME"] = "testingData.csv";
+    data["VALIDATION_DATA_PERCENTAGE"] = 10;
     data["OPTIMIZER_CODE"] = 3;
     data["OPTIMIZER_STEP_SIZE"] = 0.001;
     data["SGD_BATCH_SIZE"] = 32;
@@ -48,12 +36,15 @@ def runSimulations(thisRunDir):
 # Start the loops
 
     listDir = os.listdir(thisRunDir);
+    print(listDir);
     maxDir = 0;
-    if (listDir == ['metadata.dat', 'inputSpace.dat']):
+    if (listDir ==['metadata.dat', 'inputSpace.dat', 'testingData.csv', 'trainingData.csv']):
         maxDir = 0;
     else:
         listDir.remove('metadata.dat');
         listDir.remove('inputSpace.dat');
+        listDir.remove('testingData.csv');
+        listDir.remove('trainingData.csv');
         listDir.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
         maxDir = int(listDir[-1]);
         maxDir = maxDir + 1;

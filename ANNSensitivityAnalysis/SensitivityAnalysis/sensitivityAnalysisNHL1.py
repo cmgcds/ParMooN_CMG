@@ -14,7 +14,7 @@ import pandas as pd
 projectName = "ANN";
 
 # Enter the run number i.e. folder output/ANN/runNUmber
-runNumber = 0;
+runNumber = 1;
 
 #_______________________________________________________
 # Set paths and variables
@@ -73,10 +73,10 @@ for n in range(numberOfSamples):
     pass;
 
 # Save the output space:
-outputData = np.vstack((L1Error, L2Error, MaxError, MinError)).T;
+outputData = np.vstack((L1Error, L2Error, MinError, MaxError)).T;
 
 print("Saving outputSpace...");
-np.savetxt("ouputSpace_NHL1.dat", outputData);
+np.savetxt("outputSpace_NHL1.dat", outputData);
 print("Done.");
 
 # make sure that we are in the run dir

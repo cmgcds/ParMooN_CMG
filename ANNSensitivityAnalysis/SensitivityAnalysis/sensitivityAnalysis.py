@@ -10,7 +10,7 @@ from openturns.viewer import View
 import pandas as pd
 
 # Name of the project
-projectName = "ANN";
+projectName = "Expt1";
 
 # Enter the run number i.e. folder output/ANN/runNUmber
 runNumber = 1;
@@ -71,10 +71,10 @@ for n in range(numberOfSamples):
     pass;
 
 # Save the output space:
-outputData = np.vstack((L1Error, L2Error, MaxError, MinError)).T;
+outputData = np.vstack((L1Error, L2Error, MinError, MaxError)).T;
 
 print("Saving outputSpace...");
-np.savetxt("ouputSpace.dat", outputData);
+np.savetxt("outputSpace.dat", outputData);
 print("Done.");
 
 # make sure that we are in the run dir

@@ -21,7 +21,7 @@ def runSimulations(thisRunDir):
     data["OPLDIM"] = 1;
     data["TRAINING_DATASET_NAME"] = "trainingData.csv";
     data["TESTING_DATASET_NAME"] = "testingData.csv";
-    data["VALIDATION_DATA_PERCENTAGE"] = 10;
+    data["VALIDATION_DATA_PERCENTAGE"] = 50;
     data["OPTIMIZER_CODE"] = 3;
     data["OPTIMIZER_STEP_SIZE"] = 0.001;
     data["SGD_BATCH_SIZE"] = 32;

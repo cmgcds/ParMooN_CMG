@@ -14,11 +14,11 @@ import Run3HL as H3
 import RunExpt as exp
 
 
-TrainingSizes = [12,25,50,100,200,400,800];
+TrainingSizes = [6,12,25,50,100,200,400,800];
 TestingSize = 50;
-ValidationPercentage = 10;
+ValidationPercentage = 50;
 
-name = "Expt2"
+name = "Expt4"
 
 
 # Create testing data

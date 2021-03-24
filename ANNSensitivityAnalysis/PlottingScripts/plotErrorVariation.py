@@ -54,11 +54,11 @@ def getError(projectName, runNumber):
     return (pMean, p5, p95, pStd);
 
 
-if __name__ == "__main__":
+def plotErrorVariation(projectName):
 
     curDir = os.getcwd();
 
-    TotalRuns = 7;
+    TotalRuns = 8;
 
     # 4 metrics: mean value, 5 percentile, 95 percentile, standard deviation
     L1Error = np.zeros(shape=(TotalRuns, 4));
@@ -66,8 +66,6 @@ if __name__ == "__main__":
     MSError = np.zeros(shape=(TotalRuns, 4));
     MinError = np.zeros(shape=(TotalRuns, 4));
     MaxError = np.zeros(shape=(TotalRuns, 4));
-
-    projectName = "Expt1";
 
     projectDir = os.getcwd()+"/output/"+projectName+"/";
 
@@ -117,60 +115,60 @@ if __name__ == "__main__":
     #_______________________________________________________
     location = (0,0);
     axs[location].plot(x, L1Error[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
-    axs[location].plot(x, L1Error[:,1], '--', color ='green', linewidth='2', label = '5-Percentile error');
-    axs[location].plot(x, L1Error[:,2], '-.', color ='red', linewidth='2', label = '95-Percentile error');
-    axs[location].plot(x, L1Error[:,3], '.', color ='blue', linewidth='3', label = 'Standard deviation');
+    axs[location].plot(x, L1Error[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
+    axs[location].plot(x, L1Error[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
+    axs[location].plot(x, L1Error[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
-    axs[location].set_xticks([0,1,2,3,4,5,6]);
-    axs[location].set_xticklabels(['12','25','50','100','200','400','800']);
+    axs[location].set_xticks([0,1,2,3,4,5,6,7]);
+    axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
     axs[location].set_ylabel(r"$L_1$ Error");
-    axs[location].legend(loc='upper left', fontsize=5);
+    axs[location].legend(loc='upper left', fontsize=7);
 
     #_______________________________________________________
     # MS error plot
     #_______________________________________________________
     location = (1,0);
     axs[location].plot(x, MSError[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
-    axs[location].plot(x, MSError[:,1], '--', color ='green', linewidth='2', label = '5-Percentile error');
-    axs[location].plot(x, MSError[:,2], '-.', color ='red', linewidth='2', label = '95-Percentile error');
-    axs[location].plot(x, MSError[:,3], '.', color ='blue', linewidth='3', label = 'Standard deviation');
+    axs[location].plot(x, MSError[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
+    axs[location].plot(x, MSError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
+    axs[location].plot(x, MSError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
-    axs[location].set_xticks([0,1,2,3,4,5,6]);
-    axs[location].set_xticklabels(['12','25','50','100','200','400','800']);
+    axs[location].set_xticks([0,1,2,3,4,5,6,7]);
+    axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
     axs[location].set_ylabel(r"MSE");
-    axs[location].legend(loc='upper left', fontsize=5);
+    axs[location].legend(loc='upper left', fontsize=7);
 
     #_______________________________________________________
     # Rel. Min error plot
     #_______________________________________________________
     location = (0,1);
     axs[location].plot(x, MinError[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
-    axs[location].plot(x, MinError[:,1], '--', color ='green', linewidth='2', label = '5-Percentile error');
-    axs[location].plot(x, MinError[:,2], '-.', color ='red', linewidth='2', label = '95-Percentile error');
-    axs[location].plot(x, MinError[:,3], '.', color ='blue', linewidth='3', label = 'Standard deviation');
+    axs[location].plot(x, MinError[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
+    axs[location].plot(x, MinError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
+    axs[location].plot(x, MinError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
-    axs[location].set_xticks([0,1,2,3,4,5,6]);
-    axs[location].set_xticklabels(['12','25','50','100','200','400','800']);
+    axs[location].set_xticks([0,1,2,3,4,5,6,7]);
+    axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
     axs[location].set_ylabel(r"Rel. Min Error");
-    axs[location].legend(loc='upper left', fontsize=5);
+    axs[location].legend(loc='upper left', fontsize=7);
 
     #_______________________________________________________
     # Max error plot
     #_______________________________________________________
     location = (1,1);
     axs[location].plot(x, MaxError[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
-    axs[location].plot(x, MaxError[:,1], '--', color ='green', linewidth='2', label = '5-Percentile error');
-    axs[location].plot(x, MaxError[:,2], '-.', color ='red', linewidth='2', label = '95-Percentile error');
-    axs[location].plot(x, MaxError[:,3], '.', color ='blue', linewidth='3', label = 'Standard deviation');
+    axs[location].plot(x, MaxError[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
+    axs[location].plot(x, MaxError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
+    axs[location].plot(x, MaxError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
-    axs[location].set_xticks([0,1,2,3,4,5,6]);
-    axs[location].set_xticklabels(['12','25','50','100','200','400','800']);
+    axs[location].set_xticks([0,1,2,3,4,5,6,7]);
+    axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
     axs[location].set_ylabel(r"Rel. Max Error");
-    axs[location].legend(loc='upper left', fontsize=5);
+    axs[location].legend(loc='upper left', fontsize=7);
 
     plt.ticklabel_format(axis="y", style="sci", scilimits=(0,00))
    
@@ -184,3 +182,5 @@ if __name__ == "__main__":
 
 
 
+if __name__ == "__main__":
+    plotErrorVariation("Avg");

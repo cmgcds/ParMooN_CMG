@@ -26,7 +26,7 @@ def plotError(projectName, runNumber):
     # Prepare Sample data
     #_______________________________________________________
 
-    DF.createOutputSpace(runDir);
+    #DF.createOutputSpace(runDir);
 
     # Read metadata
     myfile = open("metadata.dat",'rt')
@@ -234,11 +234,9 @@ def plotError(projectName, runNumber):
     os.chdir(curDir);
 
 
-if __name__=="__main__":
-    # Name of the project
-    projectName = "Expt1";
+def plotAllErrors(projectName):
 
-    TotalRuns = 7;
+    TotalRuns = 8;
 
     projectDir = os.getcwd()+"/output/"+projectName+"/";
 
@@ -249,7 +247,11 @@ if __name__=="__main__":
 
     curDir = os.getcwd();
     os.chdir(projectDir);
-    os.system("pdftk 0/ErrorD1.pdf 1/ErrorD1.pdf 2/ErrorD1.pdf 3/ErrorD1.pdf 4/ErrorD1.pdf 5/ErrorD1.pdf 6/ErrorD1.pdf cat output Error1.pdf");
+    os.system("pdftk 0/ErrorD1.pdf 1/ErrorD1.pdf 2/ErrorD1.pdf 3/ErrorD1.pdf 4/ErrorD1.pdf 5/ErrorD1.pdf 6/ErrorD1.pdf 7/ErrorD1.pdf cat output Error1.pdf");
     os.chdir(curDir);
 
 
+if __name__=="__main__":
+    # Name of the project
+    projectName = "Avg";
+    plotAllErrors(projectName);

@@ -95,11 +95,12 @@ def runExperiment(projectName, trainingSize):
     endDateTime = datetime.now() 
     time = endDateTime.strftime("%H:%M:%S")
     metadataFile.write('\nFinal time (h:m:s) = ' + time); 
+    metadataFile.write('\nTime taken (s): ' + str((endDateTime-startDateTime).total_seconds()));
     metadataFile.close();
     metadataFile.close();
 
 
 if __name__ == "__main__":
-    createTestingDataset("allData", 10);
-    createTrainingAndValidationDataset("allData",10,10);
-    runExperiment("ANN",10);
+    #createTestingDataset("allData", 10);
+    createTrainingAndValidationDataset("allData",6,50);
+    runExperiment("ANN",6);

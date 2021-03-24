@@ -3,7 +3,72 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+def getAveragePerformance(dirList, avgDirName):
+    # dirList: list of directories containing experiment results e.g. ["Expt1", "Expt2", ...]
+    # Note: dirList will contain the directories from ./output/
+    # avgDirName: name of the directory to store the average results
+    # Note: the avgDirName will be created inside ./output/.
+
+    # Number of training datasets used i.e. size [6, 12 ,25, 50, 100, 200, 400 ,800] total 8
+    trainingDataSize = 8;
+
+    # NOTE: dirList is a list containing names of the runs e.g. ['Expt1', 'Expt2', ...]
+    # NOTE: the relative or the abs address is NOT given
+
+    # Get the location of the current directory
+    curDir = os.getcwd();
+
+    # This gives the total number of neural networks 
+    inputDataSize = np.shape(np.loadtxt(curDir+'/output/'+dirList[0]+'/0/inputSpace.dat'))[0];
+
+    # empty list
+    outputDataList = []
+
+
+    for dirName in dirList:
+        data = np.zeros(shape=(trainingDataSize,inputDataSize,5));
+        for i in range(trainingDataSize):
+            data[i] = np.loadtxt(curDir+'/output/'+dirName+'/'+str(i)+'/outputSpace.dat');
+            pass;
+        outputDataList.append(data);
+        pass;
+
+    # outputDataList now contains the outputSpace from all the runs of all the directories 
+
+    # Find the average of all the directories 
+    averageData = np.mean(np.array(outputDataList), axis=0);
+
+    # If average directory doesn't exist, create it
+    avgDirPath = curDir + '/output/'+ avgDirName;
+
+    if not os.path.exists(avgDirPath):
+        os.makedirs(avgDirPath);
+        for i in range(trainingDataSize):
+            os.makedirs(avgDirPath+'/'+str(i));
+            pass;
+        pass;
+
+    # Save the average output space for each training data size (i.e. in all 8 dirs)
+
+    print("Saving average data...");
+    for i in range(trainingDataSize):
+        np.savetxt(avgDirPath+'/'+str(i)+'/outputSpace.dat', averageData[i]);
+        pass;
+
+    # Save the input space as well
+    for i in range(trainingDataSize):
+        os.system("cp "+curDir+'/output/'+dirList[0]+'/'+str(i)+'/inputSpace.dat '+ avgDirPath+'/'+str(i)+'/.');
+        # Copy a metadata file from the first directory of the argument list. This is used only to know the size of the training data for plotting later
+        os.system("cp "+curDir+'/output/'+dirList[0]+'/'+str(i)+'/metadata.dat '+ avgDirPath+'/'+str(i)+'/.');
+        pass;
+
+
+    print("Done");
+
+
+
 def createOutputSpace(dirName):
+    # NOTE: dirName is the name of the specific run full address e.g. ./output/Expt1/0 
     curDir = os.getcwd();
 
     # Change the directory to argument
@@ -48,6 +113,9 @@ def createOutputSpace(dirName):
 
 
 def createTestingDataset(datasetName, size):
+    # datasetName: name of the parent dataset without the .csv extension i.e. "allData" for allData.csv
+    # size: size of the required testing dataset. i.e. number of testing points
+
     # create a dataset of given 'size' from 'datasetName' by random selection
     shuffleDataset(datasetName);
 
@@ -63,6 +131,9 @@ def createTestingDataset(datasetName, size):
 
 
 def createTrainingDataset(datasetName, size):
+    # datasetName: name of the parent dataset without the .csv extension i.e. "allData" for allData.csv
+    # size: size of the required testing dataset. i.e. number of testing points
+
     # create a dataset of given 'size' from 'datasetName' by random selection
     shuffleDataset(datasetName);
 
@@ -102,7 +173,12 @@ def shuffleDataset(fileName):
     df = df.reindex(np.random.permutation(df.index));
 
     # Write the file without the additional counter index (i.e. 1, 2, 3 on the left size)
+    # NOTE: the data is written to the same file twice so that the total count is > 1600
+    # This is required for the training data of size 800 with 50% validation percentage
+    # It won't have any impact on the training as anything beyond 800 points will be used 
+    # for validation anyway. 
     df.to_csv(fileName+"1.csv", index = False);
+    df.to_csv(fileName+"1.csv", mode='a',index = False, header=False);
 
     pass;
 

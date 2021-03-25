@@ -103,9 +103,9 @@ def createOutputSpace(dirName):
     # Save the output space:
     outputData = np.vstack((L1Error, L2Error, MinError, MaxError, MSError)).T;
 
-    print("Saving outputSpace...");
+    #print("Saving outputSpace...");
     np.savetxt("outputSpace.dat", outputData);
-    print("Done.");
+    #print("Done.");
 
     # Change the directory back to previous
     os.chdir(curDir);

@@ -11,7 +11,12 @@ import Run1HL as H1
 import Run2HL as H2
 import Run3HL as H3
 
-def runExperiment(projectName, trainingSize):
+def runExperiment(projectName, trainingSize, validationDataPercentage, exeName):
+    # projectName : name of the project. This directory will be created inside "./output"
+    # trainingSize: size of the training data. This will be written in the metadata file
+    # validationDataPercentage: percentage of the validation data of the total dataset
+    # exeName: name of the executable
+
 
     #______________________________________
     # Create paths and manage directories
@@ -77,10 +82,13 @@ def runExperiment(projectName, trainingSize):
     metadataFile.write("\nTraining data size :"+str(trainingSize));
     metadataFile.close();
 
+    os.system("> log");
     # Run simulations
-    H1.runSimulations(thisRunDir);
-    H2.runSimulations(thisRunDir);
-    H3.runSimulations(thisRunDir);
+    H1.runSimulations(thisRunDir, validationDataPercentage, exeName);
+    H2.runSimulations(thisRunDir, validationDataPercentage, exeName);
+    H3.runSimulations(thisRunDir, validationDataPercentage, exeName);
+
+    os.system("mv log "+thisRunDir+"/.");
 
 
     #_______________________________________________________
@@ -101,6 +109,10 @@ def runExperiment(projectName, trainingSize):
 
 
 if __name__ == "__main__":
-    #createTestingDataset("allData", 10);
-    createTrainingAndValidationDataset("allData",6,50);
-    runExperiment("ANN",6);
+    testDataSize = 50;
+    validationDataPercentage = 50;
+    trainingDataSize = 100;
+
+    createTestingDataset("allData", testDataSize);
+    createTrainingAndValidationDataset("allData",trainingDataSize,validationDataPercentage);
+    runExperiment("ANN",trainingDataSize, validationDataPercentage, "parmoon_2D_SEQUENTIAL.exe");

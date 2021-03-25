@@ -3,7 +3,9 @@ import os
 from dataFunctions import *
 from paramRange import *
 
-def runSimulations(thisRunDir):
+def runSimulations(thisRunDir, validationDataPercentage, exeName = "parmoon_2d_SEQUENTIAL.exe"):
+    # thisRunDir: the directory address containing this run i.e. ./output/exptName/thisRunDir
+    # exeName: name of the executable file
 
 # Number of hidden layers fixed at 3
     NHL = 3;
@@ -24,12 +26,12 @@ def runSimulations(thisRunDir):
     data["OPLDIM"] = 1;
     data["TRAINING_DATASET_NAME"] = "trainingData.csv";
     data["TESTING_DATASET_NAME"] = "testingData.csv";
-    data["VALIDATION_DATA_PERCENTAGE"] = 50;
+    data["VALIDATION_DATA_PERCENTAGE"] = validationDataPercentage;
     data["OPTIMIZER_CODE"] = 3;
     data["OPTIMIZER_STEP_SIZE"] = 0.001;
     data["SGD_BATCH_SIZE"] = 32;
-    data["MAX_ITERATIONS"] = 1000000;
-    data["TOLERANCE"] = 1e-8;
+    data["MAX_ITERATIONS"] = 100000;
+    data["TOLERANCE"] = 1e-6;
     data["DROPOUT_RATIO"] = 0.2;
     data["EPOCHS"] = 100;
     data["SAVE_DATA_FILE"] = "testResults.csv";
@@ -87,12 +89,15 @@ def runSimulations(thisRunDir):
 
                                     inputSpaceFile.close();
                                     # Run the simulation
-                                    os.system('./parmoon_2D_SEQUENTIAL.exe runScript.dat');
+                                    # Silent run
+                                    os.system('./' + exeName+ ' runScript.dat >> log');
+                                    # print on screen
+                                    #os.system('./' + exeName+ ' runScript.dat');
 
                                     # Copy the results file to the respective folder
                                     os.system("mv ' testResults.csv' "+thisRunDir+'/'+str(count)+'/testResults.csv');
 
-                                    print(count);
+                                    #print(count);
 
                                     # Update the file
                                     count += 1;

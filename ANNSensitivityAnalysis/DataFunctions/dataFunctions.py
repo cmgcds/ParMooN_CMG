@@ -166,6 +166,9 @@ def createTrainingAndValidationDataset(datasetName, trainingSize, validationPerc
     os.system("rm "+datasetName+"1.csv");
 
 def shuffleDataset(fileName):
+    # Set numpy random seed
+    np.random.seed();
+
     # Read file
     df = pd.read_csv(fileName+".csv", delimiter=',');
 

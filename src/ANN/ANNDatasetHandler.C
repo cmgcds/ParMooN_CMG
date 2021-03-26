@@ -15,22 +15,23 @@ TANNDatasetHandler::TANNDatasetHandler(TANNParamReader *paramReader){
   // NOTE: allData contains the training as well as the validation data
   mlpack::data::Load(paramReader->trainingDatasetName.c_str(), this->allData, true);
 
-  double trainingDataPercentage = 100. - paramReader->validationDataPercentage;
-
   // Find the total number of samples in the dataset
   this->totalNumberOfSamples = allData.n_cols;
 
   // Number of training samples based on the user input
-  this->numberOfTrainingSamples = this->totalNumberOfSamples * trainingDataPercentage / 100.;
+  this->numberOfValidationSamples = this->totalNumberOfSamples * paramReader->validationDataPercentage / 100.;
 
   // Number of validation samples based on the user input
-  this->numberOfValidationSamples = this->totalNumberOfSamples - this->numberOfTrainingSamples;
+  this->numberOfTrainingSamples = this->totalNumberOfSamples - this->numberOfValidationSamples;
 
 
   // Find the testing dataset
-  mlpack::data::Load(paramReader->testingDatasetName.c_str(), this->testData, true);
+  mlpack::data::Load(paramReader->testingDatasetName.c_str(), this->testDataset, true);
 
-  this->numberOfTestingSamples =  testData.n_cols;
+  this->numberOfTestingSamples =  testDataset.n_cols;
+
+  std::cout << "No. of training samples: " << this->numberOfTrainingSamples << "  No. of validation samples: " << this->numberOfValidationSamples << "   No. of testing samples: " << numberOfTestingSamples << std::endl;
+
 
   //int numberOfTrainingAndValidationSamples = this->numberOfTrainingSamples + this->numberOfValidationSamples;
 
@@ -62,10 +63,10 @@ TANNDatasetHandler::TANNDatasetHandler(TANNParamReader *paramReader){
   this->validationLabels = this->allData.submat(this->allData.n_rows-1,numberOfTrainingSamples, this->allData.n_rows-1, totalNumberOfSamples-1);
 
   // Create the testing dataset
-  this->testData = this->testData.submat(0,0, totalInputLayerDim-1, numberOfTestingSamples-1);
+  this->testData = this->testDataset.submat(0,0, totalInputLayerDim-1, numberOfTestingSamples-1);
 
   // Create the testing labels
-  this->testLabels = this->allData.submat(this->allData.n_rows-1,0, this->allData.n_rows-1,  numberOfTestingSamples-1);
+  this->testLabels = this->testDataset.submat(this->allData.n_rows-1,0, this->allData.n_rows-1,  numberOfTestingSamples-1);
 
   //__________________________________________
   //2. Train the scaler to scale the data

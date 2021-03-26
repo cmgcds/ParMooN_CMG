@@ -50,6 +50,9 @@ class TANNDatasetHandler
     /** Armadillo matrix storing validation data */
     arma::mat validationData;
 
+    /** Test dataset containing testData and testLabels */
+    arma::mat testDataset;
+
     /** Armadillo matrix storing testing data */
     arma::mat testData;
 

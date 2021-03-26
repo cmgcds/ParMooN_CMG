@@ -39,8 +39,9 @@ def runSimulations(thisRunDir, validationDataPercentage, exeName = "parmoon_2d_S
 # Start the loops
 
     listDir = os.listdir(thisRunDir);
+    listDir = sorted(listDir);
     maxDir = 0;
-    if (listDir ==['metadata.dat', 'inputSpace.dat', 'testingData.csv', 'trainingData.csv']):
+    if (listDir ==['inputSpace.dat', 'metadata.dat', 'testingData.csv', 'trainingData.csv']):
         maxDir = 0;
     else:
         listDir.remove('metadata.dat');

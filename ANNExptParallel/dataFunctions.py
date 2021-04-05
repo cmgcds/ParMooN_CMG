@@ -37,6 +37,11 @@ def getAveragePerformance(dirList, avgDirName):
     # Find the average of all the directories 
     averageData = np.mean(np.array(outputDataList), axis=0);
 
+    # Standard error for this mean 
+    # note: to convert into the error margin, multiply by the Z value (i.e. 1.96 for 95% CI)
+    # note1: This is actually done in the plotting stage. refer plotError.py 
+    standardError = np.std(np.array(outputDataList), axis=0, ddof=1)/np.sqrt(len(dirList));
+
     # If average directory doesn't exist, create it
     avgDirPath = curDir + '/output/'+ avgDirName;
 
@@ -52,6 +57,7 @@ def getAveragePerformance(dirList, avgDirName):
     print("Saving average data...");
     for i in range(trainingDataSize):
         np.savetxt(avgDirPath+'/'+str(i)+'/outputSpace.dat', averageData[i]);
+        np.savetxt(avgDirPath+'/'+str(i)+'/standardError.dat', standardError[i]);
         pass;
 
     # Save the input space as well

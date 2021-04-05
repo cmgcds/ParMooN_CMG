@@ -64,6 +64,12 @@ def plotError(projectName, runNumber):
     MaxError = outputData[:,3];
     MSError = outputData[:,4];
 
+
+    # Standard error
+    error = np.loadtxt("standardError.dat");
+    L1stE = error[:,0];
+
+
     # Find out the NHL1, NHL2 and NHL3 data
     flag1 = 0;
     flag2 = 0;
@@ -103,7 +109,7 @@ def plotError(projectName, runNumber):
     s4color = 'black';
 
     s1size = '2';
-    s2size = '1';
+    s2size = '3';
     s3size = '1.5';
     s4size = '1.5';
 
@@ -135,6 +141,11 @@ def plotError(projectName, runNumber):
     axs[location].axhspan(p95['L1Error'],upperbound['L1Error'],facecolor=shadeColor)
     axs[location].axhline(p5['L1Error'],color=s4color,linewidth='0.3');
     axs[location].axhline(p95['L1Error'],color=s4color,linewidth='0.3');
+
+    axs[location].set_yscale("log", nonpositive='clip')
+    axs[location].errorbar(np.arange(0,flag1), L1Error[0:flag1],yerr=1.96*L1stE[0:flag1], color=s1color, alpha=0.2);
+    axs[location].errorbar(np.arange(flag1,flag2), L1Error[flag1:flag2],yerr=1.96*L1stE[flag1:flag2], color=s2color, alpha=0.2);
+    axs[location].errorbar(np.arange(flag2, numberOfSamples), L1Error[flag2:numberOfSamples],yerr=1.96*L1stE[flag2:numberOfSamples], color=s3color, alpha=0.2);
     
 
     #_______________________________________________________

@@ -1,4 +1,6 @@
 import os
+import time 
+
 from datetime import datetime
 from decimal import Decimal
 
@@ -133,7 +135,18 @@ def getSobolIndices(projectName, runNumber, size):
     # Find sobol indices
     #_______________________________________________________
 
-    distributionList = [ot.Uniform(0.0,1.0)] * numberOfInputParam;
+    ot.RandomGenerator.SetSeed(int(1000*time.time()))
+    distributionNHL = ot.Uniform(1,3);
+    distributionOPLTYPE = ot.Uniform(0,4);
+    distributionHL0DIM = ot.Uniform(5,15);
+    distributionHL0TYPE = ot.Uniform(0,4);
+    distributionHL1DIM = ot.Uniform(5,15);
+    distributionHL1TYPE = ot.Uniform(0,4);
+    distributionHL2DIM = ot.Uniform(5,15);
+    distributionHL2TYPE = ot.Uniform(0,4);
+
+    distributionList = [distributionOPLTYPE, distributionHL0DIM, distributionHL0TYPE, distributionHL1DIM, distributionHL1TYPE, distributionHL2DIM, distributionHL2TYPE];
+
     distribution = ot.ComposedDistribution(distributionList)
 
 
@@ -180,13 +193,13 @@ def getSobolIndices(projectName, runNumber, size):
 
 
 if __name__=="__main__":
-    #os.sched_setaffinity(0,{i for i in range(28)})
+    os.sched_setaffinity(0,{i for i in range(28)})
 
     # Name of the project
     projectName = "Avg";
 
     # Data size for running Sobol analysis. i.e. these many samples will be generated using the metamodel
-    size = 100000;
+    size = 250000;
 
     # Save Sobol' indices
     for runNumber in range(8):

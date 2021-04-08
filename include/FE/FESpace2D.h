@@ -133,6 +133,9 @@ class TFESpace2D : public TFESpace
     /** return position of all dofs */
     void GetDOFPosition(double *x, double *y);
 
+    /** return DOF number of the given Position **/
+    int GetDOFNumberfromPosition(int DOF, double x,double y );
+
     void SetIntlPtIndexOfPts(int *intlPtIndexOfPts)
      { IntlPtIndexOfPts = intlPtIndexOfPts; }
 

@@ -66,7 +66,13 @@ class TFEFunction1D
 
 
     /** calculate the interpolation of an exact function */
-    void Interpolate(DoubleFunct2D *Exact);
+    void Interpolate(DoubleFunctND *Exact);
+
+
+    //** Compute the mean value of the Solution and the gradient in a cell **/
+    // If order = D0, it computes the mean value of the solution per cell //
+    // If order = D1, it computes the mean value of gradient of the solution per cell //
+    void InterpolateMeanValuePerCell(TFEFunction1D* MeanSolutionFEFunction, MultiIndex1D order);
 
     /** calculate the interpolation of an exact function */
     void Interpolate(int ConstCoord, double x, DoubleFunct2D *Exact);

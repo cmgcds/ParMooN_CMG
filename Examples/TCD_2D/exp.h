@@ -624,3 +624,9 @@ CellTree[Neib[1]]->SetJoint(j, Joint);
  
 } // TriaReMeshGen
 
+void NSType1Galerkin(double Mult, double *coeff,
+                     double *param, double hK,
+                     double **OrigValues, int *N_BaseFuncts,
+                     double ***LocMatrices, double **LocRhs)
+{
+}

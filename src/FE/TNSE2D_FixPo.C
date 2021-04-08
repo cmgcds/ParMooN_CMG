@@ -5884,6 +5884,25 @@ void TimeNSParams_NLGalerkin_VMS_1_2D(double *in, double *out)
   out[2] = in[4];                // u1current
   out[3] = in[5];                // u2current
 }
+
+// ========================================================================
+// used for UQ, assembling of matrix
+// ========================================================================
+void TimeNSParams_Mode(double *in, double *out)
+{
+  //mode 
+  out[0] = in[2];  // \tilde u1old
+  out[1] = in[3];  // \tilde u2old
+
+  // mean scales
+  out[2] = in[4];   // \bar u1old
+  out[3] = in[5];   // \bar u2old
+  out[4] = in[6];   // \bar u1old_x
+  out[5] = in[7];   // \bar u2old_x
+  out[6] = in[8];   // \bar u1old_y
+  out[7] = in[9];   // \bar u2old_y
+}
+
 // ========================================================================
 // parameters: u1old, u2old, gradients; values of previous time steps
 // defect correction type 2
@@ -9376,3 +9395,198 @@ double ***LocMatrices, double **LocRhs)
   
    }
 }
+
+// ======================================================================
+// Burgers, Standard Galerkin
+// ======================================================================
+void TimeBurgersGalerkin(double Mult, double *coeff,
+double *param, double hK,
+double **OrigValues, int *N_BaseFuncts,
+double ***LocMatrices, double **LocRhs)
+{
+  double **MatrixA, **MatrixM;
+  double *Rhs1, *Rhs2, val;
+  double *MatrixRow, *MatrixMRow;
+  double ansatz00, ansatz10, ansatz01;
+  double test00, test10, test01;
+  double *Orig0, *Orig1, *Orig2, *Orig3;
+  int i,j,N_U;
+  double c0, c1, c2;
+  double u1, u2;
+
+  MatrixA = LocMatrices[0];
+  MatrixM = LocMatrices[1];
+
+  Rhs1 = LocRhs[0];
+  Rhs2 = LocRhs[1];
+
+  N_U = N_BaseFuncts[0];
+
+  Orig0 = OrigValues[0];         // u_x
+  Orig1 = OrigValues[1];         // u_y
+  Orig2 = OrigValues[2];         // u
+
+  c0 = coeff[0];                 // nu
+  c1 = coeff[1];                 // f1
+  c2 = coeff[2];                 // f2
+
+  u1 = param[0];                 // u1old
+  u2 = param[1];                 // u2old
+
+  for(i=0;i<N_U;i++)
+  {
+    MatrixRow = MatrixA[i];
+    MatrixMRow = MatrixM[i];
+    test10 = Orig0[i];
+    test01 = Orig1[i];
+    test00 = Orig2[i];
+
+    Rhs1[i] += Mult*test00*c1;
+    Rhs2[i] += Mult*test00*c2;
+
+    for(j=0;j<N_U;j++)
+    {
+      ansatz10 = Orig0[j];
+      ansatz01 = Orig1[j];
+      ansatz00 = Orig2[j];
+
+      val  = c0*(test10*ansatz10+test01*ansatz01);
+      val += (u1*ansatz10+u2*ansatz01)*test00;
+      MatrixRow[j] += Mult * val;
+
+      val = ansatz00*test00;
+      MatrixMRow[j] += Mult * val;
+    }                            // endfor j
+  }                              // endfor i
+
+}
+
+// ======================================================================
+// Burgers nonlinear matrix, Standard Galerkin
+// ======================================================================
+void TimeBurgersNLGalerkin(double Mult, double *coeff,
+double *param, double hK,
+double **OrigValues, int *N_BaseFuncts,
+double ***LocMatrices, double **LocRhs)
+{
+  double **MatrixA;
+  double val;
+  double *MatrixRow;
+  double ansatz00, ansatz10, ansatz01;
+  double test00, test10, test01;
+  double *Orig0, *Orig1, *Orig2, *Orig3;
+  int i,j,N_U;
+  double c0, c1, c2;
+  double u1, u2;
+
+  MatrixA = LocMatrices[0];
+  N_U = N_BaseFuncts[0];
+
+  Orig0 = OrigValues[0];         // u_x
+  Orig1 = OrigValues[1];         // u_y
+  Orig2 = OrigValues[2];         // u
+
+  c0 = coeff[0];                 // nu
+
+  u1 = param[0];                 // u1old
+  u2 = param[1];                 // u2old
+
+  for(i=0;i<N_U;i++)
+  {
+    MatrixRow = MatrixA[i];
+    test10 = Orig0[i];
+    test01 = Orig1[i];
+    test00 = Orig2[i];
+
+    for(j=0;j<N_U;j++)
+    {
+      ansatz10 = Orig0[j];
+      ansatz01 = Orig1[j];
+      ansatz00 = Orig2[j];
+
+      val  = c0*(test10*ansatz10+test01*ansatz01);
+      val += (u1*ansatz10+u2*ansatz01)*test00;
+      MatrixRow[j] += Mult * val;
+    }                            // endfor j
+  }                              // endfor i
+
+}
+
+
+// ======================================================================
+// Burgers, Standard Galerkin
+// ======================================================================
+void TimeBurgers_ModeGalerkin(double Mult, double *coeff,
+double *param, double hK,
+double **OrigValues, int *N_BaseFuncts,
+double ***LocMatrices, double **LocRhs)
+{
+  double **MatrixA1, **MatrixA2,**MatrixM;
+  double *Rhs1, *Rhs2, val;
+  double *MatrixA1Row, *MatrixA2Row, *MatrixMRow;
+  double ansatz00, ansatz10, ansatz01;
+  double test00, test10, test01;
+  double *Orig0, *Orig1, *Orig2, *Orig3;
+  int i,j,N_U;
+  double c0, c1, c2;
+  double u1, u2, bu1, bu2, bu1x, bu2x, bu1y, bu2y;
+
+  MatrixA1 = LocMatrices[0];
+  MatrixA2 = LocMatrices[1];
+  MatrixM = LocMatrices[2];
+
+  Rhs1 = LocRhs[0];
+  Rhs2 = LocRhs[1];
+
+  N_U = N_BaseFuncts[0];
+
+  Orig0 = OrigValues[0];         // u_x
+  Orig1 = OrigValues[1];         // u_y
+  Orig2 = OrigValues[2];         // u
+
+  c0 = coeff[0];                 // nu
+  c1 = coeff[1];                 // f1
+  c2 = coeff[2];                 // f2
+
+  u1 = param[0];   // \tilde u1old
+  u2 = param[1];   // \tilde u2old
+  bu1 = param[0];   // \bar u1old
+  bu2 = param[1];   // \bar u2old
+  bu1x = param[0];   // \bar u1old_x
+  bu2x = param[1];   // \bar u2old_x
+  bu1y = param[0];   // \bar u1old_y
+  bu2y = param[1];   // \bar u2old_y
+
+  for(i=0;i<N_U;i++)
+  {
+    MatrixA1Row = MatrixA1[i];
+    MatrixA2Row = MatrixA2[i];   
+    MatrixMRow = MatrixM[i];
+    test10 = Orig0[i];
+    test01 = Orig1[i];
+    test00 = Orig2[i];
+
+    Rhs1[i] += Mult*test00*c1;
+    Rhs2[i] += Mult*test00*c2;
+
+    for(j=0;j<N_U;j++)
+    {
+      ansatz10 = Orig0[j];
+      ansatz01 = Orig1[j];
+      ansatz00 = Orig2[j];
+
+      val  = c0*(test10*ansatz10+test01*ansatz01);
+      val += (u1*ansatz10+u2*ansatz01)*test00;
+      MatrixA1Row[j] += Mult * val;
+
+      // val = (bu1*ansatz10+bu2*ansatz01)*test00;
+      // val += ansatz00*(bu1x0 ;
+
+
+      val = ansatz00*test00;
+      MatrixMRow[j] += Mult * val;
+    }                            // endfor j
+  }                              // endfor i
+
+}
+

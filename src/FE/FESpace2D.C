@@ -36,7 +36,8 @@
 #include <QuadBilinear.h>
 #include <QuadIsoparametric.h>
 #include <NodalFunctional2D.h>
-
+#include<BaseCell.h>
+#include<Collection.h>
 #include <MooNMD_Io.h>
 #include <stdlib.h>
 #include <string.h>
@@ -2514,3 +2515,55 @@ bool operator!=(const TFESpace2D &lhs_space, const TFESpace2D &rhs_space)
 }
 
 
+
+
+// THIVIN 
+// Get DOF number based on the position of the element. 
+int TFESpace2D::GetDOFNumberfromPosition(int DOF, double _x,double _y )
+{
+
+  TBaseCell* cell;
+  FE2D FEid;
+  RefTrans2D RefTrans, *RefTransArray;  // Reference Transformation
+
+  double X[4],Y[4];
+  int N_VertexPerCell ;
+  TVertex* vertices[4];
+
+  // Loop over all the cells
+  for(int i=0;i<N_Cells;i++)
+  {
+    cell = Collection->GetCell(i);
+    FEid = GetFE2D(i, cell); 
+    RefTrans = RefTransArray[FEid];
+    
+    RefTrans2D referenceTransformation =  TFEDatabase2D::GetRefTrans2D_IDFromFE2D(FEid);
+
+	bool found = false;
+	int DOF_NUM ;
+	int* DOF;
+
+
+    // switch (referenceTransformation)
+    // {
+	// 	case QuadBilinear:
+
+	// 		break;
+	// 	case QuadAffin:
+	// 		N_VertexPerCell  = 4;     // HARDCODED
+			
+	// 		DOF = GlobalNumbers + BeginIndex[i];
+	// 		int k = BeginIndex[i+1] - BeginIndex[i];
+
+
+
+
+	// 		break;
+		
+	// 	default:
+	// 		break;
+    // }
+
+    
+  }
+}

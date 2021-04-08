@@ -390,7 +390,9 @@ void TDatabase::SetDefaultParameters()
 
   ParamDB->ANSATZ_ORDER = 2;
   ParamDB->TEST_ORDER = 2;
-
+  ParamDB->ANSATZ_ORDER_INTL = 2;
+  ParamDB->TEST_ORDER_INTL = 2;
+  
   ParamDB->VELOCITY_SPACE = 22;
   ParamDB->PRESSURE_SPACE = -4711;
   ParamDB->PRESSURE_SEPARATION = 0;
@@ -554,6 +556,7 @@ void TDatabase::SetDefaultParameters()
 
   ParamDB->MIN_MAX_ADJOINT = 0;
   ParamDB->INITIAL_STEEPEST_DESCENT_ADJOINT = 0;
+
 
   tmp = new char[30];
   strcpy(tmp,"MooN_MD_default_basefile");

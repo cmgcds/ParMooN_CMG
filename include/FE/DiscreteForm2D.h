@@ -321,7 +321,15 @@ void InitializeDiscreteForms_ImpDropAxial3D_TNSECST(TDiscreteForm2D *&DiscreteFo
 				     TDiscreteForm2D *&DiscreteFormGrid,
 				     CoeffFct2D *LinCoeffs, CoeffFct2D *GridCoeffs);
 
-
+void InitializeDiscreteFormsBurgers(  
+  TDiscreteForm2D *&DiscreteFormGalerkin,
+  TDiscreteForm2D *&DiscreteFormSDFEM,
+  TDiscreteForm2D *&DiscreteFormUpwind,
+  TDiscreteForm2D *&DiscreteFormNLGalerkin,
+  TDiscreteForm2D *&DiscreteFormNLSDFEM,
+  TDiscreteForm2D *&DiscreteFormNLUpwind,
+  TDiscreteForm2D *&DiscreteFormRHS,
+  CoeffFct2D *LinCoeffs);
 
 #endif
 

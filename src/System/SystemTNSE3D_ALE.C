@@ -3316,6 +3316,7 @@ void TSystemTNSE3D_ALE::impose_FreeSlip_BoundaryCondition( double* rhs,int lengt
 void TSystemTNSE3D_ALE::imposeExternalBoundaryCondition(void externalBoundaryParameters(double&, unsigned int&, double&), TFEVectFunct3D* ExternalVelocityFEvect, TFEVectFunct3D* VelocityFEvect)
 {
 
+<<<<<<< HEAD
     // get these variables from the ALE input example file 
     	double frequency;   // ( cycles per second )
 	
@@ -3403,6 +3404,8 @@ void TSystemTNSE3D_ALE::imposeExternalBoundaryCondition(void externalBoundaryPar
     default:
       break;
     }
+=======
+>>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
    
     // cout << " Ext Vel norm after : " << cblas_dnrm2(totallength,ExternalVelocityArray,1.0) <<endl;
     // cout << " Vel norm after : " << cblas_dnrm2(totallength,VelocityArray,1.0) <<endl;

@@ -99,6 +99,7 @@ typedef void DoubleFunctVect(double *, double *);
 typedef int IntFunct2D(double, double);
 typedef double DoubleFunct2Param(double, double);
 
+typedef void BoundCond1D(BoundCond &, BoundCond &);
 typedef void BoundCondFunct3D(int, double, double, double, BoundCond &);
 typedef void BoundValueFunct3D(int, double, double, double, double &);
 typedef void BoundCondFunct2D(int, double, BoundCond &);

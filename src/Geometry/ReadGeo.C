@@ -45,7 +45,10 @@
 
 int TDomain::ReadGeo(char *GeoFile)
 {
+<<<<<<< HEAD
 	
+=======
+>>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
   char line[100];
   int i, j, N_Vertices, NVpF, NVE, NBCT;
   double *DCORVG;

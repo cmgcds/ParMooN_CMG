@@ -1,0 +1,6 @@
+Name: mlpack
+Description: scalable C++ machine learning library
+URL: http://www.mlpack.org/
+Version: 3.4.2
+Cflags:  -I/home/subodh/bin/Armadillo/include -I/usr/include/stb/ -I/home/subodh/bin/Ensmallen/include -I/home/subodh/bin/mlpack/include/
+Libs: -L/home/subodh/bin/Armadillo/lib/ -larmadillo -lboost_unit_test_framework -lboost_serialization -L/home/subodh/bin/mlpack/lib/ -lmlpack

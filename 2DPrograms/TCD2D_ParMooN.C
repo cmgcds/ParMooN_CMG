@@ -44,7 +44,7 @@
 // #include "../Examples_All/TCD_2D/exp_1.h"
 // #include "../Main_Users/Sashi/TCD_2D/Hemker.h"
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
   int i, j, l, m, N_SubSteps, ORDER, N_Cells, N_DOF, img=1, N_G;
   int N_Active;
@@ -357,12 +357,3 @@ int main(int argc, char* argv[])
   
   return 0;
 } // end main
-
-
-
-
-
-
-
-
-

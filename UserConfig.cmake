@@ -8,8 +8,13 @@
 set(CMAKE_VERBOSE_MAKEFILE FALSE)
 
 # selection of dimension (2D 3D)
+<<<<<<< HEAD
 # set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimensio of the problem")
 set(AParMooN_GEO "3D" CACHE STRING "Change AParMooN_GEO, to select the Dimension of the problem")
+=======
+set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimensio of the problem")
+# set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimension of the problem")
+>>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
 
 #...................................................................................................................................................
 # select this line accordingly to include your main program
@@ -17,7 +22,11 @@ set(AParMooN_GEO "3D" CACHE STRING "Change AParMooN_GEO, to select the Dimension
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TCD2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TCD2D_ParMooN_ALE.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/NSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
+<<<<<<< HEAD
 #set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TNSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
+=======
+# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TNSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
+>>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/CD3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/TCD3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/NSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
@@ -25,7 +34,16 @@ set(AParMooN_GEO "3D" CACHE STRING "Change AParMooN_GEO, to select the Dimension
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/2D_Programs/deepikaji.cpp" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/TNSE3D/thivin_TNSE3D.cpp" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/Sample_mesh_move_2d.cpp" CACHE STRING "Enter to select the Main file of the model")
+<<<<<<< HEAD
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TBE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
+=======
+
+#set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TBE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
+#set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_Thyroid.C" CACHE STRING "Enter to select the Main file of the model") 
+#set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_MNIST.C" CACHE STRING "Enter to select the Main file of the model") 
+#set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_Regression.C" CACHE STRING "Enter to select the Main file of the model") 
+set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_SUPG.C" CACHE STRING "Enter to select the Main file of the model") 
+>>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
 
 # selection of architect type (LINUX64 MAC64 INTEL64 TYRONE64 CRAY64)
 set(AParMooN_ARCH "INTEL64" CACHE STRING "select the machine type")
@@ -51,6 +69,10 @@ set(AParMooN_MPI_IMPLEMENTATION "INTELMPI" CACHE STRING "select the MPI Implemen
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/deepikaji" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/burger" CACHE STRING "select the model")
 
+
+#set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/burger" CACHE STRING "select the model")
+#set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/cd1dANN" CACHE STRING "select the model")
+set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/ANNRegression" CACHE STRING "select the model")
 
 set(USE_PARMOON_DEFINE -D__PRIVATE__)
 

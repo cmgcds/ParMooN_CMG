@@ -5532,6 +5532,66 @@ DiscreteFormRHS = new TDiscreteForm2D(GalerkinString, rhsString,
   } // endswitch
 }
 
+void InitializeDiscreteFormsBurgers(  
+  TDiscreteForm2D *&DiscreteFormGalerkin,
+  TDiscreteForm2D *&DiscreteFormSDFEM,
+  TDiscreteForm2D *&DiscreteFormUpwind,
+  TDiscreteForm2D *&DiscreteFormNLGalerkin,
+  TDiscreteForm2D *&DiscreteFormNLSDFEM,
+  TDiscreteForm2D *&DiscreteFormNLUpwind,
+  TDiscreteForm2D *&DiscreteFormRHS,
+  CoeffFct2D *LinCoeffs)
+  {
 
+   char BurgerString[] = "Burger";
+   char allString[] = "all";
+
+  DiscreteFormGalerkin = new TDiscreteForm2D(BurgerString, allString,
+                              TimeBE_N_Terms, TimeBE_Derivatives, TimeBE_SpaceNumbers,
+                              TimeBE_N_Matrices, TimeBE_N_Rhs,
+                              TimeBE_RowSpace, TimeBE_ColumnSpace,
+                              TimeBE_RhsSpace, TimeBurgersGalerkin,
+                              LinCoeffs, NULL);    
+
+
+  DiscreteFormNLGalerkin = new TDiscreteForm2D(BurgerString, allString,
+                              TimeBE_N_Terms, TimeBE_Derivatives, TimeBE_SpaceNumbers,
+                              TimeBENL_N_Matrices, TimeBENL_N_Rhs,
+                              TimeBENL_RowSpace, TimeBENL_ColumnSpace,
+                              NULL, TimeBurgersNLGalerkin,
+                              LinCoeffs, NULL);    
+
+  }
+
+// void InitializeDiscreteFormsBurgers_Mode(  
+//   TDiscreteForm2D *&DiscreteFormGalerkin,
+//   TDiscreteForm2D *&DiscreteFormSDFEM,
+//   TDiscreteForm2D *&DiscreteFormUpwind,
+//   TDiscreteForm2D *&DiscreteFormNLGalerkin,
+//   TDiscreteForm2D *&DiscreteFormNLSDFEM,
+//   TDiscreteForm2D *&DiscreteFormNLUpwind,
+//   TDiscreteForm2D *&DiscreteFormRHS,
+//   CoeffFct2D *LinCoeffs)
+//   {
+
+//    char BurgerString[] = "Burger";
+//    char allString[] = "all";
+
+//   DiscreteFormGalerkin = new TDiscreteForm2D(BurgerString, allString,
+//                               TimeBE_N_Terms, TimeBE_Derivatives, TimeBE_SpaceNumbers,
+//                               TimeBE_N_Matrices, TimeBE_N_Rhs,
+//                               TimeBE_RowSpace, TimeBE_ColumnSpace,
+//                               TimeBE_RhsSpace, TimeBurgersGalerkin,
+//                               LinCoeffs, NULL);    
+
+
+//   DiscreteFormNLGalerkin = new TDiscreteForm2D(BurgerString, allString,
+//                               TimeBE_N_Terms, TimeBE_Derivatives, TimeBE_SpaceNumbers,
+//                               TimeBENL_N_Matrices, TimeBENL_N_Rhs,
+//                               TimeBENL_RowSpace, TimeBENL_ColumnSpace,
+//                               NULL, TimeBurgersNLGalerkin,
+//                               LinCoeffs, NULL);    
+
+//   }
 
 #endif

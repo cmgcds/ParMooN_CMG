@@ -1096,8 +1096,37 @@ double **OrigValues, int *N_BaseFuncts,
 double ***LocMatrices, double **LocRhs);
 
 
+// ======================================================================
+// declaration for all Burgers problems 
+//      one A block, 
+//      M block from time discretization
+// ======================================================================
 
+int TimeBE_N_Terms = 3;
+MultiIndex2D TimeBE_Derivatives[3] = {D10, D01, D00};
+int TimeBE_SpaceNumbers[3] = {0, 0, 0};
+int TimeBE_N_Matrices = 2;
+int TimeBE_RowSpace[2] = { 0, 0};
+int TimeBE_ColumnSpace[2] = {0, 0};
+int TimeBE_N_Rhs = 2;
+int TimeBE_RhsSpace[2] = {0, 0 };
 
+int TimeBENL_N_Matrices = 1;
+int TimeBENL_RowSpace[1] = {0};
+int TimeBENL_ColumnSpace[1] = {0};
+int TimeBENL_N_Rhs = 0;
+// ======================================================================
+// Burgers, Standard Galerkin
+// ======================================================================
+void TimeBurgersGalerkin(double Mult, double *coeff, 
+                double *param, double hK, 
+                double **OrigValues, int *N_BaseFuncts,
+                double ***LocMatrices, double **LocRhs);
+
+void TimeBurgersNLGalerkin(double Mult, double *coeff, 
+                double *param, double hK, 
+                double **OrigValues, int *N_BaseFuncts,
+                double ***LocMatrices, double **LocRhs);
 
 
 #endif  // __TNSE2D_FIXPO__

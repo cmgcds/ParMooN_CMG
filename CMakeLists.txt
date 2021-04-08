@@ -37,16 +37,16 @@ SET(BUILD_SHARED_LIBS ON)
  
 # set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/local/lib)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/lib)
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/intel/mkl/lib/intel64)
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} $ENV{HOME}/intel/mkl/lib/intel64)
+set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/intel/oneapi/mkl/latest/lib/intel64)
+set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} $ENV{HOME}/intel/oneapi/mkl/latest/lib/intel64)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} $ENV{HOME}/lib)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} $ENV{HOME}/software/lib)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} $ENV{HOME}/Software/lib)
 
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} /opt/local/include)
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} /opt/include)
-set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} /opt/intel/mkl/include)
-set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/intel/mkl/include)
+set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} /opt/intel/oneapi/mkl/latest/include)
+set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/intel/oneapi/mkl/latest/include)
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/include)
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/software/include)
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/Software/include)
@@ -80,10 +80,28 @@ if(AParMooN_USE_SYSTEM_MKLBLAS)
     # add a User parameter to be passed to parmoon to inform the usage of MKL header files
     # Declare a private Variable for _INTELMKLBLAS_ in order to include Header Files
     if(BLAS_FOUND)
-    set(PARMOON_C_DEF " ${PARMOON_C_DEF} -DINTELMKLBLAS")
-    set(PARMOON_CXX_DEF " ${PARMOON_CXX_DEF} -DINTELMKLBLAS")
-    # Set the Variable ISMKLBLASUSED to true
-    set(MKLBLASFOUND "TRUE")
+      set(PARMOON_C_DEF " ${PARMOON_C_DEF} -DINTELMKLBLAS")
+      set(PARMOON_CXX_DEF " ${PARMOON_CXX_DEF} -DINTELMKLBLAS")
+      # Set the Variable ISMKLBLASUSED to true
+      
+      set(MKLBLASFOUND "TRUE")
+
+
+      #### SET UP MKL BLAS VARIABLES ######
+      if ("${MKLBLASFOUND}" STREQUAL "TRUE")
+      if("${AParMooN_ARCH}" STREQUAL "LINUX64")  
+        set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -liomp5 -lpthread  -ldl")
+        set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -liomp5 -lpthread  -ldl")
+      endif("${AParMooN_ARCH}" STREQUAL "LINUX64") 
+
+      if("${AParMooN_ARCH}" STREQUAL "INTEL64")  
+        set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF}  -liomp5 -lpthread  -ldl")
+        set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -liomp5 -lpthread  -ldl")
+      endif("${AParMooN_ARCH}" STREQUAL "INTEL64") 
+
+      endif ("${MKLBLASFOUND}" STREQUAL "TRUE")
+      ####  --END-- SET UP MKL BLAS VARIABLES ######
+
     endif(BLAS_FOUND)
 endif(AParMooN_USE_SYSTEM_MKLBLAS)
 
@@ -332,9 +350,8 @@ if( "${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI"  OR "${AParMooN_PARALLEL_TYPE}" S
                       ${MPIBLACS_LIBRARIES}  ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  ${MUMPS_LIBRARIES}   ${BLAS_LIBRARIES} ${MPI_LIBS})  
 elseif( "${AParMooN_PARALLEL_TYPE}" STREQUAL "SEQUENTIAL"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "OMPONLY")
    target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "sys" "geo"  "fe" "gen" "geo" "fe" "gen" "fe"
-                      "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "sys" "fe" "geo"  ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
-                      ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}   )
-
+                      "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "sys" "fe" "geo" "gen" ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
+                      ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  )
 elseif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
 target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "sys" "geo"  "fe" "gen" "geo" "fe" "gen" "fe"
                     "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "sys" "fe" "geo" "cudaSpLinSolver" ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}

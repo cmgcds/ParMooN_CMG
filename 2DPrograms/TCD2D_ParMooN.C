@@ -121,6 +121,7 @@ int main(int argc, char* argv[])
     Domain->PS("Domain.ps", It_Finest, 0);
   
   // create output directory, if not already existing
+  TDatabase::ParamDB->WRITE_VTK = 1;
   if(TDatabase::ParamDB->WRITE_VTK)
     mkdir(vtkdir, 0777);
 
@@ -196,6 +197,7 @@ int main(int argc, char* argv[])
 
      
     // measure errors to known solution
+    TDatabase::ParamDB->MEASURE_ERRORS = 0;
     if(TDatabase::ParamDB->MEASURE_ERRORS)
      {
       fesp[0] = Scalar_FeSpace;       

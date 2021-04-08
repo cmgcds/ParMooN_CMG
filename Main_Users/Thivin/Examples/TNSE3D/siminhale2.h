@@ -7,6 +7,7 @@
 #include <IsoBoundFace.h>
 #include <MacroCell.h>
 #include <BdSphere.h>
+#include<cmath>
 // #include <tetgen.h>
 
 
@@ -100,7 +101,6 @@ void BoundCondition(int CompID, double x, double y, double z, BoundCond &cond)
     if ( CompID == 0 || CompID == 2 )
         cond = DIRICHLET;
 
-
       else
       {
         cond = NEUMANN;
@@ -119,7 +119,21 @@ void U1BoundValue(int CompID, double x, double y, double z, double &value)
 // value of boundary condition
 void U2BoundValue(int CompID, double x, double y, double z, double &value)
 {
-    if(CompID == 0) value = 0.001;
+    double radius = 0;
+    double x_c    = 5.32402;
+    double z_c    = 15.33205;
+
+    if(CompID == 0) 
+    {
+      if(   sqrt( pow((x - x_c),2) + pow((z - z_c),2) )  < 0.49)  // inside Circle
+      {
+        value = (z - 15.8317) * (z - 14.8324) * (x - 5.82177) * (x - 4.8317) * 100000 * (1.0 / (15.33205*15.33205 * 5.32402 *5.32402))  ;
+        // cout << " Value : " << value <<endl;
+      }
+      else
+        value = 0.0;
+    }
+
     else value = 0;
 
 
@@ -148,7 +162,7 @@ void LinCoeffs(int n_points, double *X, double *Y, double *Z,
     coeff[0] = eps;
     coeff[1] = 0;  // f1
     coeff[2] =  0; // -49050000; // ;  // f2:
-    coeff[3] = -0.002;  // f3
+    coeff[3] = 0;  // f3
   }
 
 }

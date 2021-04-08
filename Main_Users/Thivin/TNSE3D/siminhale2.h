@@ -113,13 +113,12 @@ void U1BoundValue(int CompID, double x, double y, double z, double &value)
 {
     if(CompID == 0) value = 0.00;
     else value = 0;
-     
 }
 
 // value of boundary condition
 void U2BoundValue(int CompID, double x, double y, double z, double &value)
 {
-    if(CompID == 0) value = 0.001;
+    if(CompID == 0) value = 0.01;
     else value = 0;
 
 

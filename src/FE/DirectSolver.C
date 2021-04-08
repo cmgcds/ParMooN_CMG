@@ -15,7 +15,7 @@
 #include "stdlib.h"
 #include <LinAlg.h>
 
-#ifdef  INTELMKLBLAS
+#ifdef INTELMKLBLAS
 #include <mkl.h>
 #endif
 #include <omp.h>
@@ -24,8 +24,9 @@
 
 extern "C"
 {
-#include "umfpack.h"
+  #include "umfpack.h"
 }
+
 void UMFPACK_return(int ret)
 {
 
@@ -4476,6 +4477,7 @@ void DirectSolver(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
                   TMatrix3D *matrixB1, TMatrix3D *matrixB2, TMatrix3D *matrixB3,
                   double *rhs, double *sol, int flag)
 {
+
   if (TDatabase::ParamDB->SC_VERBOSE > 3)
     OutPut("umf3d" << endl);
   int *KColA, *RowPtrA;
@@ -4700,6 +4702,7 @@ void DirectSolver(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
       rhs[3 * N_U] = 0;
     }
 
+    cout << " Sort Begin " <<endl;
     // sort matrix
     for (i = 0; i < N_; i++)
     {
@@ -4723,6 +4726,7 @@ void DirectSolver(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
       }     // endfor j
     }       // endfor i
 
+    cout << " Sort End " <<endl;
     /*
   for(i=0;i<N_;i++)
   {
@@ -4733,37 +4737,40 @@ void DirectSolver(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
 
     t2 = GetTime();
 
-    ret = umfpack_di_symbolic(N_, N_, RowPtr, KCol, Entries, &Symbolic, null, null);
-    if (ret != 0)
-    {
-      OutPut("WARNING: symbolic: " << ret << endl);
-    }
-    t3 = GetTime();
-    ret = umfpack_di_numeric(RowPtr, KCol, Entries, Symbolic, &Numeric, null, null);
-    if (ret != 0)
-    {
-      OutPut("WARNING: numeric: " << ret << endl);
-    }
-    t4 = GetTime();
-    umfpack_di_free_symbolic(&Symbolic);
-  }
-  t4 = GetTime();
-  ret = umfpack_di_solve(UMFPACK_At, RowPtr, KCol, Entries,
-                         sol, rhs, Numeric, null, null);
-  if (ret != 0)
-  {
-    OutPut("WARNING: solve: " << ret << endl);
-  }
-  t5 = GetTime();
+    solve_pardiso(N_, RowPtr, KCol, Entries, rhs, sol);
+    // solve_pardiso()
 
-  if (flag == 2 || flag == 3)
-  {
-    // cout << " Deleting the Values " <<endl;
-    umfpack_di_free_numeric(&Numeric);
+    // ret = umfpack_di_symbolic(N_, N_, RowPtr, KCol, Entries, &Symbolic, null, null);
+    // if (ret != 0)
+    // {
+    //   OutPut("WARNING: symbolic: " << ret << endl);
+    // }
+    // t3 = GetTime();
+    // ret = umfpack_di_numeric(RowPtr, KCol, Entries, Symbolic, &Numeric, null, null);
+    // if (ret != 0)
+    // {
+    //   OutPut("WARNING: numeric: " << ret << endl);
+    // }
+    // t4 = GetTime();
+    // umfpack_di_free_symbolic(&Symbolic);
+  }
+  // t4 = GetTime();
+  // ret = umfpack_di_solve(UMFPACK_At, RowPtr, KCol, Entries,
+  //                        sol, rhs, Numeric, null, null);
+  // if (ret != 0)
+  // {
+  //   OutPut("WARNING: solve: " << ret << endl);
+  // }
+  // t5 = GetTime();
+
+  // if (flag == 2 || flag == 3)
+  // {
+  //   // cout << " Deleting the Values " <<endl;
+  //   umfpack_di_free_numeric(&Numeric);
     delete[] Entries;
     delete[] KCol;
     delete[] RowPtr;
-  }
+  // }
 
   if (verbose > 3)
   {
@@ -5124,9 +5131,8 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
   double *EntriesB1, *EntriesB2, *EntriesB3, *EntriesB1T, *EntriesB2T, *EntriesB3T;
   int N_, N_U, N_P, N_Entries;
   // static double *Entries;
-  static double* TEntries;
+  static double *TEntries;
   static int *TKCol, *TRowPtr;
-
 
   double *null = (double *)NULL;
   static void *Symbolic, *Numeric;
@@ -5177,8 +5183,7 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
 
     N_Entries = (9 * RowPtrA[N_U]) + (3 * RowPtrB[N_P]) + 3 * RowPtrBT[N_U];
 
-
-    // THIVIN 
+    // THIVIN
     // New copy Procedure to the local matrix to global without the need for sorting at the end
 
     TEntries = new double[N_Entries]();
@@ -5218,7 +5223,7 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
         Tpos++;
       }
 
-       if (i < N_Active)
+      if (i < N_Active)
       {
         // B1T
         begin = RowPtrBT[i];
@@ -5232,11 +5237,10 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
         }
       }
 
-
       TRowPtr[i + 1] = Tpos;
     }
- 
-   for (i = 0; i < N_U; i++)
+
+    for (i = 0; i < N_U; i++)
     {
       begin = RowPtrA[i];
       end = RowPtrA[i + 1];
@@ -5253,11 +5257,11 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
       {
         // A12
         TEntries[Tpos] = EntriesA22[j];
-       TKCol[Tpos] = KColA[j] + N_U;
+        TKCol[Tpos] = KColA[j] + N_U;
         Tpos++;
       }
 
-            for (j = begin; j < end; j++)
+      for (j = begin; j < end; j++)
       {
         // A13
         TEntries[Tpos] = EntriesA23[j];
@@ -5265,7 +5269,7 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
         Tpos++;
       }
 
-       if (i < N_Active)
+      if (i < N_Active)
       {
         // B1T
         begin = RowPtrBT[i];
@@ -5273,11 +5277,10 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
         for (j = begin; j < end; j++)
         {
           TEntries[Tpos] = EntriesB2T[j];
-          TKCol[Tpos] = KColBT[j] + ( 3 * N_U);
+          TKCol[Tpos] = KColBT[j] + (3 * N_U);
           Tpos++;
         }
       }
-
 
       TRowPtr[N_U + i + 1] = Tpos;
     }
@@ -5306,12 +5309,12 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
       for (j = begin; j < end; j++)
       {
         // A13
-       TEntries[Tpos] = EntriesA33[j];
+        TEntries[Tpos] = EntriesA33[j];
         TKCol[Tpos] = KColA[j] + 2 * N_U;
         Tpos++;
       }
 
-       if (i < N_Active)
+      if (i < N_Active)
       {
         // B1T
         begin = RowPtrBT[i];
@@ -5324,8 +5327,7 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
         }
       }
 
-
-      TRowPtr[(2*N_U)+i + 1] = Tpos;
+      TRowPtr[(2 * N_U) + i + 1] = Tpos;
     }
 
     for (i = 0; i < N_P; i++)
@@ -5367,40 +5369,36 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
       TKCol[begin] = 3 * N_U;
       rhs[3 * N_U] = 0;
     }
-
   }
-    t1 = omp_get_wtime();
+  t1 = omp_get_wtime();
 
-    solve_pardiso(N_, TRowPtr, TKCol, TEntries, rhs, sol);
+  solve_pardiso(N_, TRowPtr, TKCol, TEntries, rhs, sol);
 
-    t2 = omp_get_wtime();
+  t2 = omp_get_wtime();
 
-    // cout << " SOLVING time : " << t2 - t1 << endl;
+  // cout << " SOLVING time : " << t2 - t1 << endl;
 
-    //  cout << " Solution norm main : "<< cblas_ddot(N_,sol,1.0,sol,1.0) <<endl;
-    /*
+  //  cout << " Solution norm main : "<< cblas_ddot(N_,sol,1.0,sol,1.0) <<endl;
+  /*
   for(i=0;i<N_;i++)
     cout << setw(6) << i << setw(30) << sol[i] << endl;
   */
-    delete[] TEntries;
-    delete[] TRowPtr;
-    delete[] TKCol;
-  }
+  delete[] TEntries;
+  delete[] TRowPtr;
+  delete[] TKCol;
+}
 
-
-
-
-
-  void PardisoDirectSolver(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
-                                                        TSquareMatrix3D *sqmatrixA13,
-                                                        TSquareMatrix3D *sqmatrixA21, TSquareMatrix3D *sqmatrixA22,
-                                                        TSquareMatrix3D *sqmatrixA23,
-                                                        TSquareMatrix3D *sqmatrixA31, TSquareMatrix3D *sqmatrixA32,
-                                                        TSquareMatrix3D *sqmatrixA33,
-                                                        TMatrix3D *matrixB1T, TMatrix3D *matrixB2T, TMatrix3D *matrixB3T,
-                                                        TMatrix3D *matrixB1, TMatrix3D *matrixB2, TMatrix3D *matrixB3,
-                                                        double *rhs, double *sol, int flag)
+void PardisoDirectSolver(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
+                         TSquareMatrix3D *sqmatrixA13,
+                         TSquareMatrix3D *sqmatrixA21, TSquareMatrix3D *sqmatrixA22,
+                         TSquareMatrix3D *sqmatrixA23,
+                         TSquareMatrix3D *sqmatrixA31, TSquareMatrix3D *sqmatrixA32,
+                         TSquareMatrix3D *sqmatrixA33,
+                         TMatrix3D *matrixB1T, TMatrix3D *matrixB2T, TMatrix3D *matrixB3T,
+                         TMatrix3D *matrixB1, TMatrix3D *matrixB2, TMatrix3D *matrixB3,
+                         double *rhs, double *sol, int flag)
 {
+
   if (TDatabase::ParamDB->SC_VERBOSE > 3)
     OutPut("umf3d" << endl);
   int *KColA, *RowPtrA;
@@ -5411,9 +5409,8 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
   double *EntriesB1, *EntriesB2, *EntriesB3, *EntriesB1T, *EntriesB2T, *EntriesB3T;
   int N_, N_U, N_P, N_Entries;
   // static double *Entries;
-  static double* TEntries;
+  static double *TEntries;
   static int *TKCol, *TRowPtr;
-
 
   double *null = (double *)NULL;
   static void *Symbolic, *Numeric;
@@ -5464,8 +5461,7 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
 
     N_Entries = (9 * RowPtrA[N_U]) + (3 * RowPtrB[N_P]) + 3 * RowPtrBT[N_U];
 
-
-    // THIVIN 
+    // THIVIN
     // New copy Procedure to the local matrix to global without the need for sorting at the end
 
     TEntries = new double[N_Entries]();
@@ -5505,7 +5501,7 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
         Tpos++;
       }
 
-       if (i < N_Active)
+      if (i < N_Active)
       {
         // B1T
         begin = RowPtrBT[i];
@@ -5519,11 +5515,10 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
         }
       }
 
-
       TRowPtr[i + 1] = Tpos;
     }
- 
-   for (i = 0; i < N_U; i++)
+
+    for (i = 0; i < N_U; i++)
     {
       begin = RowPtrA[i];
       end = RowPtrA[i + 1];
@@ -5540,11 +5535,11 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
       {
         // A12
         TEntries[Tpos] = EntriesA22[j];
-       TKCol[Tpos] = KColA[j] + N_U;
+        TKCol[Tpos] = KColA[j] + N_U;
         Tpos++;
       }
 
-            for (j = begin; j < end; j++)
+      for (j = begin; j < end; j++)
       {
         // A13
         TEntries[Tpos] = (i < N_Active) ? EntriesA23[j] : 0;
@@ -5552,7 +5547,7 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
         Tpos++;
       }
 
-       if (i < N_Active)
+      if (i < N_Active)
       {
         // B1T
         begin = RowPtrBT[i];
@@ -5560,11 +5555,10 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
         for (j = begin; j < end; j++)
         {
           TEntries[Tpos] = EntriesB2T[j];
-          TKCol[Tpos] = KColBT[j] + ( 3 * N_U);
+          TKCol[Tpos] = KColBT[j] + (3 * N_U);
           Tpos++;
         }
       }
-
 
       TRowPtr[N_U + i + 1] = Tpos;
     }
@@ -5593,12 +5587,12 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
       for (j = begin; j < end; j++)
       {
         // A13
-       TEntries[Tpos] = EntriesA33[j];
+        TEntries[Tpos] = EntriesA33[j];
         TKCol[Tpos] = KColA[j] + 2 * N_U;
         Tpos++;
       }
 
-       if (i < N_Active)
+      if (i < N_Active)
       {
         // B1T
         begin = RowPtrBT[i];
@@ -5611,8 +5605,7 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
         }
       }
 
-
-      TRowPtr[(2*N_U)+i + 1] = Tpos;
+      TRowPtr[(2 * N_U) + i + 1] = Tpos;
     }
 
     for (i = 0; i < N_P; i++)
@@ -5654,108 +5647,104 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
       TKCol[begin] = 3 * N_U;
       rhs[3 * N_U] = 0;
     }
-
   }
-    t1 = omp_get_wtime();
+  t1 = omp_get_wtime();
 
-    solve_pardiso(N_, TRowPtr, TKCol, TEntries, rhs, sol);
+  solve_pardiso(N_, TRowPtr, TKCol, TEntries, rhs, sol);
 
-    t2 = omp_get_wtime();
+  t2 = omp_get_wtime();
 
-    // cout << " SOLVING time : " << t2 - t1 << endl;
+  // cout << " SOLVING time : " << t2 - t1 << endl;
 
-    //  cout << " Solution norm main : "<< cblas_ddot(N_,sol,1.0,sol,1.0) <<endl;
-    /*
+  //  cout << " Solution norm main : "<< cblas_ddot(N_,sol,1.0,sol,1.0) <<endl;
+  /*
   for(i=0;i<N_;i++)
     cout << setw(6) << i << setw(30) << sol[i] << endl;
   */
-    delete[] TEntries;
-    delete[] TRowPtr;
-    delete[] TKCol;
+  delete[] TEntries;
+  delete[] TRowPtr;
+  delete[] TKCol;
+}
+
+void DirectSolver(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
+                  double *sol, double *rhs)
+{
+  // cout << " CALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLll" <<endl;
+  int N_Active;
+  int N_Rows;
+  int N_Entries, N_Row, begin, end, pos, l;
+  int *RowPtr, *rowptr;
+  int *KCol, *kcol;
+  double *Entries, *entries, value;
+  double t1, t2;
+
+  N_Active = sqmatrices[0]->GetActiveBound();
+  N_Rows = sqmatrices[0]->GetN_Rows();
+
+  N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
+
+  Entries = new double[N_Entries];
+  RowPtr = new int[N_Rows * n_row + 1];
+  KCol = new int[N_Entries];
+
+  N_Row = N_Rows * n_row;
+
+  pos = 0;
+  RowPtr[0] = 0;
+
+  for (int i = 0; i < n_row; ++i)
+  {
+    for (int row = 0; row < N_Rows; ++row)
+    {
+      for (int j = 0; j < n_column; ++j)
+      {
+        if (i != j && row >= N_Active)
+          continue;
+
+        rowptr = sqmatrices[(i * n_column) + j]->GetRowPtr();
+        kcol = sqmatrices[(i * n_column) + j]->GetKCol();
+        entries = sqmatrices[(i * n_column) + j]->GetEntries();
+
+        begin = rowptr[row];
+        end = rowptr[row + 1];
+
+        for (int loc_pos = begin; loc_pos < end; ++loc_pos)
+        {
+          Entries[pos] = entries[loc_pos];
+          KCol[pos] = kcol[loc_pos] + j * N_Rows;
+          ++pos;
+        }
+      }
+      RowPtr[i * N_Rows + row + 1] = pos;
+    }
   }
 
-  void DirectSolver(TSquareMatrix3D * *sqmatrices, int n_row, int n_column,
-                    double *sol, double *rhs)
+  // sort matrix
+  for (int i = 0; i < N_Row; i++)
   {
-    // cout << " CALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLll" <<endl;
-    int N_Active;
-    int N_Rows;
-    int N_Entries, N_Row, begin, end, pos, l;
-    int *RowPtr, *rowptr;
-    int *KCol, *kcol;
-    double *Entries, *entries, value;
-    double t1, t2;
+    begin = RowPtr[i];
+    end = RowPtr[i + 1];
 
-    N_Active = sqmatrices[0]->GetActiveBound();
-    N_Rows = sqmatrices[0]->GetN_Rows();
-
-    N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
-
-    Entries = new double[N_Entries];
-    RowPtr = new int[N_Rows * n_row + 1];
-    KCol = new int[N_Entries];
-
-    N_Row = N_Rows * n_row;
-
-    pos = 0;
-    RowPtr[0] = 0;
-
-    for (int i = 0; i < n_row; ++i)
+    for (int j = begin; j < end; j++)
     {
-      for (int row = 0; row < N_Rows; ++row)
+      for (int k = j + 1; k < end; k++)
       {
-        for (int j = 0; j < n_column; ++j)
+        if (KCol[j] > KCol[k])
         {
-          if (i != j && row >= N_Active)
-            continue;
-
-          rowptr = sqmatrices[(i * n_column) + j]->GetRowPtr();
-          kcol = sqmatrices[(i * n_column) + j]->GetKCol();
-          entries = sqmatrices[(i * n_column) + j]->GetEntries();
-
-          begin = rowptr[row];
-          end = rowptr[row + 1];
-
-          for (int loc_pos = begin; loc_pos < end; ++loc_pos)
-          {
-            Entries[pos] = entries[loc_pos];
-            KCol[pos] = kcol[loc_pos] + j * N_Rows;
-            ++pos;
-          }
-        }
-        RowPtr[i * N_Rows + row + 1] = pos;
-      }
-    }
-
-    // sort matrix
-    for (int i = 0; i < N_Row; i++)
-    {
-      begin = RowPtr[i];
-      end = RowPtr[i + 1];
-
-      for (int j = begin; j < end; j++)
-      {
-        for (int k = j + 1; k < end; k++)
-        {
-          if (KCol[j] > KCol[k])
-          {
-            l = KCol[j];
-            value = Entries[j];
-            KCol[j] = KCol[k];
-            Entries[j] = Entries[k];
-            KCol[k] = l;
-            Entries[k] = value;
-          } // endif
-        }   // endfor k
-      }     // endfor j
-    }
-
-
-
+          l = KCol[j];
+          value = Entries[j];
+          KCol[j] = KCol[k];
+          Entries[j] = Entries[k];
+          KCol[k] = l;
+          Entries[k] = value;
+        } // endif
+      }   // endfor k
+    }     // endfor j
+  }
 
   //  std::ofstream outfile;
   //   outfile.open("rowptr.txt");
-  //   outfile << N_Rows*n_row ; 
+  //   outfile << N_Rows*n_row ;
   //   outfile << endl <<  RowPtr[0];
   //   for ( int i = 1 ; i < N_Rows*n_row+1 ; i++)
   //     outfile <<endl << RowPtr[i];
@@ -5786,62 +5775,228 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
   //   // outfile3<<endl;
   //   outfile3.close();
 
-    void *Symbolic, *Numeric;
-    int ret;
+  void *Symbolic, *Numeric;
+  int ret;
 
-    ret = umfpack_di_symbolic(N_Row, N_Row, RowPtr, KCol, Entries, &Symbolic, NULL, NULL);
-    if (ret != 0)
-    {
-      OutPut("symbolic: " << ret << endl);
-      exit(0);
-    }
-    //   t1 = GetTime();
-    ret = umfpack_di_numeric(RowPtr, KCol, Entries, Symbolic, &Numeric, NULL, NULL);
-    if (ret != 0)
-    {
-      OutPut("numeric: " << ret << endl);
-      exit(0);
-    }
-    //   t2 = GetTime();
-    //   OutPut("numeric: " << ret << " "  << t2-t1 << endl);
+  ret = umfpack_di_symbolic(N_Row, N_Row, RowPtr, KCol, Entries, &Symbolic, NULL, NULL);
+  if (ret != 0)
+  {
+    OutPut("symbolic: " << ret << endl);
+    exit(0);
+  }
+  //   t1 = GetTime();
+  ret = umfpack_di_numeric(RowPtr, KCol, Entries, Symbolic, &Numeric, NULL, NULL);
+  if (ret != 0)
+  {
+    OutPut("numeric: " << ret << endl);
+    exit(0);
+  }
+  //   t2 = GetTime();
+  //   OutPut("numeric: " << ret << " "  << t2-t1 << endl);
 
-    ret = umfpack_di_solve(UMFPACK_At, RowPtr, KCol, Entries, sol, rhs, Numeric, NULL, NULL);
-    if (ret != 0)
-    {
-      OutPut("solve: " << ret << endl);
-      exit(0);
-    }
-    //   t1 = GetTime();
-    //   OutPut("numeric: " << ret << " "  << t1-t2 << endl);
+  ret = umfpack_di_solve(UMFPACK_At, RowPtr, KCol, Entries, sol, rhs, Numeric, NULL, NULL);
+  if (ret != 0)
+  {
+    OutPut("solve: " << ret << endl);
+    exit(0);
+  }
+  //   t1 = GetTime();
+  //   OutPut("numeric: " << ret << " "  << t1-t2 << endl);
 
-    umfpack_di_free_symbolic(&Symbolic);
+  umfpack_di_free_symbolic(&Symbolic);
+  umfpack_di_free_numeric(&Numeric);
+
+  delete[] Entries;
+  delete[] RowPtr;
+  delete[] KCol;
+}
+
+// THIVIN ------
+// THis Direct Solver routine is same as the previous Direct Solver routine, without the removing of
+// non zero values in the anti diagonal blocks of the Dirchlet DOF's
+
+void DirectSolver_without_removing_dirichlet(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
+                                             double *sol, double *rhs)
+{
+  int N_Active;
+  int N_Rows;
+  int N_Entries, N_Row, begin, end, pos, l;
+  int *RowPtr, *rowptr;
+  int *KCol, *kcol;
+  double *Entries, *entries, value;
+  double t1, t2;
+
+  N_Active = sqmatrices[0]->GetActiveBound();
+  N_Rows = sqmatrices[0]->GetN_Rows();
+
+  N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
+
+  Entries = new double[N_Entries];
+  RowPtr = new int[N_Rows * n_row + 1];
+  KCol = new int[N_Entries];
+
+  N_Row = N_Rows * n_row;
+
+  pos = 0;
+  RowPtr[0] = 0;
+
+  for (int i = 0; i < n_row; ++i)
+  {
+    for (int row = 0; row < N_Rows; ++row)
+    {
+      for (int j = 0; j < n_column; ++j)
+      {
+        rowptr = sqmatrices[i * n_column + j]->GetRowPtr();
+        kcol = sqmatrices[i * n_column + j]->GetKCol();
+        entries = sqmatrices[i * n_column + j]->GetEntries();
+
+        begin = rowptr[row];
+        end = rowptr[row + 1];
+
+        for (int loc_pos = begin; loc_pos < end; ++loc_pos)
+        {
+          Entries[pos] = entries[loc_pos];
+          KCol[pos] = kcol[loc_pos] + j * N_Rows;
+          ++pos;
+        }
+      }
+      RowPtr[i * N_Rows + row + 1] = pos;
+    }
+  }
+
+  // std::ofstream outfile;
+  // outfile.open("rowptr");
+  // outfile << N_Rows*n_row ;
+  // outfile << endl <<  RowPtr[0];
+  // for ( int i = 1 ; i < N_Rows*n_row+1 ; i++)
+  //   outfile <<endl << RowPtr[i];
+  // // outfile<<endl;
+  // outfile.close();
+
+  // std::ofstream outfile1;
+  // outfile1.open("colptr");
+  // outfile1  <<  KCol[0];
+  // for ( int i = 1 ; i < pos ; i++)
+  //   outfile1  <<endl<< KCol[i] ;
+  // // outfile1<<endl;
+  // outfile1.close();
+
+  // std::ofstream outfile2;
+  // outfile2.open("values");
+  // outfile2 <<  Entries[0];
+  // for ( int i = 1 ; i < pos ; i++)
+  //   outfile2  <<endl<< Entries[i] ;
+  // // outfile2<<endl;
+  // outfile2.close();
+
+  //  std::ofstream outfile3;
+  // outfile3.open("rhs");
+  // outfile3 <<  rhs[0];
+  // for ( int i = 1 ; i < N_Rows*n_row ; i++)
+  //   outfile3  <<endl<< rhs[i] ;
+  // // outfile3<<endl;
+  // outfile3.close();
+
+  // sort matrix
+
+  // for (int i = 0; i < N_Row; i++)
+  // {
+  //   begin = RowPtr[i];
+  //   end = RowPtr[i + 1];
+
+  //   for (int j = begin; j < end; j++)
+  //   {
+  //     for (int k = j + 1; k < end; k++)
+  //     {
+  //       if (KCol[j] > KCol[k])
+  //       {
+  //         l = KCol[j];
+  //         value = Entries[j];
+  //         KCol[j] = KCol[k];
+  //         Entries[j] = Entries[k];
+  //         KCol[k] = l;
+  //         Entries[k] = value;
+  //       } // endif
+  //     }   // endfor k
+  //   }     // endfor j
+  // }
+
+  void *Symbolic, *Numeric;
+  int ret;
+
+  ret = umfpack_di_symbolic(N_Row, N_Row, RowPtr, KCol, Entries, &Symbolic, NULL, NULL);
+  if (ret != 0)
+  {
+    OutPut("symbolic: " << ret << endl);
+    exit(0);
+  }
+  //   t1 = GetTime();
+  ret = umfpack_di_numeric(RowPtr, KCol, Entries, Symbolic, &Numeric, NULL, NULL);
+  if (ret != 0)
+  {
+    OutPut("numeric: " << ret << endl);
+    exit(0);
+  }
+  //   t2 = GetTime();
+  //   OutPut("numeric: " << ret << " "  << t2-t1 << endl);
+
+  ret = umfpack_di_solve(UMFPACK_At, RowPtr, KCol, Entries, sol, rhs, Numeric, NULL, NULL);
+  // cout << " SOLUTION NORM  : " << Ddot(N_Row,sol,sol) <<endl;
+  if (ret != 0)
+  {
+    OutPut("solve: " << ret << endl);
+    exit(0);
+  }
+
+  //   t1 = GetTime();
+  //   OutPut("numeric: " << ret << " "  << t1-t2 << endl);
+
+  umfpack_di_free_symbolic(&Symbolic);
+  umfpack_di_free_numeric(&Numeric);
+
+  delete[] Entries;
+  delete[] RowPtr;
+  delete[] KCol;
+}
+
+// rb_flag = 0 ==> allocation and LU-decomposition forward/backward.
+// rb_flag = 1 ==> only forward/backward.
+// rb_flag = 2 ==> forward/backward and free up memory
+// rb_flag = 3 ==> allocation, LU-decomposition, forward/backward, free up memory
+// rb_flag = 4 ==> only free up memory
+void DirectSolver(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
+                  double *sol, double *rhs, double *&Entries,
+                  int *&KCol, int *&RowPtr, void *&Symbolic, void *&Numeric, int rb_flag)
+{
+  int N_Active, ret;
+  int N_Rows;
+  int N_Entries, N_Row, begin, end, pos, l;
+  int *rowptr;
+  int *kcol;
+  double *entries, value;
+  double t1, t2;
+
+  if (rb_flag == 4)
+  {
     umfpack_di_free_numeric(&Numeric);
 
     delete[] Entries;
-    delete[] RowPtr;
     delete[] KCol;
+    delete[] RowPtr;
+    return;
   }
 
-  // THIVIN ------
-  // THis Direct Solver routine is same as the previous Direct Solver routine, without the removing of
-  // non zero values in the anti diagonal blocks of the Dirchlet DOF's
+  N_Active = sqmatrices[0]->GetActiveBound();
+  N_Rows = sqmatrices[0]->GetN_Rows();
+  N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
 
-  void DirectSolver_without_removing_dirichlet(TSquareMatrix3D * *sqmatrices, int n_row, int n_column,
-                                               double *sol, double *rhs)
+  if (TDatabase::ParamDB->SC_VERBOSE >= 3)
   {
-    int N_Active;
-    int N_Rows;
-    int N_Entries, N_Row, begin, end, pos, l;
-    int *RowPtr, *rowptr;
-    int *KCol, *kcol;
-    double *Entries, *entries, value;
-    double t1, t2;
+    OutPut("rb_flag: " << rb_flag << endl);
+  }
 
-    N_Active = sqmatrices[0]->GetActiveBound();
-    N_Rows = sqmatrices[0]->GetN_Rows();
-
-    N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
-
+  if (rb_flag == 0 || rb_flag == 3)
+  {
     Entries = new double[N_Entries];
     RowPtr = new int[N_Rows * n_row + 1];
     KCol = new int[N_Entries];
@@ -5857,273 +6012,8 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
       {
         for (int j = 0; j < n_column; ++j)
         {
-          rowptr = sqmatrices[i * n_column + j]->GetRowPtr();
-          kcol = sqmatrices[i * n_column + j]->GetKCol();
-          entries = sqmatrices[i * n_column + j]->GetEntries();
-
-          begin = rowptr[row];
-          end = rowptr[row + 1];
-
-          for (int loc_pos = begin; loc_pos < end; ++loc_pos)
-          {
-            Entries[pos] = entries[loc_pos];
-            KCol[pos] = kcol[loc_pos] + j * N_Rows;
-            ++pos;
-          }
-        }
-        RowPtr[i * N_Rows + row + 1] = pos;
-      }
-    }
-
-
-
-    // std::ofstream outfile;
-    // outfile.open("rowptr");
-    // outfile << N_Rows*n_row ; 
-    // outfile << endl <<  RowPtr[0];
-    // for ( int i = 1 ; i < N_Rows*n_row+1 ; i++)
-    //   outfile <<endl << RowPtr[i];
-    // // outfile<<endl;
-    // outfile.close();
-
-    // std::ofstream outfile1;
-    // outfile1.open("colptr");
-    // outfile1  <<  KCol[0];
-    // for ( int i = 1 ; i < pos ; i++)
-    //   outfile1  <<endl<< KCol[i] ;
-    // // outfile1<<endl;
-    // outfile1.close();
-
-    // std::ofstream outfile2;
-    // outfile2.open("values");
-    // outfile2 <<  Entries[0];
-    // for ( int i = 1 ; i < pos ; i++)
-    //   outfile2  <<endl<< Entries[i] ;
-    // // outfile2<<endl;
-    // outfile2.close();
-
-    //  std::ofstream outfile3;
-    // outfile3.open("rhs");
-    // outfile3 <<  rhs[0];
-    // for ( int i = 1 ; i < N_Rows*n_row ; i++)
-    //   outfile3  <<endl<< rhs[i] ;
-    // // outfile3<<endl;
-    // outfile3.close();
-
-    // sort matrix
-
-
-    // for (int i = 0; i < N_Row; i++)
-    // {
-    //   begin = RowPtr[i];
-    //   end = RowPtr[i + 1];
-
-    //   for (int j = begin; j < end; j++)
-    //   {
-    //     for (int k = j + 1; k < end; k++)
-    //     {
-    //       if (KCol[j] > KCol[k])
-    //       {
-    //         l = KCol[j];
-    //         value = Entries[j];
-    //         KCol[j] = KCol[k];
-    //         Entries[j] = Entries[k];
-    //         KCol[k] = l;
-    //         Entries[k] = value;
-    //       } // endif
-    //     }   // endfor k
-    //   }     // endfor j
-    // }
-
-
-    void *Symbolic, *Numeric;
-    int ret;
-
-    ret = umfpack_di_symbolic(N_Row, N_Row, RowPtr, KCol, Entries, &Symbolic, NULL, NULL);
-    if (ret != 0)
-    {
-      OutPut("symbolic: " << ret << endl);
-      exit(0);
-    }
-    //   t1 = GetTime();
-    ret = umfpack_di_numeric(RowPtr, KCol, Entries, Symbolic, &Numeric, NULL, NULL);
-    if (ret != 0)
-    {
-      OutPut("numeric: " << ret << endl);
-      exit(0);
-    }
-    //   t2 = GetTime();
-    //   OutPut("numeric: " << ret << " "  << t2-t1 << endl);
-
-    ret = umfpack_di_solve(UMFPACK_At, RowPtr, KCol, Entries, sol, rhs, Numeric, NULL, NULL);
-    // cout << " SOLUTION NORM  : " << Ddot(N_Row,sol,sol) <<endl;
-    if (ret != 0)
-    {
-      OutPut("solve: " << ret << endl);
-      exit(0);
-    }
-
-    //   t1 = GetTime();
-    //   OutPut("numeric: " << ret << " "  << t1-t2 << endl);
-
-    umfpack_di_free_symbolic(&Symbolic);
-    umfpack_di_free_numeric(&Numeric);
-
-    delete[] Entries;
-    delete[] RowPtr;
-    delete[] KCol;
-  }
-
-  // rb_flag = 0 ==> allocation and LU-decomposition forward/backward.
-  // rb_flag = 1 ==> only forward/backward.
-  // rb_flag = 2 ==> forward/backward and free up memory
-  // rb_flag = 3 ==> allocation, LU-decomposition, forward/backward, free up memory
-  // rb_flag = 4 ==> only free up memory
-  void DirectSolver(TSquareMatrix3D * *sqmatrices, int n_row, int n_column,
-                    double *sol, double *rhs, double *&Entries,
-                    int *&KCol, int *&RowPtr, void *&Symbolic, void *&Numeric, int rb_flag)
-  {
-    int N_Active, ret;
-    int N_Rows;
-    int N_Entries, N_Row, begin, end, pos, l;
-    int *rowptr;
-    int *kcol;
-    double *entries, value;
-    double t1, t2;
-
-    if (rb_flag == 4)
-    {
-      umfpack_di_free_numeric(&Numeric);
-
-      delete[] Entries;
-      delete[] KCol;
-      delete[] RowPtr;
-      return;
-    }
-
-    N_Active = sqmatrices[0]->GetActiveBound();
-    N_Rows = sqmatrices[0]->GetN_Rows();
-    N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
-
-    if (TDatabase::ParamDB->SC_VERBOSE >= 3)
-    {
-      OutPut("rb_flag: " << rb_flag << endl);
-    }
-
-    if (rb_flag == 0 || rb_flag == 3)
-    {
-      Entries = new double[N_Entries];
-      RowPtr = new int[N_Rows * n_row + 1];
-      KCol = new int[N_Entries];
-
-      N_Row = N_Rows * n_row;
-
-      pos = 0;
-      RowPtr[0] = 0;
-
-      for (int i = 0; i < n_row; ++i)
-      {
-        for (int row = 0; row < N_Rows; ++row)
-        {
-          for (int j = 0; j < n_column; ++j)
-          {
-            if (i != j && row >= N_Active)
-              continue;
-
-            rowptr = sqmatrices[i * n_column + j]->GetRowPtr();
-            kcol = sqmatrices[i * n_column + j]->GetKCol();
-            entries = sqmatrices[i * n_column + j]->GetEntries();
-
-            begin = rowptr[row];
-            end = rowptr[row + 1];
-
-            for (int loc_pos = begin; loc_pos < end; ++loc_pos)
-            {
-              Entries[pos] = entries[loc_pos];
-              KCol[pos] = kcol[loc_pos] + j * N_Rows;
-              ++pos;
-            }
-          }
-          RowPtr[i * N_Rows + row + 1] = pos;
-        }
-      }
-
-      // sort matrix
-      for (int i = 0; i < N_Row; i++)
-      {
-        begin = RowPtr[i];
-        end = RowPtr[i + 1];
-
-        for (int j = begin; j < end; j++)
-        {
-          for (int k = j + 1; k < end; k++)
-          {
-            if (KCol[j] > KCol[k])
-            {
-              l = KCol[j];
-              value = Entries[j];
-              KCol[j] = KCol[k];
-              Entries[j] = Entries[k];
-              KCol[k] = l;
-              Entries[k] = value;
-            } // endif
-          }   // endfor k
-        }     // endfor j
-      }
-
-      ret = umfpack_di_symbolic(N_Row, N_Row, RowPtr, KCol, Entries, &Symbolic, NULL, NULL);
-      UMFPACK_return(ret);
-
-      ret = umfpack_di_numeric(RowPtr, KCol, Entries, Symbolic, &Numeric, NULL, NULL);
-      UMFPACK_return(ret);
-      umfpack_di_free_symbolic(&Symbolic);
-    } //if (rb_flag==0 || rb_flag==3)
-
-    ret = umfpack_di_solve(UMFPACK_At, RowPtr, KCol, Entries, sol, rhs, Numeric, NULL, NULL);
-    UMFPACK_return(ret);
-
-    if (rb_flag == 2 || rb_flag == 3)
-    {
-      umfpack_di_free_numeric(&Numeric);
-
-      delete[] Entries;
-      delete[] KCol;
-      delete[] RowPtr;
-    }
-  }
-
-  void DirectSolver_withoutCleanup(TSquareMatrix3D * *sqmatrices, int n_row, int n_column,
-                                   double *sol, double *rhs)
-  {
-    int N_Active;
-    int N_Rows;
-    int N_Entries, N_Row, begin, end, pos, l;
-    int *RowPtr, *rowptr;
-    int *KCol, *kcol;
-    double *Entries, *entries, value;
-    double t1, t2;
-
-    N_Active = sqmatrices[0]->GetActiveBound();
-    N_Rows = sqmatrices[0]->GetN_Rows();
-
-    N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
-
-    Entries = new double[N_Entries];
-    RowPtr = new int[N_Rows * n_row + 1];
-    KCol = new int[N_Entries];
-
-    N_Row = N_Rows * n_row;
-
-    pos = 0;
-    RowPtr[0] = 0;
-
-    for (int i = 0; i < n_row; ++i)
-    {
-      for (int row = 0; row < N_Rows; ++row)
-      {
-        for (int j = 0; j < n_column; ++j)
-        {
-          // if ( i != j && row >= N_Active ) continue;
+          if (i != j && row >= N_Active)
+            continue;
 
           rowptr = sqmatrices[i * n_column + j]->GetRowPtr();
           kcol = sqmatrices[i * n_column + j]->GetKCol();
@@ -6166,312 +6056,400 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
       }     // endfor j
     }
 
-    void *Symbolic, *Numeric;
-    int ret;
-
     ret = umfpack_di_symbolic(N_Row, N_Row, RowPtr, KCol, Entries, &Symbolic, NULL, NULL);
-    if (ret != 0)
-    {
-      OutPut("symbolic: " << ret << endl);
-      exit(0);
-    }
-    //   t1 = GetTime();
+    UMFPACK_return(ret);
+
     ret = umfpack_di_numeric(RowPtr, KCol, Entries, Symbolic, &Numeric, NULL, NULL);
-    if (ret != 0)
-    {
-      OutPut("numeric: " << ret << endl);
-      exit(0);
-    }
-    //   t2 = GetTime();
-    //   OutPut("numeric: " << ret << " "  << t2-t1 << endl);
-
-    ret = umfpack_di_solve(UMFPACK_At, RowPtr, KCol, Entries, sol, rhs, Numeric, NULL, NULL);
-    if (ret != 0)
-    {
-      OutPut("solve: " << ret << endl);
-      exit(0);
-    }
-    //   t1 = GetTime();
-    //   OutPut("numeric: " << ret << " "  << t1-t2 << endl);
-
+    UMFPACK_return(ret);
     umfpack_di_free_symbolic(&Symbolic);
+  } //if (rb_flag==0 || rb_flag==3)
+
+  ret = umfpack_di_solve(UMFPACK_At, RowPtr, KCol, Entries, sol, rhs, Numeric, NULL, NULL);
+  UMFPACK_return(ret);
+
+  if (rb_flag == 2 || rb_flag == 3)
+  {
     umfpack_di_free_numeric(&Numeric);
 
-
-
-    
-
     delete[] Entries;
-    delete[] RowPtr;
     delete[] KCol;
+    delete[] RowPtr;
   }
+}
 
-  // THIVIN
-  // Function to form the global Rowptr, colptr and values from the blovk matrices and send them to the pardiso solve.
-  void PardisoDirectSolver_without_removing_dirichlet(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
-                                          double *sol, double *rhs)
+void DirectSolver_withoutCleanup(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
+                                 double *sol, double *rhs)
+{
+  int N_Active;
+  int N_Rows;
+  int N_Entries, N_Row, begin, end, pos, l;
+  int *RowPtr, *rowptr;
+  int *KCol, *kcol;
+  double *Entries, *entries, value;
+  double t1, t2;
+
+  N_Active = sqmatrices[0]->GetActiveBound();
+  N_Rows = sqmatrices[0]->GetN_Rows();
+
+  N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
+
+  Entries = new double[N_Entries];
+  RowPtr = new int[N_Rows * n_row + 1];
+  KCol = new int[N_Entries];
+
+  N_Row = N_Rows * n_row;
+
+  pos = 0;
+  RowPtr[0] = 0;
+
+  for (int i = 0; i < n_row; ++i)
   {
-    int N_Active;
-    int N_Rows;
-    int N_Entries, N_Row, begin, end, pos, l;
-    int *RowPtr, *rowptr;
-    int *KCol, *kcol;
-    double *Entries, *entries, value;
-    double t1, t2;
-
-    N_Active = sqmatrices[0]->GetActiveBound();
-    N_Rows = sqmatrices[0]->GetN_Rows();
-
-    N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
-
-    Entries = new double[N_Entries];
-    RowPtr = new int[N_Rows * n_row + 1];
-    KCol = new int[N_Entries];
-
-    N_Row = N_Rows * n_row;
-
-    pos = 0;
-    RowPtr[0] = 0;
-
-    for (int i = 0; i < n_row; ++i)
+    for (int row = 0; row < N_Rows; ++row)
     {
-      for (int row = 0; row < N_Rows; ++row)
+      for (int j = 0; j < n_column; ++j)
       {
-        for (int j = 0; j < n_column; ++j)
+        // if ( i != j && row >= N_Active ) continue;
+
+        rowptr = sqmatrices[i * n_column + j]->GetRowPtr();
+        kcol = sqmatrices[i * n_column + j]->GetKCol();
+        entries = sqmatrices[i * n_column + j]->GetEntries();
+
+        begin = rowptr[row];
+        end = rowptr[row + 1];
+
+        for (int loc_pos = begin; loc_pos < end; ++loc_pos)
         {
-          // if ( i != j && row >= N_Active ) continue;
-
-          rowptr = sqmatrices[i * n_column + j]->GetRowPtr();
-          kcol = sqmatrices[i * n_column + j]->GetKCol();
-          entries = sqmatrices[i * n_column + j]->GetEntries();
-
-          begin = rowptr[row];
-          end = rowptr[row + 1];
-
-          for (int loc_pos = begin; loc_pos < end; ++loc_pos)
-          {
-            Entries[pos] = entries[loc_pos];
-            KCol[pos] = kcol[loc_pos] + j * N_Rows;
-            ++pos;
-          }
+          Entries[pos] = entries[loc_pos];
+          KCol[pos] = kcol[loc_pos] + j * N_Rows;
+          ++pos;
         }
-        RowPtr[i * N_Rows + row + 1] = pos;
       }
+      RowPtr[i * N_Rows + row + 1] = pos;
     }
-
-    // sort matrix   - Not needed
-
-    //  std::ofstream outfile;
-    // outfile.open("rowptr");
-    // outfile << N_Rows*n_row ; 
-    // outfile << endl <<  RowPtr[0];
-    // for ( int i = 1 ; i < N_Rows*n_row+1 ; i++)
-    //   outfile <<endl << RowPtr[i];
-    // // outfile<<endl;
-    // outfile.close();
-
-    // std::ofstream outfile1;
-    // outfile1.open("colptr");
-    // outfile1  <<  KCol[0];
-    // for ( int i = 1 ; i < pos ; i++)
-    //   outfile1  <<endl<< KCol[i] ;
-    // // outfile1<<endl;
-    // outfile1.close();
-
-    // std::ofstream outfile2;
-    // outfile2.open("values");
-    // outfile2 <<  Entries[0];
-    // for ( int i = 1 ; i < pos ; i++)
-    //   outfile2  <<endl<< Entries[i] ;
-    // // outfile2<<endl;
-    // outfile2.close();
-
-    //  std::ofstream outfile3;
-    // outfile3.open("rhs");
-    // outfile3 <<  rhs[0];
-    // for ( int i = 1 ; i < N_Rows*n_row ; i++)
-    //   outfile3  <<endl<< rhs[i] ;
-    // // outfile3<<endl;
-    // outfile3.close();
-
-
-    // Call For pardiso Solver
-    solve_pardiso(N_Row, RowPtr, KCol, Entries, rhs, sol);
   }
 
-
-
-  void PardisoDirectSolver(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
-                                          double *sol, double *rhs)
+  // sort matrix
+  for (int i = 0; i < N_Row; i++)
   {
-    int N_Active;
-    int N_Rows;
-    int N_Entries, N_Row, begin, end, pos, l;
-    int *RowPtr, *rowptr;
-    int *KCol, *kcol;
-    double *Entries, *entries, value;
-    double t1, t2;
+    begin = RowPtr[i];
+    end = RowPtr[i + 1];
 
-    N_Active = sqmatrices[0]->GetActiveBound();
-    N_Rows = sqmatrices[0]->GetN_Rows();
-
-    N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
-
-    Entries = new double[N_Entries];
-    RowPtr = new int[N_Rows * n_row + 1];
-    KCol = new int[N_Entries];
-
-    N_Row = N_Rows * n_row;
-
-    pos = 0;
-    RowPtr[0] = 0;
-
-    for (int i = 0; i < n_row; ++i)
+    for (int j = begin; j < end; j++)
     {
-      for (int row = 0; row < N_Rows; ++row)
+      for (int k = j + 1; k < end; k++)
       {
-        for (int j = 0; j < n_column; ++j)
+        if (KCol[j] > KCol[k])
         {
-          if ( i != j && row >= N_Active ) continue;
-
-          rowptr = sqmatrices[i * n_column + j]->GetRowPtr();
-          kcol = sqmatrices[i * n_column + j]->GetKCol();
-          entries = sqmatrices[i * n_column + j]->GetEntries();
-
-          begin = rowptr[row];
-          end = rowptr[row + 1];
-
-          for (int loc_pos = begin; loc_pos < end; ++loc_pos)
-          {
-            Entries[pos] = entries[loc_pos];
-            KCol[pos] = kcol[loc_pos] + j * N_Rows;
-            ++pos;
-          }
-        }
-        RowPtr[i * N_Rows + row + 1] = pos;
-      }
-    }
-
-    // sort matrix   - Not needed
-
-
-    // Call For pardiso Solver
-    solve_pardiso(N_Row, RowPtr, KCol, Entries, rhs, sol);
+          l = KCol[j];
+          value = Entries[j];
+          KCol[j] = KCol[k];
+          Entries[j] = Entries[k];
+          KCol[k] = l;
+          Entries[k] = value;
+        } // endif
+      }   // endfor k
+    }     // endfor j
   }
 
-  // THIVIN
-  // Added INtel MKL Pardiso Solver
+  void *Symbolic, *Numeric;
+  int ret;
 
-  void solve_pardiso(int N_DOF, int *rowptr, int *colIndex, double *entries, double *rhs, double *sol)
+  ret = umfpack_di_symbolic(N_Row, N_Row, RowPtr, KCol, Entries, &Symbolic, NULL, NULL);
+  if (ret != 0)
   {
-    MKL_INT mtype = 11; /* Real unsymmetric matrix */
-    /* RHS and solution vectors. */
-    MKL_INT nrhs = 1; /* Number of right hand sides. */
-    /* Internal solver memory pointer pt, */
-    /* 32-bit: int pt[64]; 64-bit: long int pt[64] */
-    /* or void *pt[64] should be OK on both architectures */
-    void *pt[64];
-    /* Pardiso control parameters. */
-    MKL_INT iparm[64];
-    MKL_INT maxfct, mnum, phase, error, msglvl;
-    /* Auxiliary variables. */
-    MKL_INT i, j;
-    double ddum;  /* Double dummy */
-    MKL_INT idum; /* Integer dummy. */
-                  /* -------------------------------------------------------------------- */
-                  /* .. Setup Pardiso control parameters. */
-                  /* -------------------------------------------------------------------- */
-    for (i = 0; i < 64; i++)
-    {
-      iparm[i] = 0;
-    }
-    iparm[0] = 1;   /* No solver default */
-    iparm[1] = 2;   /* Fill-in reordering from METIS */
-    iparm[3] = 0;   /* No iterative-direct algorithm */
-    iparm[4] = 0;   /* No user fill-in reducing permutation */
-    iparm[5] = 0;   /* Write solution into x */
-    iparm[6] = 0;   /* Not in use */
-    iparm[7] = 2;   /* Max numbers of iterative refinement steps */
-    iparm[8] = 0;   /* Not in use */
-    iparm[9] = 13;  /* Perturb the pivot elements with 1E-13 */
-    iparm[10] = 1;  /* Use nonsymmetric permutation and scaling MPS */
-    iparm[11] = 0;  /* Conjugate transposed/transpose solve */
-    iparm[12] = 1;  /* Maximum weighted matching algorithm is switched-on (default for non-symmetric) */
-    iparm[13] = 0;  /* Output: Number of perturbed pivots */
-    iparm[14] = 0;  /* Not in use */
-    iparm[15] = 0;  /* Not in use */
-    iparm[16] = 0;  /* Not in use */
-    iparm[17] = -1; /* Output: Number of nonzeros in the factor LU */
-    iparm[18] = -1; /* Output: Mflops for LU factorization */
-    iparm[19] = 0;  /* Output: Numbers of CG Iterations */
-    maxfct = 1;     /* Maximum number of numerical factorizations. */
-    mnum = 1;       /* Which factorization to use. */
-    msglvl = 0;     /* Print statistical information  */
-    error = 0;      /* Initialize error flag */
-    iparm[34] = 1;
-    /* -------------------------------------------------------------------- */
-    /* .. Initialize the internal solver memory pointer. This is only */
-    /* necessary for the FIRST call of the PARDISO solver. */
-    /* -------------------------------------------------------------------- */
-    for (i = 0; i < 64; i++)
-    {
-      pt[i] = 0;
-    }
-    /* -------------------------------------------------------------------- */
-    /* .. Reordering and Symbolic Factorization. This step also allocates */
-    /* all memory that is necessary for the factorization. */
-    /* -------------------------------------------------------------------- */
-    phase = 11;
-    PARDISO(pt, &maxfct, &mnum, &mtype, &phase,
-            &N_DOF, entries, rowptr, colIndex, &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error);
-    if (error != 0)
-    {
-      printf("\nERROR during symbolic factorization: %d", error);
-      exit(1);
-    }
-    // printf ("\nReordering completed ... ");
-    // printf ("\nNumber of nonzeros in factors = %d", iparm[17]);
-    // printf ("\nNumber of factorization MFLOPS = %d", iparm[18]);
-    /* -------------------------------------------------------------------- */
-    /* .. Numerical factorization. */
-    /* -------------------------------------------------------------------- */
-    phase = 22;
-    PARDISO(pt, &maxfct, &mnum, &mtype, &phase,
-            &N_DOF, entries, rowptr, colIndex, &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error);
-    if (error != 0)
-    {
-      printf("\nERROR during numerical factorization: %d", error);
-      exit(2);
-    }
-    // printf ("\nFactorization completed ... ");
-    /* -------------------------------------------------------------------- */
-    /* .. Back substitution and iterative refinement. */
-    /* -------------------------------------------------------------------- */
-    phase = 33;
-    PARDISO(pt, &maxfct, &mnum, &mtype, &phase,
-            &N_DOF, entries, rowptr, colIndex, &idum, &nrhs, iparm, &msglvl, rhs, sol, &error);
-    if (error != 0)
-    {
-      printf("\nERROR during solution: %d", error);
-      exit(3);
-    }
-
-    /* -------------------------------------------------------------------- */
-    /* .. Termination and release of memory. */
-    /* -------------------------------------------------------------------- */
-    phase = -1; /* Release internal memory. */
-    PARDISO(pt, &maxfct, &mnum, &mtype, &phase,
-            &N_DOF, &ddum, rowptr, colIndex, &idum, &nrhs,
-            iparm, &msglvl, &ddum, &ddum, &error);
-    // cout << "I am here" << endl;
-
-    // phase = 13;
-    // pardiso(pt, &maxfct, &mnum, &mtype, &phase,
-    //              &N_DOF, entries, rowptr, colIndex, &idum, &nrhs, iparm, &msglvl, rhs, sol, &error);
-
-    // if(error != 0){
-    //     std::cout << "Error in pardiso" << std::endl << std::endl;
-    // }
+    OutPut("symbolic: " << ret << endl);
+    exit(0);
   }
+  //   t1 = GetTime();
+  ret = umfpack_di_numeric(RowPtr, KCol, Entries, Symbolic, &Numeric, NULL, NULL);
+  if (ret != 0)
+  {
+    OutPut("numeric: " << ret << endl);
+    exit(0);
+  }
+  //   t2 = GetTime();
+  //   OutPut("numeric: " << ret << " "  << t2-t1 << endl);
+
+  ret = umfpack_di_solve(UMFPACK_At, RowPtr, KCol, Entries, sol, rhs, Numeric, NULL, NULL);
+  if (ret != 0)
+  {
+    OutPut("solve: " << ret << endl);
+    exit(0);
+  }
+  //   t1 = GetTime();
+  //   OutPut("numeric: " << ret << " "  << t1-t2 << endl);
+
+  umfpack_di_free_symbolic(&Symbolic);
+  umfpack_di_free_numeric(&Numeric);
+
+  delete[] Entries;
+  delete[] RowPtr;
+  delete[] KCol;
+}
+
+// THIVIN
+// Function to form the global Rowptr, colptr and values from the blovk matrices and send them to the pardiso solve.
+void PardisoDirectSolver_without_removing_dirichlet(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
+                                                    double *sol, double *rhs)
+{
+  int N_Active;
+  int N_Rows;
+  int N_Entries, N_Row, begin, end, pos, l;
+  int *RowPtr, *rowptr;
+  int *KCol, *kcol;
+  double *Entries, *entries, value;
+  double t1, t2;
+
+  N_Active = sqmatrices[0]->GetActiveBound();
+  N_Rows = sqmatrices[0]->GetN_Rows();
+
+  N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
+
+  Entries = new double[N_Entries];
+  RowPtr = new int[N_Rows * n_row + 1];
+  KCol = new int[N_Entries];
+
+  N_Row = N_Rows * n_row;
+
+  pos = 0;
+  RowPtr[0] = 0;
+
+  for (int i = 0; i < n_row; ++i)
+  {
+    for (int row = 0; row < N_Rows; ++row)
+    {
+      for (int j = 0; j < n_column; ++j)
+      {
+        // if ( i != j && row >= N_Active ) continue;
+
+        rowptr = sqmatrices[i * n_column + j]->GetRowPtr();
+        kcol = sqmatrices[i * n_column + j]->GetKCol();
+        entries = sqmatrices[i * n_column + j]->GetEntries();
+
+        begin = rowptr[row];
+        end = rowptr[row + 1];
+
+        for (int loc_pos = begin; loc_pos < end; ++loc_pos)
+        {
+          Entries[pos] = entries[loc_pos];
+          KCol[pos] = kcol[loc_pos] + j * N_Rows;
+          ++pos;
+        }
+      }
+      RowPtr[i * N_Rows + row + 1] = pos;
+    }
+  }
+
+  // sort matrix   - Not needed
+
+  //  std::ofstream outfile;
+  // outfile.open("rowptr");
+  // outfile << N_Rows*n_row ;
+  // outfile << endl <<  RowPtr[0];
+  // for ( int i = 1 ; i < N_Rows*n_row+1 ; i++)
+  //   outfile <<endl << RowPtr[i];
+  // // outfile<<endl;
+  // outfile.close();
+
+  // std::ofstream outfile1;
+  // outfile1.open("colptr");
+  // outfile1  <<  KCol[0];
+  // for ( int i = 1 ; i < pos ; i++)
+  //   outfile1  <<endl<< KCol[i] ;
+  // // outfile1<<endl;
+  // outfile1.close();
+
+  // std::ofstream outfile2;
+  // outfile2.open("values");
+  // outfile2 <<  Entries[0];
+  // for ( int i = 1 ; i < pos ; i++)
+  //   outfile2  <<endl<< Entries[i] ;
+  // // outfile2<<endl;
+  // outfile2.close();
+
+  //  std::ofstream outfile3;
+  // outfile3.open("rhs");
+  // outfile3 <<  rhs[0];
+  // for ( int i = 1 ; i < N_Rows*n_row ; i++)
+  //   outfile3  <<endl<< rhs[i] ;
+  // // outfile3<<endl;
+  // outfile3.close();
+
+  // Call For pardiso Solver
+  solve_pardiso(N_Row, RowPtr, KCol, Entries, rhs, sol);
+}
+
+void PardisoDirectSolver(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
+                         double *sol, double *rhs)
+{
+  int N_Active;
+  int N_Rows;
+  int N_Entries, N_Row, begin, end, pos, l;
+  int *RowPtr, *rowptr;
+  int *KCol, *kcol;
+  double *Entries, *entries, value;
+  double t1, t2;
+
+  N_Active = sqmatrices[0]->GetActiveBound();
+  N_Rows = sqmatrices[0]->GetN_Rows();
+
+  N_Entries = n_row * n_column * sqmatrices[0]->GetN_Entries();
+
+  Entries = new double[N_Entries];
+  RowPtr = new int[N_Rows * n_row + 1];
+  KCol = new int[N_Entries];
+
+  N_Row = N_Rows * n_row;
+
+  pos = 0;
+  RowPtr[0] = 0;
+
+  for (int i = 0; i < n_row; ++i)
+  {
+    for (int row = 0; row < N_Rows; ++row)
+    {
+      for (int j = 0; j < n_column; ++j)
+      {
+        if (i != j && row >= N_Active)
+          continue;
+
+        rowptr = sqmatrices[i * n_column + j]->GetRowPtr();
+        kcol = sqmatrices[i * n_column + j]->GetKCol();
+        entries = sqmatrices[i * n_column + j]->GetEntries();
+
+        begin = rowptr[row];
+        end = rowptr[row + 1];
+
+        for (int loc_pos = begin; loc_pos < end; ++loc_pos)
+        {
+          Entries[pos] = entries[loc_pos];
+          KCol[pos] = kcol[loc_pos] + j * N_Rows;
+          ++pos;
+        }
+      }
+      RowPtr[i * N_Rows + row + 1] = pos;
+    }
+  }
+
+  // sort matrix   - Not needed
+
+  // Call For pardiso Solver
+  solve_pardiso(N_Row, RowPtr, KCol, Entries, rhs, sol);
+}
+
+// THIVIN
+// Added INtel MKL Pardiso Solver
+
+void solve_pardiso(int N_DOF, int *rowptr, int *colIndex, double *entries, double *rhs, double *sol)
+{
+  MKL_INT mtype = 11; /* Real unsymmetric matrix */
+  /* RHS and solution vectors. */
+  MKL_INT nrhs = 1; /* Number of right hand sides. */
+  /* Internal solver memory pointer pt, */
+  /* 32-bit: int pt[64]; 64-bit: long int pt[64] */
+  /* or void *pt[64] should be OK on both architectures */
+  void *pt[64];
+  /* Pardiso control parameters. */
+  MKL_INT iparm[64];
+  MKL_INT maxfct, mnum, phase, error, msglvl;
+  /* Auxiliary variables. */
+  MKL_INT i, j;
+  double ddum;  /* Double dummy */
+  MKL_INT idum; /* Integer dummy. */
+                /* -------------------------------------------------------------------- */
+                /* .. Setup Pardiso control parameters. */
+                /* -------------------------------------------------------------------- */
+  for (i = 0; i < 64; i++)
+  {
+    iparm[i] = 0;
+  }
+  iparm[0] = 1;   /* No solver default */
+  iparm[1] = 2;   /* Fill-in reordering from METIS */
+  iparm[3] = 0;   /* No iterative-direct algorithm */
+  iparm[4] = 0;   /* No user fill-in reducing permutation */
+  iparm[5] = 0;   /* Write solution into x */
+  iparm[6] = 0;   /* Not in use */
+  iparm[7] = 2;   /* Max numbers of iterative refinement steps */
+  iparm[8] = 0;   /* Not in use */
+  iparm[9] = 13;  /* Perturb the pivot elements with 1E-13 */
+  iparm[10] = 1;  /* Use nonsymmetric permutation and scaling MPS */
+  iparm[11] = 0;  /* Conjugate transposed/transpose solve */
+  iparm[12] = 1;  /* Maximum weighted matching algorithm is switched-on (default for non-symmetric) */
+  iparm[13] = 0;  /* Output: Number of perturbed pivots */
+  iparm[14] = 0;  /* Not in use */
+  iparm[15] = 0;  /* Not in use */
+  iparm[16] = 0;  /* Not in use */
+  iparm[17] = -1; /* Output: Number of nonzeros in the factor LU */
+  iparm[18] = -1; /* Output: Mflops for LU factorization */
+  iparm[19] = 0;  /* Output: Numbers of CG Iterations */
+  maxfct = 1;     /* Maximum number of numerical factorizations. */
+  mnum = 1;       /* Which factorization to use. */
+  msglvl = 0;     /* Print statistical information  */
+  error = 0;      /* Initialize error flag */
+  iparm[34] = 1;
+  /* -------------------------------------------------------------------- */
+  /* .. Initialize the internal solver memory pointer. This is only */
+  /* necessary for the FIRST call of the PARDISO solver. */
+  /* -------------------------------------------------------------------- */
+  for (i = 0; i < 64; i++)
+  {
+    pt[i] = 0;
+  }
+  /* -------------------------------------------------------------------- */
+  /* .. Reordering and Symbolic Factorization. This step also allocates */
+  /* all memory that is necessary for the factorization. */
+  /* -------------------------------------------------------------------- */
+  phase = 11;
+  PARDISO(pt, &maxfct, &mnum, &mtype, &phase,
+          &N_DOF, entries, rowptr, colIndex, &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error);
+  if (error != 0)
+  {
+    printf("\nERROR during symbolic factorization: %d", error);
+    exit(1);
+  }
+  // printf ("\nReordering completed ... ");
+  // printf ("\nNumber of nonzeros in factors = %d", iparm[17]);
+  // printf ("\nNumber of factorization MFLOPS = %d", iparm[18]);
+  /* -------------------------------------------------------------------- */
+  /* .. Numerical factorization. */
+  /* -------------------------------------------------------------------- */
+  phase = 22;
+  PARDISO(pt, &maxfct, &mnum, &mtype, &phase,
+          &N_DOF, entries, rowptr, colIndex, &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error);
+  if (error != 0)
+  {
+    printf("\nERROR during numerical factorization: %d", error);
+    exit(2);
+  }
+  // printf ("\nFactorization completed ... ");
+  /* -------------------------------------------------------------------- */
+  /* .. Back substitution and iterative refinement. */
+  /* -------------------------------------------------------------------- */
+  phase = 33;
+  PARDISO(pt, &maxfct, &mnum, &mtype, &phase,
+          &N_DOF, entries, rowptr, colIndex, &idum, &nrhs, iparm, &msglvl, rhs, sol, &error);
+  if (error != 0)
+  {
+    printf("\nERROR during solution: %d", error);
+    exit(3);
+  }
+
+  /* -------------------------------------------------------------------- */
+  /* .. Termination and release of memory. */
+  /* -------------------------------------------------------------------- */
+  phase = -1; /* Release internal memory. */
+  PARDISO(pt, &maxfct, &mnum, &mtype, &phase,
+          &N_DOF, &ddum, rowptr, colIndex, &idum, &nrhs,
+          iparm, &msglvl, &ddum, &ddum, &error);
+  // cout << "I am here" << endl;
+
+  // phase = 13;
+  // pardiso(pt, &maxfct, &mnum, &mtype, &phase,
+  //              &N_DOF, entries, rowptr, colIndex, &idum, &nrhs, iparm, &msglvl, rhs, sol, &error);
+
+  // if(error != 0){
+  //     std::cout << "Error in pardiso" << std::endl << std::endl;
+  // }
+}
 
 #endif

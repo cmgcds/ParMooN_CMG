@@ -3263,6 +3263,7 @@ void InitializeDiscreteForms(
   TDiscreteForm2D *&DiscreteFormRHSAuxProblemU,
   CoeffFct2D *LinCoeffs, int NSTYPE)
 {
+
   char GalerkinString[] = "Galerkin";
   char allString[] = "all";
   char UpwindString[] = "Upwind";

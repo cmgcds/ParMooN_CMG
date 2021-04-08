@@ -27,6 +27,18 @@
         "TBE2D_ParMooN.C": "cpp",
         "SystemNSE2D.C": "cpp",
         "bitset": "c",
-        "set": "c"
+        "set": "c",
+        "iostream": "cpp",
+        "iomanip": "cpp",
+        "cmath": "cpp",
+        "TCD2D_ParMooN.C": "cpp",
+        "AssembleMat3D.C": "cpp",
+        "AssembleMat2D.C": "cpp",
+        "Matrix.C": "cpp",
+        "DiscreteForm3D.C": "cpp",
+        "SystemTCD2D.C": "cpp",
+        "DiscreteForm2D.C": "cpp",
+        "NSE2D_FixPo.C": "cpp",
+        "TNSE2D_FixPo.C": "cpp"
     }
 }

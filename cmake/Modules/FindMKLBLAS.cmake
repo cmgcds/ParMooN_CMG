@@ -12,8 +12,11 @@ if(BLAS_INCLUDES AND BLAS_LIBRARIES)
   set(BLAS_FIND_QUIETLY TRUE)
 endif(BLAS_INCLUDES AND BLAS_LIBRARIES)
 
+
+
+
 if(NOT BLAS_FOUND)
- 
+  
   find_path(BLAS_INCLUDE_DIR   mkl.h PATHS $ENV{ACMBLASDIR}/include ${CMAKE_INCLUDE_PATH})
   
   if(NOT BLAS_INCLUDE_DIR)
@@ -22,15 +25,20 @@ if(NOT BLAS_FOUND)
   
   find_library(BLAS_LIBRARY NAMES mkl_core PATHS $ENV{BLASDIR}/lib ${CMAKE_LIBRARY_PATH})
   get_filename_component(BLAS_LIBDIR ${BLAS_LIBRARY} PATH)
-  find_library(BLAS_LIBRARY_MP NAMES mkl_intel_lp64 PATHS ${BLAS_LIBDIR})
-  find_library(BLAS_LIBRARY_SQ NAMES mkl_sequential PATHS ${BLAS_LIBDIR})
-  find_library(BLAS_LIBRARY_SQ NAMES mkl_parallel PATHS ${BLAS_LIBDIR})
+  # find_library(BLAS_LIBRARY_MP NAMES mkl_intel_lp64 PATHS ${BLAS_LIBDIR})
+  # find_library(BLAS_LIBRARY_SQ NAMES mkl_sequential PATHS ${BLAS_LIBDIR})
+
   find_library(BLAS_LIBRARY_SQ NAMES mkl_intel_thread PATHS ${BLAS_LIBDIR})
+  find_library(BLAS_LIBRARY_MP NAMES mkl_intel_lp64 PATHS ${BLAS_LIBDIR})
+
+  
+
+
   
   if(BLAS_LIBRARY)  
-    # combine mumps and its deps 
+  
     if(BLAS_LIBRARY_SQ)
-      set(BLAS_LIBRARY   ${BLAS_LIBRARY_SQ} ${BLAS_LIBRARY}  ) 
+      set(BLAS_LIBRARY ${BLAS_LIBRARY_SQ} ${BLAS_LIBRARY}  ) 
     else(BLAS_LIBRARY_SQ)   
       set(BLAS_LIBRARY FALSE)
     endif(BLAS_LIBRARY_SQ)    

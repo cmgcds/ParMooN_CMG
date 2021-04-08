@@ -160,9 +160,9 @@ def getSobolIndices(projectName, runNumber, size):
         # generate corresponding output data
         outputDesign = metamodel(inputDesign)
 
-        # perform Sobol analysis using Saltelli algorithm
-        print("3. Running Saltelli algorithm...");
-        sensitivityAnalysis = ot.SaltelliSensitivityAlgorithm(inputDesign, outputDesign, size)
+        # perform Sobol analysis using Mauntz-Kucherenko algorithm
+        print("3. Running Mauntz-Kucherenko algorithm...");
+        sensitivityAnalysis = ot.MauntzKucherenkoSensitivityAlgorithm(inputDesign, outputDesign, size)
 
         # Get First order indices
         sobol1=sensitivityAnalysis.getFirstOrderIndices();

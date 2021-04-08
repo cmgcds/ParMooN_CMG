@@ -3,115 +3,21 @@ from datetime import datetime
 from decimal import Decimal
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 import openturns as ot
 from openturns.viewer import View
 import pandas as pd
 
-# Name of the project
-projectName = "Expt1";
 
-# Enter the run number i.e. folder output/ANN/runNUmber
-runNumber = 1;
-
-#_______________________________________________________
-# Set paths and variables
-#_______________________________________________________
-# Output path for sensitivity analysis (./output)
-outputPath = os.getcwd()+'/output';
-# Location for storing test case (name is specified in inputData.py)
-projectOutputDir = outputPath+'/'+projectName; 
-runDir = projectOutputDir+'/'+str(runNumber); 
-
-# Change into the run directory inside output/caseName
-os.chdir(runDir);
-
-
-#_______________________________________________________
-# Prepare Sample data
-#_______________________________________________________
-
-# Load input space for sensitivity analysis
-inputData = np.loadtxt("inputSpace.dat");
-# Total number of samples
-numberOfSamples = inputData.shape[0];
-# Total number of input parameters i.e. dimension of Input space for sensitivity analysis
-numberOfInputParam = inputData.shape[1]-1;
-# Total number of output results (4) 
-# i.e. min error, max error, L1 error, L2 error
-numberOfOutputParam = 4;
-
-# Extract useful information about arrays etc. Refer Run.py to find out the sequence of data
-sampleNumber = inputData[:,0];
-NHL = inputData[:,1];
-OPLTYPE = inputData[:,2];
-HL_0_DIM = inputData[:,3];
-HL_0_TYPE = inputData[:,4];
-HL_1_DIM = inputData[:,5];
-HL_1_TYPE = inputData[:,6];
-HL_2_DIM = inputData[:,7];
-HL_2_TYPE = inputData[:,8];
-EPOCHS = inputData[:,9];
-
-
-# Prepare output of model for samples
-L1Error = np.zeros(numberOfSamples);
-L2Error = np.zeros(numberOfSamples);
-MinError = np.zeros(numberOfSamples);
-MaxError = np.zeros(numberOfSamples);
-
-for n in range(numberOfSamples):
-    sampleDir = runDir+'/'+str(n);
-    h_data = np.loadtxt(sampleDir+'/testResults.csv', delimiter=',')
-    MaxError[n] = max(h_data[:,2]);
-    MinError[n] = min(h_data[:,2]);
-    L1Error[n] = np.mean(abs(h_data[:,0] - h_data[:,1]));
-    L2Error[n] = np.sqrt(np.sum((h_data[:,0] - h_data[:,1])**2));
-    pass;
-
-# Save the output space:
-outputData = np.vstack((L1Error, L2Error, MinError, MaxError)).T;
-
-print("Saving outputSpace...");
-np.savetxt("outputSpace.dat", outputData);
-print("Done.");
-
-# make sure that we are in the run dir
-os.chdir(runDir);
-
-#_______________________________________________________
-# Metamodel using OpenTurns
-#_______________________________________________________
-
-# Coordinates in input space for samples
-coordinates = np.zeros(shape=(numberOfSamples, numberOfInputParam));
-coordinates[:,0] = NHL;
-coordinates[:,1] = OPLTYPE;
-coordinates[:,2] = HL_0_DIM;
-coordinates[:,3] = HL_0_TYPE;
-coordinates[:,4] = HL_1_DIM;
-coordinates[:,5] = HL_1_TYPE;
-coordinates[:,6] = HL_2_DIM;
-coordinates[:,7] = HL_2_TYPE;
-coordinates[:,8] = EPOCHS;
-
-# Observations for these coordinates
-observations = np.zeros(shape=(numberOfSamples, numberOfOutputParam));
-
-observations[:,0] = L1Error;
-observations[:,1] = L2Error;
-observations[:,2] = MinError;
-observations[:,3] = MaxError;
-
-
-def getMetamodel(outputNumber):
+def getMetamodel(coordinates, observations, outputNumber):
+    print("Creating Kriging metamodel...");
     # prepare training data from coordinates and observations for Openturns
     input_train = ot.Sample(coordinates)
     output_train = ot.Sample([[ui] for ui in observations[:,outputNumber]])
 
     # Fit
-    inputDimension = numberOfInputParam;
+    inputDimension = np.shape(coordinates)[1];
+    print("INPUT DIM: ",inputDimension);
     # Basis functions (linear)
     #basis = ot.LinearBasisFactory(inputDimension).build()
     # Basis functions (constant)
@@ -125,60 +31,158 @@ def getMetamodel(outputNumber):
     # extract metamodel
     result = algo.getResult()
     krigingMetamodel = result.getMetaModel()
+    print("Done.");
     return krigingMetamodel;
 
 
+def getSobolIndices(projectName, runNumber, size):
+    #_______________________________________________________
+    # Set paths and variables
+    #_______________________________________________________
+    currDir = os.getcwd();
+    # Output path for sensitivity analysis (./output)
+    outputPath = os.getcwd()+'/output';
+    # Location for storing test case (name is specified in inputData.py)
+    projectOutputDir = outputPath+'/'+projectName; 
+    runDir = projectOutputDir+'/'+str(runNumber); 
+
+    # Change into the run directory inside output/caseName
+    os.chdir(runDir);
 
 
-input_names = ['NHL', 'OPLTYPE', 'HL_0_DIM', 'HL_0_TYPE', 'HL_1_DIM', 'HL_1_TYPE', 'HL_2_DIM', 'HL_2_TYPE','EPOCHS']
+    #_______________________________________________________
+    # Prepare Sample data
+    #_______________________________________________________
 
-output_names = ['L1Error', 'L2Error','MinError','MaxError'];
-#_______________________________________________________
-# Find sobol indices
-#_______________________________________________________
+    # Load input space for sensitivity analysis
+    inputData = np.loadtxt("inputSpace.dat");
+    # Total number of samples
+    numberOfSamples = inputData.shape[0];
+    # Total number of input parameters i.e. dimension of Input space for sensitivity analysis
+    numberOfInputParam = 8;
+    # Total number of output results (4) 
+    # i.e. min error, max error, L1 error, L2 error
+    numberOfOutputParam = 4;
 
-distributionList = [ot.Uniform(0.0,1.0)] * numberOfInputParam;
-distribution = ot.ComposedDistribution(distributionList)
+    # Extract useful information about arrays etc. Refer Run.py to find out the sequence of data
+    sampleNumber = inputData[:,0]; # not used
+    NHL = inputData[:,1];
+    OPLTYPE = inputData[:,2];
+    HL_0_DIM = inputData[:,3];
+    HL_0_TYPE = inputData[:,4];
+    HL_1_DIM = inputData[:,5];
+    HL_1_TYPE = inputData[:,6];
+    HL_2_DIM = inputData[:,7];
+    HL_2_TYPE = inputData[:,8];
 
-# Size of created data for metamodel
-size = 100000
 
-for i in range(numberOfOutputParam):
-    # Get a fresh meta model for ith output
-    print("Solving for ",output_names[i]," \n");
+    # Load the output space for sensitivity analysis
+    outputData = np.loadtxt("outputSpace.dat");
+    L1Error = outputData[:,0];
+    L2Error = outputData[:,1];  # Not used, MSError used instead
+    MinError = outputData[:,2];
+    MaxError = outputData[:,3];
+    MSError = outputData[:,4];
 
-    print("1. Getting metamodel...");
-    metamodel = getMetamodel(i);
-    # create new experiement
-    sie = ot.SobolIndicesExperiment(distribution, size)
-    print("2. Generating input and output data...");
-    # generate fresh input data
-    inputDesign = sie.generate()
-    inputDesign.setDescription(input_names)
-    # generate corresponding output data
-    outputDesign = metamodel(inputDesign)
+    # Find out the NHL1, NHL2 and NHL3 data
+    flag1 = 0;
+    flag2 = 0;
+    for i in range(numberOfSamples):
+        if (inputData[i,1] == 1):
+            flag1 = i+1;
+        elif (inputData[i,1] == 2):
+            flag2 = i+1;
 
-    # perform Sobol analysis using Saltelli algorithm
-    print("3. Running Saltelli algorithm...");
-    sensitivityAnalysis = ot.SaltelliSensitivityAlgorithm(inputDesign, outputDesign, size)
+    #_______________________________________________________
+    # Metamodel using OpenTurns
+    #_______________________________________________________
 
-    # Get First order indices
-    sobol1=sensitivityAnalysis.getFirstOrderIndices();
-    # Get Total order indices
-    soboltotal=sensitivityAnalysis.getTotalOrderIndices()
+    # Coordinates in input space for samples
+    coordinates = np.zeros(shape=(numberOfSamples, numberOfInputParam));
+    coordinates[:,0] = NHL;
+    coordinates[:,1] = OPLTYPE;
+    coordinates[:,2] = HL_0_DIM;
+    coordinates[:,3] = HL_0_TYPE;
+    coordinates[:,4] = HL_1_DIM;
+    coordinates[:,5] = HL_1_TYPE;
+    coordinates[:,6] = HL_2_DIM;
+    coordinates[:,7] = HL_2_TYPE;
 
-    print(sobol1); 
-    print(soboltotal);
-    print("Saving Sobol indices...");
-    np.savez("sobolIndices_"+output_names[i], sobol1=sobol1, soboltotal=soboltotal);
-    print("Done.");
+    # Observations for these coordinates
+    observations = np.zeros(shape=(numberOfSamples, numberOfOutputParam));
 
-    # Draw the results
-    '''
-    graph = sensitivityAnalysis.draw()
-    graph.setLegendFontSize(18);
-    graph.setTitle(output_names[i]);
-    ot.Show(graph);
-    '''
+    observations[:,0] = L1Error;
+    observations[:,1] = MSError;
+    observations[:,2] = MinError;
+    observations[:,3] = MaxError;
+
+
+
+
+
+    input_names = ['NHL', 'OPLTYPE', 'HL_0_DIM', 'HL_0_TYPE', 'HL_1_DIM', 'HL_1_TYPE', 'HL_2_DIM', 'HL_2_TYPE']
+
+    output_names = ['L1Error', 'MSError','MinError','MaxError'];
+    #_______________________________________________________
+    # Find sobol indices
+    #_______________________________________________________
+
+    distributionList = [ot.Uniform(0.0,1.0)] * numberOfInputParam;
+    distribution = ot.ComposedDistribution(distributionList)
+
+
+    for i in range(numberOfOutputParam):
+        # Get a fresh meta model for ith output
+        print("Solving for ",output_names[i]," \n");
+
+        print("1. Getting metamodel...");
+        metamodel = getMetamodel(coordinates, observations,i);
+        # create new experiement
+        sie = ot.SobolIndicesExperiment(distribution, size)
+        print("2. Generating input and output data...");
+        # generate fresh input data
+        inputDesign = sie.generate()
+        inputDesign.setDescription(input_names)
+        # generate corresponding output data
+        outputDesign = metamodel(inputDesign)
+
+        # perform Sobol analysis using Saltelli algorithm
+        print("3. Running Saltelli algorithm...");
+        sensitivityAnalysis = ot.SaltelliSensitivityAlgorithm(inputDesign, outputDesign, size)
+
+        # Get First order indices
+        sobol1=sensitivityAnalysis.getFirstOrderIndices();
+        # Get Total order indices
+        soboltotal=sensitivityAnalysis.getTotalOrderIndices()
+
+        print(sobol1); 
+        print(soboltotal);
+        print("Saving Sobol indices...");
+        np.savez("sobolIndices_"+output_names[i], sobol1=sobol1, soboltotal=soboltotal);
+        print("Done.");
+
+        # Draw the results
+        '''
+        graph = sensitivityAnalysis.draw()
+        graph.setLegendFontSize(18);
+        graph.setTitle(output_names[i]);
+        ot.Show(graph);
+        '''
+        pass;
+    os.chdir(currDir);
     pass;
 
+
+if __name__=="__main__":
+    os.sched_setaffinity(0,{i for i in range(28)})
+
+    # Name of the project
+    projectName = "Avg";
+
+    # Data size for running Sobol analysis. i.e. these many samples will be generated using the metamodel
+    size = 100000;
+
+    # Save Sobol' indices
+    for runNumber in range(1,8):
+        print("\n\n Training set number: ", runNumber, "  \n\n");
+        getSobolIndices(projectName, runNumber, size); 

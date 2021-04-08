@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 import dataFunctions as DF
 
 
-def plotError(projectName, runNumber):
+def plotError(projectName, runNumber, figName, errorBar = False):
+
+    plt.rcParams["font.family"] = "monospace"
+
     curDir = os.getcwd();
     #_______________________________________________________
     # Set paths and variables
@@ -27,6 +30,8 @@ def plotError(projectName, runNumber):
     #_______________________________________________________
 
     #DF.createOutputSpace(runDir);
+
+    zValue = 1.96;
 
     # Read metadata
     myfile = open("metadata.dat",'rt')
@@ -66,8 +71,15 @@ def plotError(projectName, runNumber):
 
 
     # Standard error
-    error = np.loadtxt("standardError.dat");
-    L1stE = error[:,0];
+    if (errorBar == True):
+        error = np.loadtxt("standardError.dat");
+    else:
+        error = outputData.copy();
+    L1StE = error[:,0];
+    L2StE = error[:,1];
+    MinStE = error[:,2];
+    MaxStE = error[:,3];
+    MSEStE = error[:,4];
 
 
     # Find out the NHL1, NHL2 and NHL3 data
@@ -90,10 +102,10 @@ def plotError(projectName, runNumber):
 
     pMean = np.mean(outputData, axis=0);
 
-    lowerbound = 0.5 * np.min(outputData, axis = 0);
+    lowerbound = 0.1 * np.min(outputData, axis = 0);
     lowerbound = {'L1Error':lowerbound[0], 'L2Error':lowerbound[1], 'MinError':lowerbound[2], 'MaxError':lowerbound[3], 'MSError':lowerbound[4]};
 
-    upperbound = 2.* np.max(outputData, axis = 0) ;
+    upperbound = 10. * np.max(outputData, axis = 0) ;
     upperbound = {'L1Error':upperbound[0], 'L2Error':upperbound[1], 'MinError':upperbound[2], 'MaxError':upperbound[3], 'MSError':upperbound[4]};
 
 
@@ -110,7 +122,7 @@ def plotError(projectName, runNumber):
 
     s1size = '2';
     s2size = '3';
-    s3size = '1.5';
+    s3size = '1';
     s4size = '1.5';
 
     #_______________________________________________________
@@ -142,10 +154,11 @@ def plotError(projectName, runNumber):
     axs[location].axhline(p5['L1Error'],color=s4color,linewidth='0.3');
     axs[location].axhline(p95['L1Error'],color=s4color,linewidth='0.3');
 
-    axs[location].set_yscale("log", nonpositive='clip')
-    axs[location].errorbar(np.arange(0,flag1), L1Error[0:flag1],yerr=1.96*L1stE[0:flag1], color=s1color, alpha=0.2);
-    axs[location].errorbar(np.arange(flag1,flag2), L1Error[flag1:flag2],yerr=1.96*L1stE[flag1:flag2], color=s2color, alpha=0.2);
-    axs[location].errorbar(np.arange(flag2, numberOfSamples), L1Error[flag2:numberOfSamples],yerr=1.96*L1stE[flag2:numberOfSamples], color=s3color, alpha=0.2);
+    if (errorBar == True):
+        axs[location].set_yscale("log", nonpositive='clip')
+        axs[location].errorbar(np.arange(0,flag1), L1Error[0:flag1],yerr=zValue*L1StE[0:flag1], color=s1color, alpha=0.1);
+        axs[location].errorbar(np.arange(flag1,flag2), L1Error[flag1:flag2],yerr=zValue*L1StE[flag1:flag2], color=s2color, alpha=0.1);
+        axs[location].errorbar(np.arange(flag2, numberOfSamples), L1Error[flag2:numberOfSamples],yerr=zValue*L1StE[flag2:numberOfSamples], color=s3color, alpha=0.1);
     
 
     #_______________________________________________________
@@ -158,7 +171,7 @@ def plotError(projectName, runNumber):
 
     axs[location].legend(loc=0,ncol=3, fontsize=6.6);
 
-    axs[location].set_xlabel(r"ANN Samples");
+    axs[location].set_xlabel(r"ANN ID");
 
     axs[location].set_ylabel(r"MSE");
     axs[location].set_ylim(lowerbound['MSError'],upperbound['MSError']);
@@ -170,6 +183,11 @@ def plotError(projectName, runNumber):
     axs[location].axhline(p5['MSError'],color=s4color,linewidth='0.3');
     axs[location].axhline(p95['MSError'],color=s4color,linewidth='0.3');
 
+    if (errorBar == True):
+        axs[location].errorbar(np.arange(0,flag1), MSError[0:flag1],yerr=zValue*MSEStE[0:flag1], color=s1color, alpha=0.1);
+        axs[location].errorbar(np.arange(flag1,flag2), MSError[flag1:flag2],yerr=zValue*MSEStE[flag1:flag2], color=s2color, alpha=0.1);
+        axs[location].errorbar(np.arange(flag2, numberOfSamples), MSError[flag2:numberOfSamples],yerr=zValue*MSEStE[flag2:numberOfSamples], color=s3color, alpha=0.1);
+    
     '''
     #_______________________________________________________
     # L2 Error plot
@@ -181,7 +199,7 @@ def plotError(projectName, runNumber):
 
     axs[location].legend(loc=0,ncol=3, fontsize=6.6);
 
-    axs[location].set_xlabel(r"ANN Samples");
+    axs[location].set_xlabel(r"ANN ID");
 
     axs[location].set_ylabel(r"$L_2$ Error");
     axs[location].set_ylim(lowerbound['L2Error'],upperbound['L2Error']);
@@ -192,6 +210,14 @@ def plotError(projectName, runNumber):
     axs[location].axhspan(p95['L2Error'],upperbound['L2Error'],facecolor=shadeColor)
     axs[location].axhline(p5['L2Error'],color=s4color,linewidth='0.3');
     axs[location].axhline(p95['L2Error'],color=s4color,linewidth='0.3');
+
+    if (errorBar == True):
+        axs[location].set_yscale("log", nonpositive='clip')
+        axs[location].errorbar(np.arange(0,flag1), L2Error[0:flag1],yerr=zValue*L2StE[0:flag1], color=s1color, alpha=0.1);
+        axs[location].errorbar(np.arange(flag1,flag2), L2Error[flag1:flag2],yerr=zValue*L2StE[flag1:flag2], color=s2color, alpha=0.1);
+        axs[location].errorbar(np.arange(flag2, numberOfSamples), L2Error[flag2:numberOfSamples],yerr=zValue*L2StE[flag2:numberOfSamples], color=s3color, alpha=0.1);
+    
+
     '''
 
 
@@ -216,6 +242,11 @@ def plotError(projectName, runNumber):
     axs[location].axhline(p5['MinError'],color=s4color,linewidth='0.3');
     axs[location].axhline(p95['MinError'],color=s4color,linewidth='0.3');
 
+    if (errorBar == True):
+        axs[location].set_yscale("log", nonpositive='clip')
+        axs[location].errorbar(np.arange(0,flag1), MinError[0:flag1],yerr=zValue*MinStE[0:flag1], color=s1color, alpha=0.1);
+        axs[location].errorbar(np.arange(flag1,flag2), MinError[flag1:flag2],yerr=zValue*MinStE[flag1:flag2], color=s2color, alpha=0.1);
+        axs[location].errorbar(np.arange(flag2, numberOfSamples), MinError[flag2:numberOfSamples],yerr=zValue*MinStE[flag2:numberOfSamples], color=s3color, alpha=0.1);
 
     #_______________________________________________________
     # L_Max Error plot
@@ -227,7 +258,7 @@ def plotError(projectName, runNumber):
 
     axs[location].legend(loc=1,ncol=3, fontsize=6.6);
 
-    axs[location].set_xlabel(r"ANN Samples");
+    axs[location].set_xlabel(r"ANN ID");
 
     axs[location].set_ylabel(r"Max Error");
     axs[location].set_ylim(lowerbound['MaxError'],upperbound['MaxError']*10);
@@ -239,13 +270,19 @@ def plotError(projectName, runNumber):
     axs[location].axhline(p5['MaxError'],color=s4color,linewidth='0.3');
     axs[location].axhline(p95['MaxError'],color=s4color,linewidth='0.3');
 
-    plt.savefig("ErrorD1.pdf");
+    if (errorBar == True):
+        axs[location].set_yscale("log", nonpositive='clip')
+        axs[location].errorbar(np.arange(0,flag1), MaxError[0:flag1],yerr=zValue*MaxStE[0:flag1], color=s1color, alpha=0.1);
+        axs[location].errorbar(np.arange(flag1,flag2), MaxError[flag1:flag2],yerr=zValue*MaxStE[flag1:flag2], color=s2color, alpha=0.1);
+        axs[location].errorbar(np.arange(flag2, numberOfSamples), MaxError[flag2:numberOfSamples],yerr=zValue*MaxStE[flag2:numberOfSamples], color=s3color, alpha=0.1);
+
+    plt.savefig(figName);
 
     
     os.chdir(curDir);
 
 
-def plotAllErrors(projectName):
+def plotAllErrors(projectName,figName,errorBar):
 
     TotalRuns = 8;
 
@@ -253,16 +290,18 @@ def plotAllErrors(projectName):
 
     for runNumber in range(TotalRuns):
         print (runNumber);
-        plotError(projectName, runNumber);
+        plotError(projectName, runNumber,figName,errorBar);
         pass;
 
     curDir = os.getcwd();
     os.chdir(projectDir);
-    os.system("pdftk 0/ErrorD1.pdf 1/ErrorD1.pdf 2/ErrorD1.pdf 3/ErrorD1.pdf 4/ErrorD1.pdf 5/ErrorD1.pdf 6/ErrorD1.pdf 7/ErrorD1.pdf cat output Error1.pdf");
+    os.system("pdftk 0/"+figName+" 1/"+figName+" 2/"+figName+ " 3/"+figName+ " 4/"+figName+ " 5/"+figName+ " 6/"+figName+ " 7/"+figName+ " cat output ErrorPlots.pdf");
     os.chdir(curDir);
 
 
 if __name__=="__main__":
     # Name of the project
     projectName = "Avg";
-    plotAllErrors(projectName);
+    errorBar = True;
+    figName = "Error"+projectName+".pdf"
+    plotAllErrors(projectName, figName,errorBar);

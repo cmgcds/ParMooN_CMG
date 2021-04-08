@@ -110,67 +110,74 @@ def plotErrorVariation(projectName):
     # Title:
     plt.suptitle("Variation of error vs. size of training dataset");
 
+    # Legend location
+    legendLocation = "upper right";
+
     #_______________________________________________________
     # L1 error plot
     #_______________________________________________________
     location = (0,0);
-    axs[location].plot(x, L1Error[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
-    axs[location].plot(x, L1Error[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
-    axs[location].plot(x, L1Error[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
-    axs[location].plot(x, L1Error[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
+    axs[location].semilogy(x, L1Error[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
+    axs[location].semilogy(x, L1Error[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
+    axs[location].semilogy(x, L1Error[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
+    axs[location].semilogy(x, L1Error[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
     axs[location].set_xticks([0,1,2,3,4,5,6,7]);
     axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
     axs[location].set_ylabel(r"$L_1$ Error");
-    axs[location].legend(loc='upper left', fontsize=7);
+    axs[location].set_ylim(10**-1, 10**3);
+    axs[location].legend(loc=legendLocation, fontsize=7);
 
     #_______________________________________________________
     # MS error plot
     #_______________________________________________________
     location = (1,0);
-    axs[location].plot(x, MSError[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
-    axs[location].plot(x, MSError[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
-    axs[location].plot(x, MSError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
-    axs[location].plot(x, MSError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
+    axs[location].semilogy(x, MSError[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
+    axs[location].semilogy(x, MSError[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
+    axs[location].semilogy(x, MSError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
+    axs[location].semilogy(x, MSError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
     axs[location].set_xticks([0,1,2,3,4,5,6,7]);
     axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
     axs[location].set_ylabel(r"MSE");
-    axs[location].legend(loc='upper left', fontsize=7);
+    axs[location].set_ylim(10**-4, 10**4);
+    axs[location].legend(loc=legendLocation, fontsize=7);
 
     #_______________________________________________________
     # Rel. Min error plot
     #_______________________________________________________
     location = (0,1);
-    axs[location].plot(x, MinError[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
-    axs[location].plot(x, MinError[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
-    axs[location].plot(x, MinError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
-    axs[location].plot(x, MinError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
+    axs[location].semilogy(x, MinError[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
+    axs[location].semilogy(x, MinError[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
+    axs[location].semilogy(x, MinError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
+    axs[location].semilogy(x, MinError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
     axs[location].set_xticks([0,1,2,3,4,5,6,7]);
     axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
     axs[location].set_ylabel(r"Rel. Min Error");
-    axs[location].legend(loc='upper left', fontsize=7);
+    axs[location].set_ylim(10**-2, 10**1);
+    axs[location].legend(loc=legendLocation, fontsize=7);
 
     #_______________________________________________________
     # Max error plot
     #_______________________________________________________
     location = (1,1);
-    axs[location].plot(x, MaxError[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
-    axs[location].plot(x, MaxError[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
-    axs[location].plot(x, MaxError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
-    axs[location].plot(x, MaxError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
+    axs[location].semilogy(x, MaxError[:,0], '-', color ='black', linewidth='1.5', label = 'Mean error');
+    axs[location].semilogy(x, MaxError[:,1], '--', color ='green', linewidth='2', label = 'p5 error');
+    axs[location].semilogy(x, MaxError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
+    axs[location].semilogy(x, MaxError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
     axs[location].set_xticks([0,1,2,3,4,5,6,7]);
     axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
     axs[location].set_ylabel(r"Rel. Max Error");
-    axs[location].legend(loc='upper left', fontsize=7);
+    axs[location].set_ylim(10**4, 10**10);
+    axs[location].legend(loc=legendLocation, fontsize=7);
 
-    plt.ticklabel_format(axis="y", style="sci", scilimits=(0,00))
+    #plt.ticklabel_format(axis="y", style="sci", scilimits=(0,00))
    
     os.chdir(projectDir);
 
@@ -183,4 +190,7 @@ def plotErrorVariation(projectName):
 
 
 if __name__ == "__main__":
+    from cycler import cycler
+    plt.rcParams["font.family"] = "monospace"
+    plt.rcParams['axes.prop_cycle'] = cycler(color=['darkblue', '#d62728', '#2ca02c', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
     plotErrorVariation("Avg");

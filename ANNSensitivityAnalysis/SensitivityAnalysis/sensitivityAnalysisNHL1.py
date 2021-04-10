@@ -95,6 +95,16 @@ def getSobolIndices(projectName, runNumber, size):
     HL_2_DIM = inputData[:,7];  # Will NOT be used
     HL_2_TYPE = inputData[:,8];  # Will NOT be used
 
+    # Now change the OPLTYPE, HL_*_TYPE arrays from 0,1,3,4 to 0,1,2,3 as we don't care about type 2 here in the sensitivity analysis and need equal 'distance' between them
+    OPLTYPE[OPLTYPE == 3] = 2;
+    OPLTYPE[OPLTYPE == 4] = 3;
+    HL_0_TYPE[HL_0_TYPE == 3] = 2;
+    HL_0_TYPE[HL_0_TYPE == 4] = 3;
+    HL_1_TYPE[HL_1_TYPE == 3] = 2;
+    HL_1_TYPE[HL_1_TYPE == 4] = 3;
+    HL_2_TYPE[HL_2_TYPE == 3] = 2;
+    HL_2_TYPE[HL_2_TYPE == 4] = 3;
+
 
     L1Error = outputData[:,0];
     L2Error = outputData[:,1];  # Not used, MSError used instead
@@ -130,15 +140,17 @@ def getSobolIndices(projectName, runNumber, size):
     #_______________________________________________________
     # Find sobol indices
     #_______________________________________________________
+    # NOTE: we are changing the *TYPE arrays from 0,1,3,4 range to 0,1,2,3 
+    # i.e. we are re-coding LeakyRELU as 2 and TanH as 3 
     ot.RandomGenerator.SetSeed(int(1000*time.time()))
     distributionNHL = ot.Uniform(1,3);
-    distributionOPLTYPE = ot.Uniform(0,4);
-    distributionHL0DIM = ot.Uniform(5,15);
-    distributionHL0TYPE = ot.Uniform(0,4);
+    distributionOPLTYPE = ot.Uniform(0,3); # note the range
+    distributionHL0DIM = ot.Uniform(5,15); 
+    distributionHL0TYPE = ot.Uniform(0,3); # note the range
     distributionHL1DIM = ot.Uniform(5,15);
-    distributionHL1TYPE = ot.Uniform(0,4);
+    distributionHL1TYPE = ot.Uniform(0,3); # note the range
     distributionHL2DIM = ot.Uniform(5,15);
-    distributionHL2TYPE = ot.Uniform(0,4);
+    distributionHL2TYPE = ot.Uniform(0,3); # note the range
 
     distributionList = [distributionOPLTYPE, distributionHL0DIM, distributionHL0TYPE];
 
@@ -152,7 +164,7 @@ def getSobolIndices(projectName, runNumber, size):
         print("1. Getting metamodel...");
         metamodel = getMetamodel(coordinates, observations,i);
         # create new experiement
-        sie = ot.SobolIndicesExperiment(distribution, size)
+        sie = ot.SobolIndicesExperiment(distribution, size, True)
         print("2. Generating input and output data...");
         # generate fresh input data
         inputDesign = sie.generate()
@@ -168,27 +180,22 @@ def getSobolIndices(projectName, runNumber, size):
         sobol1=sensitivityAnalysis.getFirstOrderIndices();
         # Get Total order indices
         soboltotal=sensitivityAnalysis.getTotalOrderIndices()
+        # Get The second-order indices
+        sobol2 = sensitivityAnalysis.getSecondOrderIndices()
 
         print(sobol1); 
         print(soboltotal);
         print("Saving Sobol indices...");
-        np.savez("sobolIndices_NH1_"+output_names[i], sobol1=sobol1, soboltotal=soboltotal);
+        np.savez("sobolIndices_NH1_"+output_names[i], sobol1=sobol1, sobol2 = sobol2, soboltotal=soboltotal);
         print("Done.");
 
-        # Draw the results
-        '''
-        graph = sensitivityAnalysis.draw()
-        graph.setLegendFontSize(18);
-        graph.setTitle(output_names[i]);
-        ot.Show(graph);
-        '''
         pass;
     os.chdir(currDir);
     pass;
 
 
 if __name__=="__main__":
-    os.sched_setaffinity(0,{i for i in range(28)})
+    #os.sched_setaffinity(0,{i for i in range(28)})
 
     # Name of the project
     projectName = "Avg";
@@ -198,5 +205,5 @@ if __name__=="__main__":
 
     # Save Sobol' indices
     for runNumber in range(8):
-        print("\n\n Training set number: ", runNumber, "  \n\n");
+        print("\n\n#Training set number: ", runNumber, "  \n\n");
         getSobolIndices(projectName, runNumber, size); 

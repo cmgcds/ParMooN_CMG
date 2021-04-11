@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from pylab import figure, cm
+from matplotlib.colors import LogNorm
 import os
 
 def getIndices(projectName, runNumber, NHL):
@@ -56,16 +58,16 @@ def getPlotParameters(NHL):
     # X axis for hyperparameters
     x = []
     if (NHL == 0):
-        x = ['NHL', 'OP-A', 'HL0-D', 'HL0-A', 'HL1-D', 'HL1-A', 'HL2-D', 'HL2-A'];
+        x = ['NHL', 'OP-A', 'HL1-D', 'HL1-A', 'HL2-D', 'HL2-A', 'HL3-D', 'HL3-A'];
         title = "Sobol' indices";
     elif (NHL == 1):
-        x = ['OP-A', 'HL0-D', 'HL0-A'];
+        x = ['OP-A', 'HL1-D', 'HL1-A'];
         title = "Sobol' indices for ANNs with one hidden layer";
     elif (NHL == 2):
-        x = ['OP-A', 'HL0-D', 'HL0-A', 'HL1-D', 'HL1-A'];
+        x = ['OP-A', 'HL1-D', 'HL1-A', 'HL2-D', 'HL2-A'];
         title = "Sobol' indices for ANNs with two hidden layers";
     elif (NHL == 3):
-        x = ['OP-A', 'HL0-D', 'HL0-A', 'HL1-D', 'HL1-A', 'HL2-D', 'HL2-A'];
+        x = ['OP-A', 'HL1-D', 'HL1-A', 'HL2-D', 'HL2-A', 'HL3-D', 'HL3-A'];
         title = "Sobol' indices for ANNs with three hidden layers";
         pass;
 
@@ -393,7 +395,96 @@ def plotIndices(projectName, NHL):
     plt.savefig("TOSobolIndices"+str(NHL)+"Variation.pdf");
     os.chdir(curDir);
 
-    
+
+    if (NHL == 0):
+        VMIN = 1e-3;
+        VMAX = 1e0
+        #__________________________________________
+        # Plot SO Sobol indices
+        #__________________________________________
+        # Get indices for training size of 200 (i.e. run number 5, with 0 NHL i.e. all 7536 expts)
+        i = 5;
+        (dataL1, dataMS, dataMin, dataMax) = getIndices(projectName, i,0);
+        indicesListSecond = np.zeros(shape=(4,8,8));
+        indicesListSecond[0] = dataL1['sobol2'];
+        indicesListSecond[1] = dataMS['sobol2'];
+        indicesListSecond[2] = dataMin['sobol2'];
+        indicesListSecond[3] = dataMax['sobol2'];
+
+
+        for i in range(4):
+            # Set the autocorrelation to 1
+            np.fill_diagonal(indicesListSecond[i], 1.0);
+            pass;
+
+
+
+        FigSize = (6.4,4.8);
+        fig, axs = plt.subplots(2,2, figsize=FigSize, dpi=300);
+        locations = [(0,0),(0,1),(1,0),(1,1)];
+        # Legend location
+        legendLocation = "upper center";
+        
+        #__________________________________________
+        # L1 error plot
+        #__________________________________________
+        location = locations[0];
+        im = axs[location].matshow(indicesListSecond[0],cmap=plt.cm.get_cmap('Blues', 6), norm=LogNorm(vmin=VMIN, vmax=VMAX));
+        axs[location].set_title(r"$L_1$ Error");
+        axs[location].set_yticks(np.arange(8));
+        axs[location].set_yticklabels(x);
+        axs[location].tick_params(axis='x', bottom=False, top=False, labeltop = False)
+        axs[location].grid();
+
+        #__________________________________________
+        # MS error plot
+        #__________________________________________
+        location = locations[1];
+        axs[location].matshow(indicesListSecond[1],cmap=plt.cm.get_cmap('Blues'), norm=LogNorm(vmin=VMIN, vmax=VMAX));
+        axs[location].set_title(r"MS Error");
+        axs[location].tick_params(axis='x', bottom=False, top=False, labeltop = False, labelbottom = False)
+        axs[location].tick_params(axis='y', left=False, right=False, labelleft = False)
+        axs[location].grid();
+
+        #__________________________________________
+        # Min error plot
+        #__________________________________________
+        location = locations[2];
+        axs[location].matshow(indicesListSecond[2],cmap=plt.cm.get_cmap('Blues'), norm=LogNorm(vmin=VMIN, vmax=VMAX));
+        axs[location].set_title(r"Min Error");
+        axs[location].set_xticks(np.arange(8));
+        axs[location].set_xticklabels(x);
+        axs[location].xaxis.tick_bottom();
+        axs[location].set_yticks(np.arange(8));
+        axs[location].set_yticklabels(x);
+        axs[location].tick_params(axis='x', rotation=75)
+        axs[location].grid();
+
+        #__________________________________________
+        # Max error plot
+        #__________________________________________
+        location = locations[3];
+        axs[location].matshow(indicesListSecond[3],cmap=plt.cm.get_cmap('Blues'), norm=LogNorm(vmin=VMIN, vmax=VMAX));
+        axs[location].set_title(r"Max Error");
+        axs[location].set_xticks(np.arange(8));
+        axs[location].set_xticklabels(x);
+        axs[location].xaxis.tick_bottom();
+        axs[location].tick_params(axis='x', rotation=75)
+        axs[location].tick_params(axis='y', left=False, right=False, labelleft = False)
+        axs[location].grid();
+
+
+
+
+        fig.colorbar(im, ax=axs[0, :2], shrink=0.5, location='top');
+        fig.tight_layout(rect=[0.2,0,0.8,0.8])
+
+        os.chdir(projectDir);
+        plt.savefig("SOSobolIndices.pdf");
+        os.system("pdfcrop SOSobolIndices.pdf SOSobolIndices.pdf");
+        os.chdir(curDir);
+
+        
 
     
 

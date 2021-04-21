@@ -58,42 +58,25 @@ def getSobolIndices(projectName, runNumber, size):
 
     # Load input space for sensitivity analysis
     inputData = np.loadtxt("inputSpace.dat");
-
-    # Load the output space for sensitivity analysis
-    outputData = np.loadtxt("outputSpace.dat");
-
-    # Find out the NHL1, NHL2 and NHL3 data
-    flag1 = 0;
-    flag2 = 0;
-    for i in range(inputData.shape[0]):
-        if (inputData[i,1] == 1):
-            flag1 = i+1;
-        elif (inputData[i,1] == 2):
-            flag2 = i+1;
-
-    # Select the NH3 data alone
-    inputData = inputData[flag2:];
-    outputData = outputData[flag2:];
-
     # Total number of samples
     numberOfSamples = inputData.shape[0];
-    print("\nNumber of samples: " + str(numberOfSamples));
     # Total number of input parameters i.e. dimension of Input space for sensitivity analysis
-    numberOfInputParam = 7;
+    numberOfInputParam = 8;
     # Total number of output results (4) 
     # i.e. min error, max error, L1 error, L2 error
     numberOfOutputParam = 4;
 
     # Extract useful information about arrays etc. Refer Run.py to find out the sequence of data
     sampleNumber = inputData[:,0]; # not used
-    NHL = inputData[:,1]; # not used
+    NHL = inputData[:,1];
     OPLTYPE = inputData[:,2];
     HL_0_DIM = inputData[:,3];
     HL_0_TYPE = inputData[:,4];
-    HL_1_DIM = inputData[:,5];  
-    HL_1_TYPE = inputData[:,6]; 
-    HL_2_DIM = inputData[:,7];  
-    HL_2_TYPE = inputData[:,8]; 
+    HL_1_DIM = inputData[:,5];
+    HL_1_TYPE = inputData[:,6];
+    HL_2_DIM = inputData[:,7];
+    HL_2_TYPE = inputData[:,8];
+
 
     # Now change the OPLTYPE, HL_*_TYPE arrays from 0,1,3,4 to 0,1,2,3 as we don't care about type 2 here in the sensitivity analysis and need equal 'distance' between them
     # This is like calling 0:sigmoid, 1:identity, 2:leakyReLU, 3:TanH
@@ -108,11 +91,22 @@ def getSobolIndices(projectName, runNumber, size):
 
 
 
+    # Load the output space for sensitivity analysis
+    outputData = np.loadtxt("outputSpace.dat");
     L1Error = outputData[:,0];
     L2Error = outputData[:,1];  # Not used, MSError used instead
     MinError = outputData[:,2];
     MaxError = outputData[:,3];
     MSError = outputData[:,4];
+
+    # Find out the NHL1, NHL2 and NHL3 data
+    flag1 = 0;
+    flag2 = 0;
+    for i in range(numberOfSamples):
+        if (inputData[i,1] == 1):
+            flag1 = i+1;
+        elif (inputData[i,1] == 2):
+            flag2 = i+1;
 
     #_______________________________________________________
     # Metamodel using OpenTurns
@@ -120,34 +114,32 @@ def getSobolIndices(projectName, runNumber, size):
 
     # Coordinates in input space for samples
     coordinates = np.zeros(shape=(numberOfSamples, numberOfInputParam));
-    coordinates[:,0] = OPLTYPE;
-    coordinates[:,1] = HL_0_DIM;
-    coordinates[:,2] = HL_0_TYPE;
-    coordinates[:,3] = HL_1_DIM;
-    coordinates[:,4] = HL_1_TYPE;
-    coordinates[:,5] = HL_2_DIM;
-    coordinates[:,6] = HL_2_TYPE;
+    coordinates[:,0] = NHL;
+    coordinates[:,1] = OPLTYPE;
+    coordinates[:,2] = HL_0_DIM;
+    coordinates[:,3] = HL_0_TYPE;
+    coordinates[:,4] = HL_1_DIM;
+    coordinates[:,5] = HL_1_TYPE;
+    coordinates[:,6] = HL_2_DIM;
+    coordinates[:,7] = HL_2_TYPE;
 
     # Observations for these coordinates
     observations = np.zeros(shape=(numberOfSamples, numberOfOutputParam));
 
-    observations[:,0] = L1Error;
-    observations[:,1] = MSError;
-    observations[:,2] = MinError;
-    observations[:,3] = MaxError;
+    # Normalization of the observation matrix
+    observations[:,0] = L1Error/np.max(L1Error);
+    observations[:,1] = MSError/np.max(MSError);
+    observations[:,2] = MinError/np.max(MinError);
+    observations[:,3] = MaxError/np.max(MaxError);
 
 
 
-
-
-    input_names = ['OPLTYPE', 'HL_0_DIM', 'HL_0_TYPE', 'HL_1_DIM', 'HL_1_TYPE', 'HL_2_DIM', 'HL_2_TYPE']
+    input_names = ['NHL', 'OPLTYPE', 'HL_0_DIM', 'HL_0_TYPE', 'HL_1_DIM', 'HL_1_TYPE', 'HL_2_DIM', 'HL_2_TYPE']
 
     output_names = ['L1Error', 'MSError','MinError','MaxError'];
     #_______________________________________________________
     # Find sobol indices
     #_______________________________________________________
-    # NOTE: we are changing the *TYPE arrays from 0,1,3,4 range to 0,1,2,3 
-    # i.e. we are re-coding LeakyRELU as 2 and TanH as 3 
 
     ot.RandomGenerator.SetSeed(int(1000*time.time()))
     distributionNHL = ot.Uniform(1,3);
@@ -159,7 +151,7 @@ def getSobolIndices(projectName, runNumber, size):
     distributionHL2DIM = ot.Uniform(5,15);
     distributionHL2TYPE = ot.Uniform(0,3); # note the range
 
-    distributionList = [distributionOPLTYPE, distributionHL0DIM, distributionHL0TYPE, distributionHL1DIM, distributionHL1TYPE, distributionHL2DIM, distributionHL2TYPE];
+    distributionList = [distributionNHL, distributionOPLTYPE, distributionHL0DIM, distributionHL0TYPE, distributionHL1DIM, distributionHL1TYPE, distributionHL2DIM, distributionHL2TYPE];
 
     distribution = ot.ComposedDistribution(distributionList)
 
@@ -193,8 +185,9 @@ def getSobolIndices(projectName, runNumber, size):
         print(sobol1); 
         print(soboltotal);
         print("Saving Sobol indices...");
-        np.savez("sobolIndices_NH3_"+output_names[i], sobol1=sobol1, sobol2 = sobol2, soboltotal=soboltotal);
+        np.savez("sobolIndices_"+output_names[i], sobol1=sobol1, sobol2 = sobol2, soboltotal=soboltotal);
         print("Done.");
+
         pass;
     os.chdir(currDir);
     pass;

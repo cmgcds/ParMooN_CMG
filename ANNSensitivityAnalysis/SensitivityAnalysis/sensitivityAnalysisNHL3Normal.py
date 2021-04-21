@@ -131,10 +131,11 @@ def getSobolIndices(projectName, runNumber, size):
     # Observations for these coordinates
     observations = np.zeros(shape=(numberOfSamples, numberOfOutputParam));
 
-    observations[:,0] = L1Error;
-    observations[:,1] = MSError;
-    observations[:,2] = MinError;
-    observations[:,3] = MaxError;
+    # Normalization of the observation matrix
+    observations[:,0] = L1Error/np.max(L1Error);
+    observations[:,1] = MSError/np.max(MSError);
+    observations[:,2] = MinError/np.max(MinError);
+    observations[:,3] = MaxError/np.max(MaxError);
 
 
 
@@ -201,7 +202,7 @@ def getSobolIndices(projectName, runNumber, size):
 
 
 if __name__=="__main__":
-    os.sched_setaffinity(0,{i for i in range(28)})
+    #os.sched_setaffinity(0,{i for i in range(28)})
 
     # Name of the project
     projectName = "Avg";

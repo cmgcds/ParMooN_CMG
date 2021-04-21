@@ -71,15 +71,15 @@ def getSobolIndices(projectName, runNumber, size):
         elif (inputData[i,1] == 2):
             flag2 = i+1;
 
-    # Select the NH3 data alone
-    inputData = inputData[flag2:];
-    outputData = outputData[flag2:];
+    # Select the NH2 data alone
+    inputData = inputData[flag1:flag2];
+    outputData = outputData[flag1:flag2];
 
     # Total number of samples
     numberOfSamples = inputData.shape[0];
     print("\nNumber of samples: " + str(numberOfSamples));
     # Total number of input parameters i.e. dimension of Input space for sensitivity analysis
-    numberOfInputParam = 7;
+    numberOfInputParam = 5;
     # Total number of output results (4) 
     # i.e. min error, max error, L1 error, L2 error
     numberOfOutputParam = 4;
@@ -92,8 +92,8 @@ def getSobolIndices(projectName, runNumber, size):
     HL_0_TYPE = inputData[:,4];
     HL_1_DIM = inputData[:,5];  
     HL_1_TYPE = inputData[:,6]; 
-    HL_2_DIM = inputData[:,7];  
-    HL_2_TYPE = inputData[:,8]; 
+    HL_2_DIM = inputData[:,7];  # Will NOT be used
+    HL_2_TYPE = inputData[:,8];  # Will NOT be used
 
     # Now change the OPLTYPE, HL_*_TYPE arrays from 0,1,3,4 to 0,1,2,3 as we don't care about type 2 here in the sensitivity analysis and need equal 'distance' between them
     # This is like calling 0:sigmoid, 1:identity, 2:leakyReLU, 3:TanH
@@ -105,6 +105,7 @@ def getSobolIndices(projectName, runNumber, size):
     HL_1_TYPE[HL_1_TYPE == 4] = 3;
     HL_2_TYPE[HL_2_TYPE == 3] = 2;
     HL_2_TYPE[HL_2_TYPE == 4] = 3;
+
 
 
 
@@ -125,22 +126,21 @@ def getSobolIndices(projectName, runNumber, size):
     coordinates[:,2] = HL_0_TYPE;
     coordinates[:,3] = HL_1_DIM;
     coordinates[:,4] = HL_1_TYPE;
-    coordinates[:,5] = HL_2_DIM;
-    coordinates[:,6] = HL_2_TYPE;
 
     # Observations for these coordinates
     observations = np.zeros(shape=(numberOfSamples, numberOfOutputParam));
 
-    observations[:,0] = L1Error;
-    observations[:,1] = MSError;
-    observations[:,2] = MinError;
-    observations[:,3] = MaxError;
+    # Normalization of the observation matrix
+    observations[:,0] = L1Error/np.max(L1Error);
+    observations[:,1] = MSError/np.max(MSError);
+    observations[:,2] = MinError/np.max(MinError);
+    observations[:,3] = MaxError/np.max(MaxError);
 
 
 
 
 
-    input_names = ['OPLTYPE', 'HL_0_DIM', 'HL_0_TYPE', 'HL_1_DIM', 'HL_1_TYPE', 'HL_2_DIM', 'HL_2_TYPE']
+    input_names = ['OPLTYPE', 'HL_0_DIM', 'HL_0_TYPE', 'HL_1_DIM', 'HL_1_TYPE']
 
     output_names = ['L1Error', 'MSError','MinError','MaxError'];
     #_______________________________________________________
@@ -148,7 +148,6 @@ def getSobolIndices(projectName, runNumber, size):
     #_______________________________________________________
     # NOTE: we are changing the *TYPE arrays from 0,1,3,4 range to 0,1,2,3 
     # i.e. we are re-coding LeakyRELU as 2 and TanH as 3 
-
     ot.RandomGenerator.SetSeed(int(1000*time.time()))
     distributionNHL = ot.Uniform(1,3);
     distributionOPLTYPE = ot.Uniform(0,3); # note the range
@@ -159,7 +158,7 @@ def getSobolIndices(projectName, runNumber, size):
     distributionHL2DIM = ot.Uniform(5,15);
     distributionHL2TYPE = ot.Uniform(0,3); # note the range
 
-    distributionList = [distributionOPLTYPE, distributionHL0DIM, distributionHL0TYPE, distributionHL1DIM, distributionHL1TYPE, distributionHL2DIM, distributionHL2TYPE];
+    distributionList = [distributionOPLTYPE, distributionHL0DIM, distributionHL0TYPE, distributionHL1DIM, distributionHL1TYPE];
 
     distribution = ot.ComposedDistribution(distributionList)
 
@@ -193,15 +192,16 @@ def getSobolIndices(projectName, runNumber, size):
         print(sobol1); 
         print(soboltotal);
         print("Saving Sobol indices...");
-        np.savez("sobolIndices_NH3_"+output_names[i], sobol1=sobol1, sobol2 = sobol2, soboltotal=soboltotal);
+        np.savez("sobolIndices_NH2_"+output_names[i], sobol1=sobol1, sobol2 = sobol2, soboltotal=soboltotal);
         print("Done.");
+
         pass;
     os.chdir(currDir);
     pass;
 
 
 if __name__=="__main__":
-    os.sched_setaffinity(0,{i for i in range(28)})
+    #os.sched_setaffinity(0,{i for i in range(28)})
 
     # Name of the project
     projectName = "Avg";

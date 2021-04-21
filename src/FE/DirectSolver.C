@@ -16,9 +16,10 @@
 #include <LinAlg.h>
 
 // #ifdef _MPI
+#ifdef INTELMKLBLAS
   #include <mkl.h>
   #include <omp.h>
-// #endif
+#endif INTELMKLBLAS
 
 
 #include <fstream>

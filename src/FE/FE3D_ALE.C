@@ -2192,13 +2192,9 @@ void FE3D_ALE::constructGlobalStiffness(TSquareMatrix3D **sqmatrices, int*& RowP
 
 void FE3D_ALE::AssembleMeshMatrix(TFESpace3D* fespace, TFEVectFunct3D* MeshVelocityVectFunction3D, int FactoriseFlag)
 {
-<<<<<<< HEAD
 	#ifdef  _CUDA
 		// PUSH_RANGE("Mesh Matrix Assemble", 5);	
 	#endif  //_CUDA
-=======
-	// PUSH_RANGE("Mesh Matrix Assemble", 5);
->>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
 	char UString[] = "T";
 	char NameString[] = "name";
 	char CString[] = "C";
@@ -2288,15 +2284,10 @@ void FE3D_ALE::AssembleMeshMatrix(TFESpace3D* fespace, TFEVectFunct3D* MeshVeloc
 	// Assign the u.n boundary Condition for the Free Slip Slides
 	impose_FreeSlip_BoundaryCondition(sqstructure,SqmatrixG11->GetEntries(),SqmatrixG12->GetEntries(),SqmatrixG13->GetEntries(),SqmatrixG21->GetEntries(),SqmatrixG22->GetEntries()
 									,SqmatrixG23->GetEntries(),SqmatrixG31->GetEntries(),SqmatrixG32->GetEntries(),SqmatrixG33->GetEntries(),GlobRhs,N_DOF,N_ActiveBoundary);
-<<<<<<< HEAD
 	
 	#ifdef _CUDA
 		// POP_RANGE;
 	#endif  // _CUDA
-=======
-	// POP_RANGE;
-
->>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
 
 	#ifdef _CUDA
 	// If Cuda Solver is Selected , Solve here, Else Solve in THe Solve MEsh Matrix Routine

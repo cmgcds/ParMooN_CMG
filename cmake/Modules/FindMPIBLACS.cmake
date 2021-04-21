@@ -8,15 +8,19 @@
 #  MPIBLACS_INCLUDE_DIRS - The MPIBLACS include directories
 #  MPIBLACS_LIBRARIES - The libraries needed to use MPIBLACS
 # ===================================================================
+
+
 if(MPIBLACS_INCLUDES AND MPIBLACS_LIBRARIES)
   set(MPIBLACS_FIND_QUIETLY TRUE)
 endif(MPIBLACS_INCLUDES AND MPIBLACS_LIBRARIES)
+
+
 
 if(NOT MPIBLACS_FOUND)
     find_library(MPIBLACS_LIBRARY NAMES scalapack_${AParMooN_ARCH} PATHS ${PARMOON_EXTLIB_PATH}/MPIBLACS) 
     find_library(BLACS_LIBRARY NAMES blacs_MPI_${AParMooN_ARCH}-0 PATHS ${PARMOON_EXTLIB_PATH}/MPIBLACS)     
     find_library(BLACS_F77LIBRARY NAMES blacsF77init_MPI_${AParMooN_ARCH}-0 PATHS ${PARMOON_EXTLIB_PATH}/MPIBLACS) 
-    
+
 #         message("MPIBLACS_LIBRARY: ${MPIBLACS_LIBRARY}")
 #          message("BLACS_LIBRARY: ${BLACS_LIBRARY}")       
 #         message("BLACS_F77LIBRARY: ${BLACS_F77LIBRARY}")

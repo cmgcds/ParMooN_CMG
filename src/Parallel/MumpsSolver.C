@@ -26,7 +26,7 @@
  
 //  #include <ParVector.h>
 //  #include <ParVectorNSE3D.h>
-
+#include "dmumps_c.h"
 extern "C"
  {
   #include "dmumps_c.h"

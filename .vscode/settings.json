@@ -39,6 +39,13 @@
         "SystemTCD2D.C": "cpp",
         "DiscreteForm2D.C": "cpp",
         "NSE2D_FixPo.C": "cpp",
-        "TNSE2D_FixPo.C": "cpp"
+        "TNSE2D_FixPo.C": "cpp",
+        "TNSE3D_FixPo.C": "cpp",
+        "VMS.C": "cpp",
+        "FESpace3D.C": "cpp",
+        "TNSE3D_Newton.C": "cpp",
+        "Convolution.C": "cpp",
+        "MumpsSolver.C": "cpp",
+        "SeqParDirectSolver.C": "cpp"
     }
 }

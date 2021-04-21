@@ -66,7 +66,7 @@ if(NOT "${AParMooN_ARCH}" STREQUAL "CRAY64")
 # search the blas in the system, if available it will be default
 message("==================Searching BLAS in the System - begin===================================================")
 if(AParMooN_USE_SYSTEM_MKLBLAS)
-    message("Searching MKL BLAS HOME...")
+    message("Searching MKL BLAS in HOME...")
     find_package(MKLBLAS REQUIRED)
     include_directories(${BLAS_INCLUDE_DIRS})
     if(CMAKE_VERBOSE_MAKEFILE)
@@ -78,7 +78,7 @@ if(AParMooN_USE_SYSTEM_MKLBLAS)
     endif(CMAKE_VERBOSE_MAKEFILE)  
 
     # add a User parameter to be passed to parmoon to inform the usage of MKL header files
-    # Declare a private Variable for _INTELMKLBLAS_ in order to include Header Files
+    # Declare a private Variable for INTELMKLBLAS in order to include Header Files
     if(BLAS_FOUND)
       set(PARMOON_C_DEF " ${PARMOON_C_DEF} -DINTELMKLBLAS")
       set(PARMOON_CXX_DEF " ${PARMOON_CXX_DEF} -DINTELMKLBLAS")
@@ -114,7 +114,7 @@ message("Intel MKL Blas not found..! Switiching to ACML BLAS ")
     if(BLAS_FOUND)
       message("Available system BLAS_LIB =${BLAS_LIBRARIES}")
     elseif(NOT BLAS_FOUND)
-       message("ERROR :   BLAS_NOT_FOUND in your system, BLAS must be linked before compiling")
+       message("ERROR : BLAS_NOT_FOUND in your system, BLAS must be linked before compiling")
     endif()
   endif()
 # endif(AParMooN_USE_SYSTEM_BLAS)
@@ -128,10 +128,11 @@ if("${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI" OR "${AParMooN_PARALLEL_TYPE}" STR
 
 
 #   message("==================Searching MPI in the System - begin===================================================")
-find_package(MPI)
-
+find_package(MPIBLACS)
+  ## --- Thivin ---- ##
+  ## Change -- "lmpichf90" was removed from the "MPICH" flags due to missing library error 
    if("${AParMooN_MPI_IMPLEMENTATION}" STREQUAL "MPICH")
-       set(MPI_LIBS -lmpich -lmpichf90 -lmpichcxx -lgfortran )
+       set(MPI_LIBS "-lmpich -lmpichcxx -lgfortran -lmpichfort")
    elseif("${AParMooN_MPI_IMPLEMENTATION}" STREQUAL "OPENMPI")
       set(MPI_LIBS -lmpi -lmpifort -lmpicxx)
    elseif("${AParMooN_MPI_IMPLEMENTATION}" STREQUAL "INTELMPI")
@@ -220,6 +221,8 @@ if(CMAKE_VERBOSE_MAKEFILE)
   endif()
 endif()
 message("==================Searching TECPLOT in the System - end====================================================")
+
+
 
 message("==================Add mlpack from EXT_LIB - begin====================================================")
 
@@ -330,7 +333,7 @@ endif()
 # set the define for compiler  options
   set(CMAKE_C_FLAGS "${PARMOON_C_DEF}")
   set(CMAKE_C_FLAGS_DEBUG "-g ${PARMOON_C_DEF}")
-  set(CMAKE_C_FLAGS_RELEASE " -s  ${PARMOON_C_DEF}")
+  set(CMAKE_C_FLAGS_RELEASE "O3 -s  ${PARMOON_C_DEF}")
   set(CMAKE_CXX_FLAGS "${PARMOON_CXX_DEF} " )
   set(CMAKE_CXX_FLAGS_DEBUG "${PARMOON_CXX_DEF} ")
   set(CMAKE_CXX_FLAGS_RELEASE " -s ${PARMOON_CXX_DEF}") 
@@ -351,7 +354,6 @@ include_directories("${CMAKE_SOURCE_DIR}/include/System")
 include_directories("${CMAKE_SOURCE_DIR}/include/Parallel")
 include_directories("${CMAKE_SOURCE_DIR}/Examples")
 include_directories("${CMAKE_SOURCE_DIR}/include/Solvers")
-
 include_directories("${CMAKE_SOURCE_DIR}/include/ANN")
 
 if("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "MCUDA" )
@@ -369,7 +371,7 @@ add_subdirectory(src/FE)
 add_subdirectory(src/System)
 add_subdirectory(src/Solvers)
 
-add_subdirectory(src/ANN)
+# add_subdirectory(src/ANN)
 
  
 # add_subdirectory(src/PBE) 
@@ -387,11 +389,11 @@ add_executable(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe  ${AParMooN
 if( "${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "HYBRID" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI" )
    target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "solver" "sys" "par" "geo"  "fe" "gen" "geo" "fe" "gen"  
                       "amg"  "quad" "ref" "geo" "fe" "quad" "geo"  ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
-                      ${MPIBLACS_LIBRARIES}  ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  ${MUMPS_LIBRARIES}   ${BLAS_LIBRARIES} ${MPI_LIBS} "${ARMADILLO_LIBRARIES}" "${MLPACK_LIBRARIES}" "ann")  
+                      ${MPIBLACS_LIBRARIES}  ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  ${MUMPS_LIBRARIES} ${BLAS_LIBRARIES} ${MPI_LIBS} )  
 elseif( "${AParMooN_PARALLEL_TYPE}" STREQUAL "SEQUENTIAL"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "OMPONLY")
    target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "sys" "geo"  "fe" "gen" "geo" "fe" "gen" "fe"
                       "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "sys" "fe" "geo" "gen" ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
-                      ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  )
+                      ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  ${ARMADILLO_LIBRARIES}  ${MLPACK_LIBRARIES} "ann")
 elseif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
 target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "solver" "sys" "geo"  "fe" "gen" "geo" "fe" "gen" "fe"
                     "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "solver" "sys" "fe" "geo" "cudaSpLinSolver" ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}

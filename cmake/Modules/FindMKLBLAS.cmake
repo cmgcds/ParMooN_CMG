@@ -27,9 +27,9 @@ if(NOT BLAS_FOUND)
   get_filename_component(BLAS_LIBDIR ${BLAS_LIBRARY} PATH)
   # find_library(BLAS_LIBRARY_MP NAMES mkl_intel_lp64 PATHS ${BLAS_LIBDIR})
   # find_library(BLAS_LIBRARY_SQ NAMES mkl_sequential PATHS ${BLAS_LIBDIR})
-
-  find_library(BLAS_LIBRARY_SQ NAMES mkl_intel_thread PATHS ${BLAS_LIBDIR})
+  # find_library(BLAS_LIBRARY_SQ NAMES mkl_sequential PATHS ${BLAS_LIBDIR})
   find_library(BLAS_LIBRARY_MP NAMES mkl_intel_lp64 PATHS ${BLAS_LIBDIR})
+  find_library(BLAS_LIBRARY_SQ NAMES mkl_sequential PATHS ${BLAS_LIBDIR})
 
   
 

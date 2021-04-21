@@ -12,7 +12,7 @@
 #if defined(_MPI) || defined(_SMPI)
  extern "C"
  {
-  #  include "dmumps_c.h"
+  #include "dmumps_c.h"
  }
 
 #ifndef __MUMPSSOLVER__

@@ -92,7 +92,6 @@ double TurbulentViscosity3D(double delta, double* gradU, double* u,
              " not implemented !!!" << endl);
       exit(4711);
   }
-
   // compute turbulent viscosity
   switch(nu_type)
   {

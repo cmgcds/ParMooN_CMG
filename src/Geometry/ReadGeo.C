@@ -45,10 +45,7 @@
 
 int TDomain::ReadGeo(char *GeoFile)
 {
-<<<<<<< HEAD
 	
-=======
->>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
   char line[100];
   int i, j, N_Vertices, NVpF, NVE, NBCT;
   double *DCORVG;
@@ -3571,17 +3568,14 @@ int TDomain::GmshGen(char *GeoFile)
      dat >> X >> Y >> Z;      
      
     X *= scale_x;
-    X += 5.32163;
+    X += 0.1064326;
     Y *= scale_y;
-    Y += 0.000245284;
+    Y += 0.0;
     Z *= scale_z;
-    Z += 15.332153;
-
-
-
+    Z += 0.3066431;
 
     if(fabs(X) < 1e-5 ) X = 0.;
-    if(fabs(Y) < 1e-3 ) Y = 0.;
+    if(fabs(Y) < 1e-5 ) Y = 0.;
     if(fabs(Z) < 1e-5 ) Z = 0.;
     
 

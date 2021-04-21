@@ -8,13 +8,8 @@
 set(CMAKE_VERBOSE_MAKEFILE FALSE)
 
 # selection of dimension (2D 3D)
-<<<<<<< HEAD
 # set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimensio of the problem")
 set(AParMooN_GEO "3D" CACHE STRING "Change AParMooN_GEO, to select the Dimension of the problem")
-=======
-set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimensio of the problem")
-# set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimension of the problem")
->>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
 
 #...................................................................................................................................................
 # select this line accordingly to include your main program
@@ -22,11 +17,7 @@ set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimensio 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TCD2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TCD2D_ParMooN_ALE.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/NSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-<<<<<<< HEAD
 #set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TNSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-=======
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TNSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
->>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/CD3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/TCD3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/NSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
@@ -34,25 +25,16 @@ set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimensio 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/2D_Programs/deepikaji.cpp" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/TNSE3D/thivin_TNSE3D.cpp" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/Sample_mesh_move_2d.cpp" CACHE STRING "Enter to select the Main file of the model")
-<<<<<<< HEAD
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TBE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-=======
-
-#set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TBE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
-#set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_Thyroid.C" CACHE STRING "Enter to select the Main file of the model") 
-#set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_MNIST.C" CACHE STRING "Enter to select the Main file of the model") 
-#set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_Regression.C" CACHE STRING "Enter to select the Main file of the model") 
-set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_SUPG.C" CACHE STRING "Enter to select the Main file of the model") 
->>>>>>> 767196c0c4ffba25b63d722d5099249ff702b0ee
 
 # selection of architect type (LINUX64 MAC64 INTEL64 TYRONE64 CRAY64)
-set(AParMooN_ARCH "INTEL64" CACHE STRING "select the machine type")
+set(AParMooN_ARCH "LINUX64" CACHE STRING "select the machine type")
 
 #  selection of program type (SEQUENTIAL SMPI MPI OMPONLY HYBRID SCUDA)
-set(AParMooN_PARALLEL_TYPE "SEQUENTIAL" CACHE STRING "select the parallel type")
+set(AParMooN_PARALLEL_TYPE "SMPI" CACHE STRING "select the parallel type")
 
 #  selection of program type (MPICH OPENMPI INTELMPI CRAYMPI MACMPI)
-set(AParMooN_MPI_IMPLEMENTATION "INTELMPI" CACHE STRING "select the MPI Implementation type")
+set(AParMooN_MPI_IMPLEMENTATION "MPICH" CACHE STRING "select the MPI Implementation type")
  
 # set the path to save the exe file ....................................................................................
 #.......................................................................................................................
@@ -145,16 +127,31 @@ endif()
 
  if("${AParMooN_ARCH}" STREQUAL "LINUX64")  
    set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -fopenmp -std=c++11 ")
-   set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -DREDUCED -DNO_TIMER -m64    ")
+   set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -DREDUCED -DNO_TIMER -m64 -fopenmp  ")
    set(PARMOON_CUDA_DEF "${PARMOON_CUDA_DEF} -arch=sm_70 -Xcompiler -fopenmp -w ")
-   
+
+  ##  ------------- Changes made by Thivin ---------
+  ## The Below code is added for backward compatibility of the MUMPS Solver code. 
+  ## The MUMPS libraries available in Linux are compiled without the -fPIC flags ( Non position indepent code compilation )
+  ## From Ubuntu 18.04 the PIC is enabled by default, To remove this the following flag "-no-pie" has been added 
+  ## to the gcc and g++ compilers to suppress the PIC during compilation
+
+   if("${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI" )
+    set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -no-pie ")
+    set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -no-pie  ")
+   endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI") 
+
+
+   ### --- Added by thivin  ---- ##
+   ## For MPICH , the flag -lmpichfort have to be added in order 
+
  elseif("${AParMooN_ARCH}" STREQUAL "MAC64")
    set(PARMOON_CXX_DEF " -stdlib=libc++ ${PARMOON_CXX_DEF}  -fapple-pragma-pack -Wdeprecated-register  ")
    set(PARMOON_C_DEF "  ${PARMOON_C_DEF}  -DREDUCED -DNO_TIMER -DMKL_ILP64 -m64 -fapple-pragma-pack ")
 
  elseif("${AParMooN_ARCH}" STREQUAL "INTEL64")
-   set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -std=c++11   -fopenmp -fma")
-   set(PARMOON_C_DEF "  ${PARMOON_C_DEF}   -DREDUCED -DNO_TIMER -std=c++11 -qopenmp -fma")
+   set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -std=c++11   -qopenmp -fma")
+   set(PARMOON_C_DEF "  ${PARMOON_C_DEF}  -std=c++11 -DREDUCED -DNO_TIMER -DMKL_ILP64 -m64 -qopenmp")
    set(PARMOON_CUDA_DEF "${PARMOON_CUDA_DEF} -arch=sm_70 -Xcompiler -fopenmp -w ")
 
  elseif("${AParMooN_ARCH}" STREQUAL "TYRONE64")

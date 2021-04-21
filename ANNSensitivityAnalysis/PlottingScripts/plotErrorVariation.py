@@ -122,10 +122,11 @@ def plotErrorVariation(projectName):
     axs[location].semilogy(x, L1Error[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
     axs[location].semilogy(x, L1Error[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
+    axs[location].set_xlabel(r"TDS");
     axs[location].set_xticks([0,1,2,3,4,5,6,7]);
     axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
-    axs[location].set_ylabel(r"$L_1$ Error");
+    axs[location].set_ylabel(r"Aggr. $L_1$ Error");
     axs[location].set_ylim(10**-1, 10**3);
     axs[location].legend(loc=legendLocation, fontsize=7);
 
@@ -138,10 +139,11 @@ def plotErrorVariation(projectName):
     axs[location].semilogy(x, MSError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
     axs[location].semilogy(x, MSError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
+    axs[location].set_xlabel(r"TDS");
     axs[location].set_xticks([0,1,2,3,4,5,6,7]);
     axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
-    axs[location].set_ylabel(r"MSE");
+    axs[location].set_ylabel(r"Aggr. MSE");
     axs[location].set_ylim(10**-4, 10**4);
     axs[location].legend(loc=legendLocation, fontsize=7);
 
@@ -154,10 +156,11 @@ def plotErrorVariation(projectName):
     axs[location].semilogy(x, MinError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
     axs[location].semilogy(x, MinError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
+    axs[location].set_xlabel(r"TDS");
     axs[location].set_xticks([0,1,2,3,4,5,6,7]);
     axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
-    axs[location].set_ylabel(r"Rel. Min Error");
+    axs[location].set_ylabel(r"Aggr. Min Error");
     axs[location].set_ylim(10**-2, 10**1);
     axs[location].legend(loc=legendLocation, fontsize=7);
 
@@ -170,10 +173,11 @@ def plotErrorVariation(projectName):
     axs[location].semilogy(x, MaxError[:,2], '-.', color ='red', linewidth='2', label = 'p95 error');
     axs[location].semilogy(x, MaxError[:,3], '.', color ='blue', linewidth='3', label = 'St. Dev.');
 
+    axs[location].set_xlabel(r"TDS");
     axs[location].set_xticks([0,1,2,3,4,5,6,7]);
     axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
-    axs[location].set_ylabel(r"Rel. Max Error");
+    axs[location].set_ylabel(r"Aggr. Max Error");
     axs[location].set_ylim(10**4, 10**10);
     axs[location].legend(loc=legendLocation, fontsize=7);
 

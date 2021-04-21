@@ -121,7 +121,7 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     s4color = 'black';
 
     s1size = '2';
-    s2size = '3';
+    s2size = '1.5';
     s3size = '1';
     s4size = '1.5';
 

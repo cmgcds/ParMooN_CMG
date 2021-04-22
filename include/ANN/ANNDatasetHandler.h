@@ -97,15 +97,12 @@ class TANNDatasetHandler
 
     double computeError(arma::mat referenceValue, arma::mat numericalValue, std::string norm, std::string type);
 
-<<<<<<< HEAD
     //save the model 
     void saveModel();
-=======
     void writeErrorFile(arma::mat referenceValue, arma::mat numericalValue);
 
     // save the model 
     // void saveModel();
->>>>>>> b5d788effe7b194fc98319c225c4598e58a1c016
 };
 
 #endif

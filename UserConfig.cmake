@@ -54,6 +54,9 @@ set(USE_PARMOON_DEFINE -D__PRIVATE__)
 set(EXE_BUILD_TYPE RELEASE)
 
 
+## Flags for ANN
+set(AParMooN_USE_ANN TRUE)
+
 # set FALSE, if you want to use libs provided in PARMOON 
 # if you set TRUE, it will search in all you lib paths and if not found, PARMOON libs will be used
 set(AParMooN_USE_SYSTEM_MKLBLAS TRUE)

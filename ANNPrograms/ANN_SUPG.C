@@ -28,5 +28,7 @@ int main(int argc, char* argv[])
   // Test
   ann.testNetwork(&datasetHandler);
 
+  datasetHandler.saveModel();
+
   return 0;
 } // end main

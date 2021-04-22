@@ -9,15 +9,15 @@
 #  ifndef MLPACK_EXPORT
 #    ifdef mlpack_EXPORTS
         /* We are building this library */
-#      define MLPACK_EXPORT __attribute__((visibility("default")))
+#      define MLPACK_EXPORT 
 #    else
         /* We are using this library */
-#      define MLPACK_EXPORT __attribute__((visibility("default")))
+#      define MLPACK_EXPORT 
 #    endif
 #  endif
 
 #  ifndef MLPACK_NO_EXPORT
-#    define MLPACK_NO_EXPORT __attribute__((visibility("hidden")))
+#    define MLPACK_NO_EXPORT 
 #  endif
 #endif
 

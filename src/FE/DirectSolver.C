@@ -19,7 +19,7 @@
 #ifdef INTELMKLBLAS
   #include <mkl.h>
   #include <omp.h>
-#endif INTELMKLBLAS
+#endif 
 
 
 #include <fstream>

@@ -61,12 +61,12 @@ TANNDatasetHandler::TANNDatasetHandler(TANNParamReader *paramReader){
 
 
 // Export the Data 
-// void TANNDatasetHandler::saveModel(){
+void TANNDatasetHandler::saveModel(){
 
-//   // Load the data
-//   mlpack::data::Save("model.xml", "model",  this->allData, false);
+  // save the data
+  mlpack::data::Save("model.txt", "model",  this->allData, false);
 
-// }
+}
 
 TANNDatasetHandler::~TANNDatasetHandler(){};
 

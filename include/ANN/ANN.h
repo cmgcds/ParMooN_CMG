@@ -88,6 +88,8 @@ class TANN
   // Verify results with training and validation datasets
   void verifyModel(TANNDatasetHandler *datasetHandler);
 
+
+
   private:
   /** Flags */
   bool layerFlag;
@@ -418,4 +420,6 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::testNetwork
   datasetHandler->postProcessResults();
   std::cout << "Error : " << datasetHandler->errorL1Relative << std::endl;
 };
+
+
 #endif

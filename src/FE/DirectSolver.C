@@ -4477,7 +4477,7 @@ void DirectSolver(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
                   TMatrix3D *matrixB1, TMatrix3D *matrixB2, TMatrix3D *matrixB3,
                   double *rhs, double *sol, int flag)
 {
-
+  exit(0);
   if (TDatabase::ParamDB->SC_VERBOSE > 3)
     OutPut("umf3d" << endl);
   int *KColA, *RowPtrA;

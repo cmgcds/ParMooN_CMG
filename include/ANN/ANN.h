@@ -54,8 +54,10 @@ class TANN
 
   /** Optimizer code */
   /** 0: Default (RMSProp)
-   *  1: SGD
-   *  2: Adam
+   *  1: Gradient Descent
+   *  2: SGD
+   *  3: Adam
+   *  4: L-BFGS
    *  **/
   int optimizerCode;
 
@@ -68,7 +70,23 @@ class TANN
   /** Max number of iterations */
   int maxIterations;
 
+  /** Number of training epochs */
   int epochs;
+
+  /** Dropout ratio for the regularization before the output layer */
+  double dropoutRatio;
+
+  /** Tolerance (absolute) */
+  double tolerance;
+
+  /** Save model to this file after training */
+  std::string saveModelFile;
+
+  /** Load model from this file if the loadModelFlag is 1 */
+  std::string loadModelFile;
+
+  /** Load model flag. If 1, load the model from a file instead of training */
+  std::string loadModelFlag;
 
   public:
   /** Methods */
@@ -168,6 +186,15 @@ TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::TANN(TANNParamRe
 
   this->epochs = paramReader->epochs;
 
+  this->dropoutRatio = paramReader->dropoutRatio;
+
+  this->tolerance = paramReader->tolerance;
+
+  this->saveModelFile = paramReader->saveModelFile;
+
+  this->loadModelFile = paramReader->loadModelFile;
+
+  this->loadModelFlag = paramReader->loadModelFlag;
 };
 
 /** Destructor */
@@ -226,7 +253,7 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::setupModel(
 
     // Add regularization before the output layer
     if (i == nLayers-2){
-      this->model.template Add<mlpack::ann::Dropout<>>(0.2);
+      this->model.template Add<mlpack::ann::Dropout<>>(this->dropoutRatio);
     };
 
     // Add a linear Layer (i.e. Sum(x_i * omega_i) )
@@ -264,14 +291,17 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::applyActiva
       break;
 
     case 3:
+      this->model.template Add<mlpack::ann::LeakyReLU<> >();
+
+    case 4:
       this->model.template Add<mlpack::ann::TanHLayer<> >();
       break;
 
-    case 4:
+    case 5:
       this->model.template Add<mlpack::ann::SoftPlusLayer<> >();
       break;
 
-    case 5:
+    case 6:
       this->model.template Add<mlpack::ann::LogSoftMax<> >();
       break;
 
@@ -296,15 +326,15 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::verifyModel
       if (predOutTrain.n_rows == 1){
           // Regression model
 
-          double errorTrain = datasetHandler->computeError(datasetHandler->trainLabels, predOutTrain, "L2", "REL");
-          std::cout << " Train error (L2, Rel) : " << errorTrain << std::endl;
+          double errorTrain = datasetHandler->computeError(datasetHandler->trainLabels, predOutTrain, "MSE", "ABS");
+          std::cout << " Train error (MSE) : " << errorTrain << std::endl;
 
           arma::mat predOutValid;
 
           this->model.template Predict(datasetHandler->validationData, predOutValid);
 
-          double errorValid = datasetHandler->computeError(datasetHandler->validationLabels, predOutValid, "L2", "REL");
-          std::cout << " Validation error (L2, Rel) : " << errorValid << std::endl;
+          double errorValid = datasetHandler->computeError(datasetHandler->validationLabels, predOutValid, "MSE", "ABS");
+          std::cout << " Validation error (MSE) : " << errorValid << std::endl;
 
       }
       else{
@@ -344,12 +374,19 @@ template<
   typename... CustomLayers
 >
 void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::trainNetwork(TANNDatasetHandler *datasetHandler){
+  // Set the max iterations based on epochs
+
+  if (this->maxIterations != 0){
+    if (this->maxIterations < datasetHandler->trainData.n_cols * this->epochs){
+      this->maxIterations = datasetHandler->trainData.n_cols * this->epochs;
+    };
+  };
   
   switch(this->optimizerCode){
     case 0:
     {
       // Default optimizer (i.e. RMSProp)
-      this->model.template Train(datasetHandler->trainData, datasetHandler->trainLabels, ens::PrintLoss(), ens::ProgressBar());
+      this->model.template Train(datasetHandler->trainData, datasetHandler->trainLabels);
       this->verifyModel(datasetHandler);
 
       break;
@@ -357,35 +394,27 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::trainNetwor
 
     case 1:
     {
-      // SGD optimizer 
-      // Set parameters for the SGD optimizer.
-      ens::StandardSGD optimizer(this->optimizerStepSize, this->sgdBatchSize, this->maxIterations);
-      // Declare callback to store best training weights.
-      ens::StoreBestCoordinates<arma::mat> bestCoordinates;
+      // Gradient Descent
+      ens::GradientDescent optimizer(this->optimizerStepSize, this->maxIterations, this->tolerance);
 
       // Train neural network. If this is the first iteration, weights are
       // random, using current values as starting point otherwise.
       model.Train(datasetHandler->trainData,
                   datasetHandler->trainLabels,
-                  optimizer,
-                  //ens::PrintLoss(),
-                  ens::ProgressBar(),
-                  ens::EarlyStopAtMinLoss(),
-                  bestCoordinates);
-
-      // Save the best training weights into the model.
-      model.Parameters() = bestCoordinates.BestCoordinates();
+                  optimizer
+                  );
 
       this->verifyModel(datasetHandler);
 
       break;
     };
+
 
     case 2:
     {
-      // Adam optimizer
-      // Set parameters for the Adam optimizer.
-      ens::Adam optimizer(this->optimizerStepSize, this->sgdBatchSize, this->maxIterations);
+      // SGD optimizer 
+      // Set parameters for the SGD optimizer.
+      ens::StandardSGD optimizer(this->optimizerStepSize, this->sgdBatchSize, this->maxIterations, this->tolerance);
       // Declare callback to store best training weights.
       ens::StoreBestCoordinates<arma::mat> bestCoordinates;
 
@@ -394,8 +423,6 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::trainNetwor
       model.Train(datasetHandler->trainData,
                   datasetHandler->trainLabels,
                   optimizer,
-                  //ens::PrintLoss(),
-                  ens::ProgressBar(),
                   ens::EarlyStopAtMinLoss(),
                   bestCoordinates);
 
@@ -407,6 +434,51 @@ void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::trainNetwor
       break;
     };
 
+    case 3:
+    {
+      // Adam optimizer
+      // Set parameters for the Adam optimizer.
+      ens::Adam optimizer(this->optimizerStepSize, this->sgdBatchSize, 0.9, 0.999, 1e-8, this->maxIterations,this->tolerance,true);
+      // Declare callback to store best training weights.
+      ens::StoreBestCoordinates<arma::mat> bestCoordinates;
+
+      // Train neural network. If this is the first iteration, weights are
+      // random, using current values as starting point otherwise.
+      model.Train(datasetHandler->trainData,
+                  datasetHandler->trainLabels,
+                  optimizer,
+                  ens::EarlyStopAtMinLoss(20),
+                  bestCoordinates);
+
+      // Save the best training weights into the model.
+      model.Parameters() = bestCoordinates.BestCoordinates();
+
+      this->verifyModel(datasetHandler);
+
+      break;
+    };
+
+    case 4:
+    {
+      // L-BFGS algorithm
+      // Number of basis dimensions 
+      int numBasis = 10;
+      ens::L_BFGS optimizer(numBasis, this->maxIterations);
+
+      // Train neural network. If this is the first iteration, weights are
+      // random, using current values as starting point otherwise.
+      model.Train(datasetHandler->trainData,
+                  datasetHandler->trainLabels,
+                  optimizer
+                  );
+
+      this->verifyModel(datasetHandler);
+
+      break;
+    };
+
+    //std::cout << "\nNetwork training done. Saving the model in " << this->saveModelFile << std::endl;
+    //mlpack::data::Save(saveModelFile, "Feed Forward Neural Network",this->model);
   };
 };
 
@@ -418,7 +490,7 @@ template<
 void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::testNetwork(TANNDatasetHandler *datasetHandler){
   this->model.template Predict(datasetHandler->testData, datasetHandler->predictionTemp);
   datasetHandler->postProcessResults();
-  std::cout << "Error : " << datasetHandler->errorL1Relative << std::endl;
+  std::cout << "Test error (MSE): " << datasetHandler->errorMSE << std::endl;
 };
 
 

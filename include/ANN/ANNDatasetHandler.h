@@ -39,6 +39,8 @@ class TANNDatasetHandler
 
     int ipDataDim;
 
+    std::string saveDataFile;
+
     /** Armadillo matrix storing raw data */
     arma::mat allData;
 
@@ -47,6 +49,9 @@ class TANNDatasetHandler
 
     /** Armadillo matrix storing validation data */
     arma::mat validationData;
+
+    /** Test dataset containing testData and testLabels */
+    arma::mat testDataset;
 
     /** Armadillo matrix storing testing data */
     arma::mat testData;
@@ -68,10 +73,19 @@ class TANNDatasetHandler
      * prediction values */
     arma::mat prediction;
 
+    /** training data scaler,i.e. betn [0,1] */
+    mlpack::data::MinMaxScaler dataScaler;
+
+    /** Training label scaler ,i.e. betn [0,1]*/
+    mlpack::data::MinMaxScaler labelScaler;
+
+
     /** error */
-    double errorL1Absolute;
-    double errorL2Absolute;
-    double errorLInfAbsolute;
+    double errorL1Absolute; // L1 norm
+    double errorL2Absolute; // L2 norm
+    double errorLInfAbsolute; // max error
+    double errorL0Absolute; // min error
+    double errorMSE; // Mean Sq. error based on mlpack routines
 
     double errorL1Relative;
     double errorL2Relative;
@@ -83,8 +97,15 @@ class TANNDatasetHandler
 
     double computeError(arma::mat referenceValue, arma::mat numericalValue, std::string norm, std::string type);
 
+<<<<<<< HEAD
     //save the model 
     void saveModel();
+=======
+    void writeErrorFile(arma::mat referenceValue, arma::mat numericalValue);
+
+    // save the model 
+    // void saveModel();
+>>>>>>> b5d788effe7b194fc98319c225c4598e58a1c016
 };
 
 #endif

@@ -25,7 +25,9 @@
 
 // MLPACK routines
 #include <mlpack/core.hpp>
+#include <mlpack/core/data/scaler_methods/min_max_scaler.hpp>
 #include <mlpack/methods/ann/layer/layer.hpp>
+#include <mlpack/methods/linear_regression/linear_regression.hpp>
 
 // MLPACK Loss functions
 #include <mlpack/methods/ann/loss_functions/mean_squared_error.hpp>

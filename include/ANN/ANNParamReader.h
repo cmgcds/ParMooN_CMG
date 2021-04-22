@@ -51,19 +51,21 @@ class TANNParamReader
     /** loss function */
     std::string lossFunction;
 
-    /** Dataset name */
-    std::string datasetName;
+    /** Training Dataset name */
+    std::string trainingDatasetName;
 
-    /** Training data percentage of the total data */
-    double trainingDataPercentage;
+    /** Testing Dataset name */
+    std::string testingDatasetName;
 
-    /** Validation data percentage of the total data */
+    /** Validation data percentage of the total training data */
     double validationDataPercentage;
 
     /** Optimizer code */
     /** 0: Default (RMSProp)
-     *  1: SGD
-     *  2: Adam
+     *  1: Gradient Descent
+     *  2: SGD
+     *  3: Adam
+     *  4: L-BFGS
      *  **/
     int optimizerCode;
 
@@ -80,6 +82,25 @@ class TANNParamReader
     double featureScalingConstant;
 
     int epochs;
+
+    // Parameter used for regularization before the output layer
+    double dropoutRatio;
+
+    // Tolerance for the optimizer
+    double tolerance;
+
+    // File for saving the model
+    std::string saveModelFile;
+
+    // File for loading the model
+    std::string loadModelFile;
+
+    // Loading vs training flag
+    // This is set to 1 if the model is read from a file instead of training from scratch
+    int loadModelFlag;
+
+    // File for saving the data
+    std::string saveDataFile;
 
   private:
     /** flags */

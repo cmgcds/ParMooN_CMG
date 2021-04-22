@@ -20,25 +20,27 @@
 
 
 template<typename eT>
-arma_hot
 arma_inline
 void
 arrayops::copy(eT* dest, const eT* src, const uword n_elem)
   {
-  if(is_cx<eT>::no)
+  if(dest != src)
     {
-    if(n_elem <= 9)
+    if(is_cx<eT>::no)
       {
-      arrayops::copy_small(dest, src, n_elem);
+      if(n_elem <= 9)
+        {
+        arrayops::copy_small(dest, src, n_elem);
+        }
+      else
+        {
+        std::memcpy(dest, src, n_elem*sizeof(eT));
+        }
       }
     else
       {
-      std::memcpy(dest, src, n_elem*sizeof(eT));
+      if(n_elem > 0)  { std::memcpy(dest, src, n_elem*sizeof(eT)); }
       }
-    }
-  else
-    {
-    if(n_elem > 0)  { std::memcpy(dest, src, n_elem*sizeof(eT)); }
     }
   }
 
@@ -135,7 +137,7 @@ arrayops::clean(eT* mem, const uword n_elem, const eT abs_limit, const typename 
     {
     eT& val = mem[i];
     
-    val = (std::abs(val) <= abs_limit) ? eT(0) : val;
+    val = (eop_aux::arma_abs(val) <= abs_limit) ? eT(0) : val;
     }
   }
 
@@ -173,7 +175,6 @@ arrayops::clean(std::complex<T>* mem, const uword n_elem, const T abs_limit)
 
 
 template<typename out_eT, typename in_eT>
-arma_hot
 arma_inline
 void
 arrayops::convert_cx_scalar
@@ -193,7 +194,6 @@ arrayops::convert_cx_scalar
 
 
 template<typename out_eT, typename in_T>
-arma_hot
 arma_inline
 void
 arrayops::convert_cx_scalar
@@ -211,7 +211,6 @@ arrayops::convert_cx_scalar
 
 
 template<typename out_T, typename in_T>
-arma_hot
 arma_inline
 void
 arrayops::convert_cx_scalar
@@ -1028,7 +1027,7 @@ arrayops::is_zero(const eT* mem, const uword n_elem, const eT abs_limit, const t
     {
     for(uword i=0; i<n_elem; ++i)
       {
-      if(std::abs(mem[i]) > abs_limit)  { return false; }
+      if(eop_aux::arma_abs(mem[i]) > abs_limit)  { return false; }
       }
     }
   

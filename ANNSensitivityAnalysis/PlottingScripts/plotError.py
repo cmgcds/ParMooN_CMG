@@ -1,13 +1,10 @@
 import os
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import dataFunctions as DF
 
 
 def plotError(projectName, runNumber, figName, errorBar = False):
 
-    plt.rcParams["font.family"] = "monospace"
 
     curDir = os.getcwd();
     #_______________________________________________________
@@ -29,7 +26,6 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     # Prepare Sample data
     #_______________________________________________________
 
-    #DF.createOutputSpace(runDir);
 
     zValue = 1.96;
 
@@ -114,7 +110,8 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     #_______________________________________________________
 
 
-    shadeColor = 'beige';
+    #shadeColor = 'beige';
+    shadeColor = 'gainsboro';
     s1color = 'red';
     s2color = 'green';
     s3color = 'darkblue';
@@ -124,6 +121,8 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     s2size = '1.5';
     s3size = '1';
     s4size = '1.5';
+
+    LW = '0.8';
 
     #_______________________________________________________
     # Plot the errors for all the networks (design space)
@@ -142,8 +141,9 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     axs[location].semilogy(np.arange(flag1,flag2), L1Error[flag1:flag2],"s",color=s2color, markersize=s2size, label="NHL = 2");
     axs[location].semilogy(np.arange(flag2, numberOfSamples), L1Error[flag2:numberOfSamples],"o", color=s3color, markersize=s3size, label="NHL = 3");
 
-    axs[location].legend(loc=0,ncol=3, fontsize=6.6);
+    axs[location].legend(loc=0,ncol=3, fontsize=6.3);
 
+    axs[location].set_xlabel(r"ANN ID");
     axs[location].set_ylabel(r"$L_1$ Error");
     axs[location].set_ylim(lowerbound['L1Error'],upperbound['L1Error']);
     #axs[location].set_yticks([0.5,1]);
@@ -151,8 +151,8 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     # highlight 5 and 95 percentile zones with demarkation line
     axs[location].axhspan(lowerbound['L1Error'],p5['L1Error'],facecolor=shadeColor)
     axs[location].axhspan(p95['L1Error'],upperbound['L1Error'],facecolor=shadeColor)
-    axs[location].axhline(p5['L1Error'],color=s4color,linewidth='0.3');
-    axs[location].axhline(p95['L1Error'],color=s4color,linewidth='0.3');
+    axs[location].axhline(p5['L1Error'],color=s4color,linewidth=LW);
+    axs[location].axhline(p95['L1Error'],color=s4color,linewidth=LW);
 
     if (errorBar == True):
         axs[location].set_yscale("log", nonpositive='clip')
@@ -169,7 +169,7 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     axs[location].semilogy(np.arange(flag1,flag2), MSError[flag1:flag2],"s",color=s2color, markersize=s2size, label="NHL = 2");
     axs[location].semilogy(np.arange(flag2, numberOfSamples), MSError[flag2:numberOfSamples],"o", color=s3color, markersize=s3size, label="NHL = 3");
 
-    axs[location].legend(loc=0,ncol=3, fontsize=6.6);
+    axs[location].legend(loc=0,ncol=3, fontsize=6.3);
 
     axs[location].set_xlabel(r"ANN ID");
 
@@ -180,8 +180,8 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     # highlight 5 and 95 percentile zones with demarkation line
     axs[location].axhspan(lowerbound['MSError'],p5['MSError'],facecolor=shadeColor)
     axs[location].axhspan(p95['MSError'],max(0.01,upperbound['MSError']),facecolor=shadeColor)
-    axs[location].axhline(p5['MSError'],color=s4color,linewidth='0.3');
-    axs[location].axhline(p95['MSError'],color=s4color,linewidth='0.3');
+    axs[location].axhline(p5['MSError'],color=s4color,linewidth=LW);
+    axs[location].axhline(p95['MSError'],color=s4color,linewidth=LW);
 
     if (errorBar == True):
         axs[location].errorbar(np.arange(0,flag1), MSError[0:flag1],yerr=zValue*MSEStE[0:flag1], color=s1color, alpha=0.1);
@@ -197,7 +197,7 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     axs[location].semilogy(np.arange(flag1,flag2), L2Error[flag1:flag2],"s",color=s2color, markersize=s2size, label="NHL = 2");
     axs[location].semilogy(np.arange(flag2, numberOfSamples), L2Error[flag2:numberOfSamples],"o", color=s3color, markersize=s3size, label="NHL = 3");
 
-    axs[location].legend(loc=0,ncol=3, fontsize=6.6);
+    axs[location].legend(loc=0,ncol=3, fontsize=6.3);
 
     axs[location].set_xlabel(r"ANN ID");
 
@@ -208,8 +208,8 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     # highlight 5 and 95 percentile zones with demarkation line
     axs[location].axhspan(lowerbound['L2Error'],p5['L2Error'],facecolor=shadeColor)
     axs[location].axhspan(p95['L2Error'],upperbound['L2Error'],facecolor=shadeColor)
-    axs[location].axhline(p5['L2Error'],color=s4color,linewidth='0.3');
-    axs[location].axhline(p95['L2Error'],color=s4color,linewidth='0.3');
+    axs[location].axhline(p5['L2Error'],color=s4color,linewidth=LW);
+    axs[location].axhline(p95['L2Error'],color=s4color,linewidth=LW);
 
     if (errorBar == True):
         axs[location].set_yscale("log", nonpositive='clip')
@@ -229,9 +229,10 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     axs[location].semilogy(np.arange(flag1,flag2), MinError[flag1:flag2],"s",color=s2color, markersize=s2size, label="NHL = 2");
     axs[location].semilogy(np.arange(flag2, numberOfSamples), MinError[flag2:numberOfSamples],"o", color=s3color, markersize=s3size, label="NHL = 3");
 
-    axs[location].legend(loc=1,ncol=3, fontsize=6.6);
+    axs[location].legend(loc=1,ncol=3, fontsize=6.3);
 
 
+    axs[location].set_xlabel(r"ANN ID");
     axs[location].set_ylabel(r"Min Error");
     axs[location].set_ylim(lowerbound['MinError'],upperbound['MinError']*100);
     #axs[location].set_yticks([1e-10,1e-5,1e-1]);
@@ -239,8 +240,8 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     # highlight 5 and 95 percentile zones with demarkation line
     axs[location].axhspan(lowerbound['MinError'],p5['MinError'],facecolor=shadeColor)
     axs[location].axhspan(p95['MinError'],upperbound['MinError']*100,facecolor=shadeColor)
-    axs[location].axhline(p5['MinError'],color=s4color,linewidth='0.3');
-    axs[location].axhline(p95['MinError'],color=s4color,linewidth='0.3');
+    axs[location].axhline(p5['MinError'],color=s4color,linewidth=LW);
+    axs[location].axhline(p95['MinError'],color=s4color,linewidth=LW);
 
     if (errorBar == True):
         axs[location].set_yscale("log", nonpositive='clip')
@@ -256,7 +257,7 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     axs[location].semilogy(np.arange(flag1,flag2), MaxError[flag1:flag2],"s",color=s2color, markersize=s2size, label="NHL = 2");
     axs[location].semilogy(np.arange(flag2, numberOfSamples), MaxError[flag2:numberOfSamples],"o", color=s3color, markersize=s3size, label="NHL = 3");
 
-    axs[location].legend(loc=1,ncol=3, fontsize=6.6);
+    axs[location].legend(loc=1,ncol=3, fontsize=6.3);
 
     axs[location].set_xlabel(r"ANN ID");
 
@@ -267,8 +268,8 @@ def plotError(projectName, runNumber, figName, errorBar = False):
     # highlight 5 and 95 percentile zones with demarkation line
     axs[location].axhspan(lowerbound['MaxError'],p5['MaxError'],facecolor=shadeColor)
     axs[location].axhspan(p95['MaxError'],upperbound['MaxError']*10,facecolor=shadeColor)
-    axs[location].axhline(p5['MaxError'],color=s4color,linewidth='0.3');
-    axs[location].axhline(p95['MaxError'],color=s4color,linewidth='0.3');
+    axs[location].axhline(p5['MaxError'],color=s4color,linewidth=LW);
+    axs[location].axhline(p95['MaxError'],color=s4color,linewidth=LW);
 
     if (errorBar == True):
         axs[location].set_yscale("log", nonpositive='clip')
@@ -300,6 +301,9 @@ def plotAllErrors(projectName,figName,errorBar):
 
 
 if __name__=="__main__":
+    plt.rcParams["text.usetex"] = True
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["font.serif"] = ["Computer Modern"]
     # Name of the project
     projectName = "Avg";
     errorBar = True;

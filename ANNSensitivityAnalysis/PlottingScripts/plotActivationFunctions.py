@@ -80,6 +80,8 @@ def plotAF():
 
 
 if __name__=="__main__":
-    plt.rcParams["font.family"] = "monospace";
+    plt.rcParams["text.usetex"] = True
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["font.serif"] = ["Computer Modern"]
     plotAF();
     pass;

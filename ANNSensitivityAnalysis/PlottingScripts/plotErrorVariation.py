@@ -56,6 +56,8 @@ def getError(projectName, runNumber):
 
 def plotErrorVariation(projectName):
 
+    FontSize = 9;
+
     curDir = os.getcwd();
 
     TotalRuns = 8;
@@ -108,7 +110,7 @@ def plotErrorVariation(projectName):
     fig, axs = plt.subplots(2,2, figsize=(6.4,4.8), dpi=300, constrained_layout=True);
 
     # Title:
-    plt.suptitle("Variation of error vs. size of training dataset");
+    plt.suptitle("Variation of error vs. size of training dataset", fontsize=16);
 
     # Legend location
     legendLocation = "upper right";
@@ -128,7 +130,7 @@ def plotErrorVariation(projectName):
 
     axs[location].set_ylabel(r"Aggr. $L_1$ Error");
     axs[location].set_ylim(10**-1, 10**3);
-    axs[location].legend(loc=legendLocation, fontsize=7);
+    axs[location].legend(loc=legendLocation, fontsize=FontSize);
 
     #_______________________________________________________
     # MS error plot
@@ -143,9 +145,9 @@ def plotErrorVariation(projectName):
     axs[location].set_xticks([0,1,2,3,4,5,6,7]);
     axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
-    axs[location].set_ylabel(r"Aggr. MSE");
+    axs[location].set_ylabel(r"Aggr. MS Error");
     axs[location].set_ylim(10**-4, 10**4);
-    axs[location].legend(loc=legendLocation, fontsize=7);
+    axs[location].legend(loc=legendLocation, fontsize=FontSize);
 
     #_______________________________________________________
     # Rel. Min error plot
@@ -161,8 +163,8 @@ def plotErrorVariation(projectName):
     axs[location].set_xticklabels(['6','12','25','50','100','200','400','800']);
 
     axs[location].set_ylabel(r"Aggr. Min Error");
-    axs[location].set_ylim(10**-2, 10**1);
-    axs[location].legend(loc=legendLocation, fontsize=7);
+    axs[location].set_ylim(10**-2, 10**2);
+    axs[location].legend(loc=legendLocation, fontsize=FontSize);
 
     #_______________________________________________________
     # Max error plot
@@ -179,7 +181,7 @@ def plotErrorVariation(projectName):
 
     axs[location].set_ylabel(r"Aggr. Max Error");
     axs[location].set_ylim(10**4, 10**10);
-    axs[location].legend(loc=legendLocation, fontsize=7);
+    axs[location].legend(loc=legendLocation, fontsize=FontSize);
 
     #plt.ticklabel_format(axis="y", style="sci", scilimits=(0,00))
    
@@ -195,6 +197,11 @@ def plotErrorVariation(projectName):
 
 if __name__ == "__main__":
     from cycler import cycler
-    plt.rcParams["font.family"] = "monospace"
+    plt.rcParams["text.usetex"] = True
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["font.serif"] = ["Computer Modern"]
+    plt.rcParams['xtick.labelsize'] = 12
+    plt.rcParams['ytick.labelsize'] = 12
+    plt.rcParams['axes.labelsize'] = 14
     plt.rcParams['axes.prop_cycle'] = cycler(color=['darkblue', '#d62728', '#2ca02c', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
     plotErrorVariation("Avg");

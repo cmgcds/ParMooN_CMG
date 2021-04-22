@@ -492,7 +492,12 @@ def plotIndices(projectName, NHL):
 
 if __name__== "__main__":
     from cycler import cycler
-    plt.rcParams["font.family"] = "monospace"
+    plt.rcParams["text.usetex"] = True
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["font.serif"] = ["Computer Modern"]
+    plt.rcParams['xtick.labelsize'] = 12
+    plt.rcParams['ytick.labelsize'] = 12
+    plt.rcParams['axes.labelsize'] = 14
     plt.rcParams['axes.grid'] = True
     plt.rcParams['axes.prop_cycle'] = cycler(color=['darkblue', '#d62728', '#2ca02c', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
     for i in range(4):

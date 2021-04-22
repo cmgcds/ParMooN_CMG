@@ -304,7 +304,6 @@ def plotKrigingMetamodel(projectName, runNumber, size):
 
 
 if __name__=="__main__":
-    #os.sched_setaffinity(0,{i for i in range(28)})
     plt.rcParams['xtick.labelsize'] = 18
     plt.rcParams['ytick.labelsize'] = 18
 

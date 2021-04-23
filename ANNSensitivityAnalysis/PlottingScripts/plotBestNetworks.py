@@ -1,3 +1,6 @@
+# NOTE: This file generates a frequency plot w.r.t. hyperparameters of the best 
+# performing networks on three metrics (simultaneously)
+
 import os
 import time 
 
@@ -84,7 +87,11 @@ def plotFrequencies(projectName, runNumber):
     cset = set([tuple(x) for x in list3])
 
 
-    supersetIP = (np.array([x for x in aset & bset & cset]));
+    supersetIP = (np.array([x for x in aset & bset & cset])).astype(int);
+    supersetOP = (outputData[supersetIP[:,0],:]);
+
+    bestNetworks = (np.argmax(supersetOP,axis=0));
+    print("L1Best: ", supersetIP[bestNetworks[0]], "\nMSBest: ", supersetIP[bestNetworks[4]], "\nMinBest: ", supersetIP[bestNetworks[2]]);
 
     # The following two samples are the only ones satisfying the criteria in NHL2 networks 
     #print(outputData[227,0], "   ",outputData[227,4],outputData[227,2]),;

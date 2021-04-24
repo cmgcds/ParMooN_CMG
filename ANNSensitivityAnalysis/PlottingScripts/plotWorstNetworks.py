@@ -76,31 +76,30 @@ def plotFrequencies(projectName, runNumber):
     inputData1 = inputData[0:];
     outputData1 = outputData[0:];
 
-    print(p5['L1Error'], p5['MSError'], p5['MinError']);
-    list1 = inputData1[(outputData1[:,0])<p5['L1Error']];
+    print(p95['L1Error'], p95['MSError'], p95['MaxError']);
+    list1 = inputData1[(outputData1[:,0])>p95['L1Error']];
     l1set = set([tuple(x) for x in list1])
 
-    list2 = inputData1[(outputData1[:,4])<p5['MSError']];
+    list2 = inputData1[(outputData1[:,4])>p95['MSError']];
     msset = set([tuple(x) for x in list2])
 
-    list3 = inputData1[(outputData1[:,2])<p5['MinError']];
-    minset = set([tuple(x) for x in list3])
+    list3 = inputData1[(outputData1[:,3])>p95['MaxError']];
+    maxset = set([tuple(x) for x in list3])
 
-    list4 = inputData1[(outputData1[:,3])<p5['MaxError']];
-    maxset = set([tuple(x) for x in list4])
+    list4 = inputData1[(outputData1[:,2])>p95['MinError']];
+    minset = set([tuple(x) for x in list4])
 
 
-    # Networks corresponding to low L1, MS and Max error (i.e. Max error is bounded above)
-    supersetIP = (np.array([x for x in l1set & msset & maxset])).astype(int);
+    # Select the networks with maximum L1, MS and Min error (i.e. min error bounded below)
+    supersetIP = (np.array([x for x in l1set & msset & minset])).astype(int);
     print(np.shape(supersetIP));
     supersetOP = (outputData[supersetIP[:,0],:]);
 
-    bestNetworks = (np.argmin(supersetOP,axis=0));
-    print("L1Best: ", supersetIP[bestNetworks[0]], "\nMSBest: ", supersetIP[bestNetworks[4]], "\nMinBest: ", supersetIP[bestNetworks[2]]);
+    worstNetworks = (np.argmax(supersetOP,axis=0));
+    print("L1Worst: ", supersetIP[worstNetworks[0]], "\nMSWorst: ", supersetIP[worstNetworks[4]], "\nMaxWorst: ", supersetIP[worstNetworks[3]]);
 
-    # The following two samples are the only ones satisfying the criteria in NHL2 networks 
-    #print(outputData[227,0], "   ",outputData[227,4],outputData[227,2]),;
-    #print(outputData[513,0], "   ",outputData[513,4],outputData[513,2]),;
+    print(np.shape(supersetIP));
+
 
 
     # Process the data
@@ -113,7 +112,7 @@ def plotFrequencies(projectName, runNumber):
     HL2DIM  = np.zeros(3);
     HL3DIM  = np.zeros(3);
 
-    # NHL 
+    # NHL
     # corresponding to inputData[:,1] 
     NHL[0] = np.sum(supersetIP[:,1] == 1); 
     NHL[1] = np.sum(supersetIP[:,1] == 2);
@@ -170,6 +169,8 @@ def plotFrequencies(projectName, runNumber):
     DIMX = np.array([5,10,15]);
     TYPEX = np.array([1,2,3,4]);
     YLABEL = r"No. of ANNs"
+    #YTICKS = [0,10,20,30,40,50];
+    YTICKS = [0,5,10];
 
     
 
@@ -180,32 +181,28 @@ def plotFrequencies(projectName, runNumber):
     # NHL frequencies
     location = (0,0);
     axs[location].bar(NHLX, NHL, width=0.5);
-    axs[location].set_yticks([0,20,40]);
-    axs[location].set_yticklabels([0,20,40]);
+    axs[location].set_yticks(YTICKS);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"NHL",size=Size);
 
     # HL1-D frequencies
     location = (0,1);
     axs[location].bar(DIMX, HL1DIM, width=2.5);
-    axs[location].set_yticks([0,10,20,30]);
-    axs[location].set_yticklabels([0,10,20,30]);
+    axs[location].set_yticks(YTICKS);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL1-D" ,size=Size);
 
     # HL2-D frequencies
     location = (0,2);
     axs[location].bar(DIMX, HL2DIM, width=2.5);
-    axs[location].set_yticks([0,10,20,30]);
-    axs[location].set_yticklabels([0,10,20,30]);
+    axs[location].set_yticks(YTICKS);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL2-D" ,size=Size);
 
     # HL3-D frequencies
     location = (1,0);
     axs[location].bar(DIMX, HL3DIM, width=2.5);
-    axs[location].set_yticks([0,10,20,30]);
-    axs[location].set_yticklabels([0,10,20,30]);
+    axs[location].set_yticks(YTICKS);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL3-D" ,size=Size);
 
@@ -218,8 +215,7 @@ def plotFrequencies(projectName, runNumber):
     # HL1-A frequencies
     location = (2,0);
     axs[location].bar(TYPEX, HL1TYPE, width=0.75);
-    axs[location].set_yticks([0,10,20]);
-    axs[location].set_yticklabels([0,10,20]);
+    axs[location].set_yticks(YTICKS);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL1-A" ,size=Size);
     axs[location].set_xticks([1,2,3,4]);
@@ -229,8 +225,7 @@ def plotFrequencies(projectName, runNumber):
     # HL2-A frequencies
     location = (2,1);
     axs[location].bar(TYPEX, HL2TYPE, width=0.75);
-    axs[location].set_yticks([0,10,20]);
-    axs[location].set_yticklabels([0,10,20]);
+    axs[location].set_yticks(YTICKS);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL2-A" ,size=Size);
     axs[location].set_xticks([1,2,3,4]);
@@ -240,8 +235,7 @@ def plotFrequencies(projectName, runNumber):
     # HL3-A frequencies
     location = (2,2);
     axs[location].bar(TYPEX, HL3TYPE, width=0.75);
-    axs[location].set_yticks([0,10,20]);
-    axs[location].set_yticklabels([0,10,20]);
+    axs[location].set_yticks(YTICKS);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL3-A" ,size=Size);
     axs[location].set_xticks([1,2,3,4]);
@@ -251,8 +245,7 @@ def plotFrequencies(projectName, runNumber):
     # OP-A frequencies
     location = (1,2);
     axs[location].bar(TYPEX, OPLTYPE, width=0.75);
-    axs[location].set_yticks([0,10,20]);
-    axs[location].set_yticklabels([0,10,20]);
+    axs[location].set_yticks(YTICKS);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"OP-A"  ,size=Size);
     axs[location].set_xticks([1,2,3,4]);
@@ -273,11 +266,12 @@ def plotFrequencies(projectName, runNumber):
     axs[location].set_xticks([]);
     axs[location].set_xticklabels([]);
 
-    plt.savefig("BestNetwork.pdf");
-    #plt.show();
+
+
+    plt.savefig("WorstNetwork.pdf");
 
     os.chdir(currDir);
-    plt.savefig("BestNetwork.pdf");
+    plt.savefig("WorstNetwork.pdf");
     pass;
 
 

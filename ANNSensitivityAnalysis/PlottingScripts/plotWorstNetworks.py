@@ -170,7 +170,7 @@ def plotFrequencies(projectName, runNumber):
     TYPEX = np.array([1,2,3,4]);
     YLABEL = r"No. of ANNs"
     #YTICKS = [0,10,20,30,40,50];
-    YTICKS = [0,5,10];
+    YTICKS = [0,2,4,6];
 
     
 
@@ -288,5 +288,5 @@ if __name__=="__main__":
 
     # Name of the project
     projectName = "Avg";
-    runNumber = 5;
+    runNumber = 6;
     plotFrequencies(projectName, runNumber);

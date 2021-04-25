@@ -13,7 +13,10 @@ from matplotlib import pylab as plt
 import pandas as pd
 
 
-def plotFrequencies(projectName, runNumber):
+def addPlot(projectName, runNumber, axs):
+
+    index = runNumber;
+    runNumber = runNumber + 4;
     #_______________________________________________________
     # Set paths and variables
     #_______________________________________________________
@@ -93,6 +96,9 @@ def plotFrequencies(projectName, runNumber):
     # Networks corresponding to low L1, MS and Max error (i.e. Max error is bounded above)
     supersetIP = (np.array([x for x in l1set & msset & maxset])).astype(int);
     print(np.shape(supersetIP));
+
+    totalNetworks = np.shape(supersetIP)[0];
+
     supersetOP = (outputData[supersetIP[:,0],:]);
 
     bestNetworks = (np.argmin(supersetOP,axis=0));
@@ -115,97 +121,101 @@ def plotFrequencies(projectName, runNumber):
 
     # NHL 
     # corresponding to inputData[:,1] 
-    NHL[0] = np.sum(supersetIP[:,1] == 1); 
-    NHL[1] = np.sum(supersetIP[:,1] == 2);
-    NHL[2] = np.sum(supersetIP[:,1] == 3);
+    NHL[0] = np.sum(supersetIP[:,1] == 1)/float(totalNetworks) * 100; 
+    NHL[1] = np.sum(supersetIP[:,1] == 2)/float(totalNetworks) * 100;
+    NHL[2] = np.sum(supersetIP[:,1] == 3)/float(totalNetworks) * 100;
 
     # Output layer type
     # corresponding to inputData[:,2] 
-    OPLTYPE[0] = np.sum(supersetIP[:,2] == 0); 
-    OPLTYPE[1] = np.sum(supersetIP[:,2] == 1);
-    OPLTYPE[2] = np.sum(supersetIP[:,2] == 3);
-    OPLTYPE[3] = np.sum(supersetIP[:,2] == 4);
+    OPLTYPE[0] = np.sum(supersetIP[:,2] == 0)/float(totalNetworks) * 100; 
+    OPLTYPE[1] = np.sum(supersetIP[:,2] == 1)/float(totalNetworks) * 100;
+    OPLTYPE[2] = np.sum(supersetIP[:,2] == 3)/float(totalNetworks) * 100;
+    OPLTYPE[3] = np.sum(supersetIP[:,2] == 4)/float(totalNetworks) * 100;
 
     # HL1  layer type
     # corresponding to inputData[:,4] 
-    HL1TYPE[0] = np.sum(supersetIP[:,4] == 0); 
-    HL1TYPE[1] = np.sum(supersetIP[:,4] == 1);
-    HL1TYPE[2] = np.sum(supersetIP[:,4] == 3);
-    HL1TYPE[3] = np.sum(supersetIP[:,4] == 4);
+    HL1TYPE[0] = np.sum(supersetIP[:,4] == 0)/float(totalNetworks) * 100; 
+    HL1TYPE[1] = np.sum(supersetIP[:,4] == 1)/float(totalNetworks) * 100;
+    HL1TYPE[2] = np.sum(supersetIP[:,4] == 3)/float(totalNetworks) * 100;
+    HL1TYPE[3] = np.sum(supersetIP[:,4] == 4)/float(totalNetworks) * 100;
 
     # HL2  layer type
     # corresponding to inputData[:,6] 
-    HL2TYPE[0] = np.sum(supersetIP[:,6] == 0); 
-    HL2TYPE[1] = np.sum(supersetIP[:,6] == 1);
-    HL2TYPE[2] = np.sum(supersetIP[:,6] == 3);
-    HL2TYPE[3] = np.sum(supersetIP[:,6] == 4);
+    HL2TYPE[0] = np.sum(supersetIP[:,6] == 0)/float(totalNetworks) * 100; 
+    HL2TYPE[1] = np.sum(supersetIP[:,6] == 1)/float(totalNetworks) * 100;
+    HL2TYPE[2] = np.sum(supersetIP[:,6] == 3)/float(totalNetworks) * 100;
+    HL2TYPE[3] = np.sum(supersetIP[:,6] == 4)/float(totalNetworks) * 100;
 
     # HL3  layer type
     # corresponding to inputData[:,8] 
-    HL3TYPE[0] = np.sum(supersetIP[:,8] == 0); 
-    HL3TYPE[1] = np.sum(supersetIP[:,8] == 1);
-    HL3TYPE[2] = np.sum(supersetIP[:,8] == 3);
-    HL3TYPE[3] = np.sum(supersetIP[:,8] == 4);
+    HL3TYPE[0] = np.sum(supersetIP[:,8] == 0)/float(totalNetworks) * 100; 
+    HL3TYPE[1] = np.sum(supersetIP[:,8] == 1)/float(totalNetworks) * 100;
+    HL3TYPE[2] = np.sum(supersetIP[:,8] == 3)/float(totalNetworks) * 100;
+    HL3TYPE[3] = np.sum(supersetIP[:,8] == 4)/float(totalNetworks) * 100;
 
     # HL1  layer dim
     # corresponding to inputData[:,3] 
-    HL1DIM[0] = np.sum(supersetIP[:,3] == 5); 
-    HL1DIM[1] = np.sum(supersetIP[:,3] == 10);
-    HL1DIM[2] = np.sum(supersetIP[:,3] == 15);
+    HL1DIM[0] = np.sum(supersetIP[:,3] == 5)/float(totalNetworks) * 100; 
+    HL1DIM[1] = np.sum(supersetIP[:,3] == 10)/float(totalNetworks) * 100;
+    HL1DIM[2] = np.sum(supersetIP[:,3] == 15)/float(totalNetworks) * 100;
 
     # HL2  layer dim
     # corresponding to inputData[:,5] 
-    HL2DIM[0] = np.sum(supersetIP[:,5] == 5); 
-    HL2DIM[1] = np.sum(supersetIP[:,5] == 10);
-    HL2DIM[2] = np.sum(supersetIP[:,5] == 15);
+    HL2DIM[0] = np.sum(supersetIP[:,5] == 5)/float(totalNetworks) * 100; 
+    HL2DIM[1] = np.sum(supersetIP[:,5] == 10)/float(totalNetworks) * 100;
+    HL2DIM[2] = np.sum(supersetIP[:,5] == 15)/float(totalNetworks) * 100;
 
     # HL3  layer dim
     # corresponding to inputData[:,7] 
-    HL3DIM[0] = np.sum(supersetIP[:,7] == 5); 
-    HL3DIM[1] = np.sum(supersetIP[:,7] == 10);
-    HL3DIM[2] = np.sum(supersetIP[:,7] == 15);
+    HL3DIM[0] = np.sum(supersetIP[:,7] == 5)/float(totalNetworks) * 100; 
+    HL3DIM[1] = np.sum(supersetIP[:,7] == 10)/float(totalNetworks) * 100;
+    HL3DIM[2] = np.sum(supersetIP[:,7] == 15)/float(totalNetworks) * 100;
 
 
     NHLX = np.array([1,2,3]);
     DIMX = np.array([5,10,15]);
     TYPEX = np.array([1,2,3,4]);
-    YLABEL = r"No. of ANNs"
+    YLABEL = r"$\%$ ANNs"
+
+    LOC1 = [-0.2,0,0.2];
+    LOC2 = [-1,0,1];
+    LOC3 = [-0.25,0,0.25];
+    HATCH  = ['///','\\\\\\','--','||'];
+    TDS = ['100','200','400']
 
     
 
-    fig, axs = plt.subplots(3,3, figsize=(6.4,6.4), dpi=300, constrained_layout=True);
+
+    
+
     Size = 14;
     Rot = 45;
 
     # NHL frequencies
     location = (0,0);
-    axs[location].bar(NHLX, NHL, width=0.5);
-    axs[location].set_yticks([0,20,40]);
-    axs[location].set_yticklabels([0,20,40]);
+    axs[location].bar(NHLX+LOC1[index], NHL, width=0.2, edgecolor='black', hatch=HATCH[index],label='TDS: '+TDS[index]);
+    axs[location].set_yticks([0,50,100]);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"NHL",size=Size);
 
     # HL1-D frequencies
     location = (0,1);
-    axs[location].bar(DIMX, HL1DIM, width=2.5);
-    axs[location].set_yticks([0,10,20,30]);
-    axs[location].set_yticklabels([0,10,20,30]);
+    axs[location].bar(DIMX+LOC2[index], HL1DIM, width=1, edgecolor='black', hatch=HATCH[index]);
+    axs[location].set_yticks([0,50,100]);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL1-D" ,size=Size);
 
     # HL2-D frequencies
     location = (0,2);
-    axs[location].bar(DIMX, HL2DIM, width=2.5);
-    axs[location].set_yticks([0,10,20,30]);
-    axs[location].set_yticklabels([0,10,20,30]);
+    axs[location].bar(DIMX+LOC2[index], HL2DIM, width=1, edgecolor='black', hatch=HATCH[index]);
+    axs[location].set_yticks([0,50,100]);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL2-D" ,size=Size);
 
     # HL3-D frequencies
     location = (1,0);
-    axs[location].bar(DIMX, HL3DIM, width=2.5);
-    axs[location].set_yticks([0,10,20,30]);
-    axs[location].set_yticklabels([0,10,20,30]);
+    axs[location].bar(DIMX+LOC2[index], HL3DIM, width=1, edgecolor='black', hatch=HATCH[index]);
+    axs[location].set_yticks([0,50,100]);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL3-D" ,size=Size);
 
@@ -217,9 +227,8 @@ def plotFrequencies(projectName, runNumber):
     #Rot = 60;
     # HL1-A frequencies
     location = (2,0);
-    axs[location].bar(TYPEX, HL1TYPE, width=0.75);
-    axs[location].set_yticks([0,10,20]);
-    axs[location].set_yticklabels([0,10,20]);
+    axs[location].bar(TYPEX+LOC3[index], HL1TYPE, width=0.25, edgecolor='black', hatch=HATCH[index]);
+    axs[location].set_yticks([0,50,100]);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL1-A" ,size=Size);
     axs[location].set_xticks([1,2,3,4]);
@@ -228,9 +237,8 @@ def plotFrequencies(projectName, runNumber):
 
     # HL2-A frequencies
     location = (2,1);
-    axs[location].bar(TYPEX, HL2TYPE, width=0.75);
-    axs[location].set_yticks([0,10,20]);
-    axs[location].set_yticklabels([0,10,20]);
+    axs[location].bar(TYPEX+LOC3[index], HL2TYPE, width=0.25, edgecolor='black', hatch=HATCH[index]);
+    axs[location].set_yticks([0,50,100]);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL2-A" ,size=Size);
     axs[location].set_xticks([1,2,3,4]);
@@ -239,9 +247,8 @@ def plotFrequencies(projectName, runNumber):
 
     # HL3-A frequencies
     location = (2,2);
-    axs[location].bar(TYPEX, HL3TYPE, width=0.75);
-    axs[location].set_yticks([0,10,20]);
-    axs[location].set_yticklabels([0,10,20]);
+    axs[location].bar(TYPEX+LOC3[index], HL3TYPE, width=0.25, edgecolor='black', hatch=HATCH[index]);
+    axs[location].set_yticks([0,50,100]);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"HL3-A" ,size=Size);
     axs[location].set_xticks([1,2,3,4]);
@@ -250,9 +257,8 @@ def plotFrequencies(projectName, runNumber):
 
     # OP-A frequencies
     location = (1,2);
-    axs[location].bar(TYPEX, OPLTYPE, width=0.75);
-    axs[location].set_yticks([0,10,20]);
-    axs[location].set_yticklabels([0,10,20]);
+    axs[location].bar(TYPEX+LOC3[index], OPLTYPE, width=0.25, edgecolor='black', hatch=HATCH[index]);
+    axs[location].set_yticks([0,50,100]);
     axs[location].set_ylabel(YLABEL,size=Size);
     axs[location].set_xlabel(r"OP-A"  ,size=Size);
     axs[location].set_xticks([1,2,3,4]);
@@ -263,22 +269,31 @@ def plotFrequencies(projectName, runNumber):
     # Glossary
     location = (1,1);
     axs[location].set_axis_off();
-    axs[location].text(0.25,0.8,r"\underline{Key}",fontsize=16);
-    axs[location].text(-0.05,0.55,r"AF-1: Sigmoid",fontsize=14);
-    axs[location].text(-0.05,0.35,r"AF-2: Identity",fontsize=14);
-    axs[location].text(-0.05, 0.15,r"AF-3: L-ReLU",fontsize=14);
-    axs[location].text(-0.05, -0.05,r"AF-4: TanH",fontsize=14);
+    #axs[location].text(0.25,0.8,r"\underline{Key}",fontsize=16);
+    #axs[location].text(-0.05,0.55,r"AF-1: Sigmoid",fontsize=14);
+    #axs[location].text(-0.05,0.35,r"AF-2: Identity",fontsize=14);
+    #axs[location].text(-0.05, 0.15,r"AF-3: L-ReLU",fontsize=14);
+    #axs[location].text(-0.05, -0.05,r"AF-4: TanH",fontsize=14);
     axs[location].set_yticks([]);
     axs[location].set_yticklabels([]);
     axs[location].set_xticks([]);
     axs[location].set_xticklabels([]);
 
-    plt.savefig("BestNetwork.pdf");
-    #plt.show();
-
     os.chdir(currDir);
-    plt.savefig("BestNetwork.pdf");
     pass;
+
+
+def plotFrequencies(projectName):
+
+    RunNumbers = [0,1,2];
+    fig, axs = plt.subplots(3,3, figsize=(6.4,6.4), dpi=300, constrained_layout=True);
+
+    for runNumber in RunNumbers:
+        addPlot(projectName, runNumber,axs);
+        pass;
+
+    fig.legend(bbox_to_anchor=(0.27, 0.26, 0.4, .4),fontsize=16);
+    plt.savefig("BestNetwork.pdf");
 
 
 if __name__=="__main__":
@@ -290,9 +305,8 @@ if __name__=="__main__":
 
     plt.rcParams['xtick.labelsize'] = 14
     plt.rcParams['ytick.labelsize'] = 14
-    plt.rcParams['axes.prop_cycle'] = cycler(color=['darkblue', '#d62728', '#2ca02c', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
+    plt.rcParams['axes.prop_cycle'] = cycler(color=['lightsteelblue', 'mediumpurple', 'midnightblue', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
 
     # Name of the project
     projectName = "Avg";
-    runNumber = 5;
-    plotFrequencies(projectName, runNumber);
+    plotFrequencies(projectName);

@@ -14,8 +14,8 @@ def plotValid(runNumber, sampleNumber):
 
     #_______________________________________________________
     # Plot for Expt1
-    projectName = "Expt22"; # For Best L1, MS
-    #projectName = "Expt37"; # For Worst L1, MS
+    #projectName = "Expt22"; # For Best L1, MS
+    projectName = "Expt12"; # For Worst L1, MS
     projectOutputDir = outputPath+'/'+projectName; 
     runDir = projectOutputDir+'/'+str(runNumber); 
     sampleDir = runDir+'/'+str(sampleNumber);
@@ -23,8 +23,8 @@ def plotValid(runNumber, sampleNumber):
 
     #_______________________________________________________
     # Plot for Expt2
-    projectName = "Expt28"; # For Best L1, MS
-    #projectName = "Expt36"; # For Worst L1, MS
+    #projectName = "Expt28"; # For Best L1, MS
+    projectName = "Expt11"; # For Worst L1, MS
     projectOutputDir = outputPath+'/'+projectName; 
     runDir = projectOutputDir+'/'+str(runNumber); 
     sampleDir = runDir+'/'+str(sampleNumber);
@@ -32,8 +32,8 @@ def plotValid(runNumber, sampleNumber):
 
     #_______________________________________________________
     # Plot for Expt3
-    projectName = "Expt40"; # For Best L1, MS
-    #projectName = "Expt35"; # For Worst L1, MS
+    #projectName = "Expt40"; # For Best L1, MS
+    projectName = "Expt16"; # For Worst L1, MS
     projectOutputDir = outputPath+'/'+projectName; 
     runDir = projectOutputDir+'/'+str(runNumber); 
     sampleDir = runDir+'/'+str(sampleNumber);
@@ -80,23 +80,23 @@ def plotValid(runNumber, sampleNumber):
     lineData = np.linspace(10**-8, 1,1000);
     plt.plot(lineData, lineData,linewidth='1',color=s4color);
 
-    plt.legend(loc=4, fontsize=16);
+    plt.legend(loc=4, fontsize=20);
 
-    plt.xlabel(r"Reference $\tau$", fontsize=16);
+    plt.xlabel(r"Reference $\tau$", fontsize=24);
     #plt.xlim(10**-6, 1);
     #plt.ylim(10**-6, 1);
 
-    plt.ylabel(r"ANN Predicted $\tau$", fontsize=16);
+    plt.ylabel(r"ANN Predicted $\tau$", fontsize=24);
     #print(np.corrcoef(data[:,0], data[:,1]));
     plt.grid();
 
 
     #plt.savefig("ValidBestL1E.pdf");
-    plt.savefig("ValidBestMSE.pdf");
+    #plt.savefig("ValidBestMSE.pdf");
     #plt.savefig("ValidBestMin.pdf");
 
     #plt.savefig("ValidWorstL1E.pdf");
-    #plt.savefig("ValidWorstMSE.pdf");
+    plt.savefig("ValidWorstMSE.pdf");
     #plt.savefig("ValidWorstMin.pdf");
     pass;
 
@@ -108,20 +108,20 @@ if __name__ == "__main__":
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.serif"] = ["Computer Modern"]
 
-    plt.rcParams['xtick.labelsize'] = 16
-    plt.rcParams['ytick.labelsize'] = 16
+    plt.rcParams['xtick.labelsize'] = 20
+    plt.rcParams['ytick.labelsize'] = 20
     plt.rcParams['axes.prop_cycle'] = cycler(color=['darkblue', '#d62728', '#2ca02c', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
 
     # Name of the project
-    runNumber = 5;
+    runNumber = 6;
     # Best networks satisfying all the three criteria L1, MS, max(for best)/min (for worst
 
     # These networks satisfy L1,MS,Max for best
-    BestL1EID = 4450;
-    BestMSEID = 985;
+    BestL1EID = 1438;
+    BestMSEID = 1438;
     # L1,MS,Min for max
-    WorstL1EID = 4905;
-    WorstMSEID = 4905;
+    WorstL1EID = 4301;
+    WorstMSEID = 4301;
     '''
     # These networks satisfy L1,MS, Min 
     # In paper we use L1,Ms,Max for best
@@ -141,11 +141,11 @@ if __name__ == "__main__":
     WorstMSEID = 6597;
     WorstL1EID = 2365;
     '''
+    sampleNumber = BestMSEID;
     sampleNumber = BestL1EID;
 
-    sampleNumber = WorstMSEID;
     sampleNumber = WorstL1EID;
+    sampleNumber = WorstMSEID;
 
-    sampleNumber = BestMSEID;
 
     plotValid(runNumber, sampleNumber);

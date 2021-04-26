@@ -35,7 +35,7 @@ set(AParMooN_ARCH "LINUX64" CACHE STRING "select the machine type")
 set(AParMooN_PARALLEL_TYPE "SEQUENTIAL" CACHE STRING "select the parallel type")
 
 #  selection of program type (MPICH OPENMPI INTELMPI CRAYMPI MACMPI)
-set(AParMooN_MPI_IMPLEMENTATION "MPICH" CACHE STRING "select the MPI Implementation type")
+set(AParMooN_MPI_IMPLEMENTATION "INTELMPI" CACHE STRING "select the MPI Implementation type")
  
 # set the path to save the exe file ....................................................................................
 #.......................................................................................................................
@@ -45,8 +45,8 @@ set(AParMooN_MPI_IMPLEMENTATION "MPICH" CACHE STRING "select the MPI Implementat
 #  set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/TNSE3D" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/thivin3d" CACHE STRING "select the model")
 #set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/burger" CACHE STRING "select the model")
-#set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/cd1dANN" CACHE STRING "select the model")
-set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/ANNRegression" CACHE STRING "select the model")
+set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/cd1dANN" CACHE STRING "select the model")
+# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/ANNRegression" CACHE STRING "select the model")
 
 set(USE_PARMOON_DEFINE -D__PRIVATE__)
 
@@ -65,6 +65,7 @@ set(AParMooN_USE_SYSTEM_LAPACK TRUE)
 set(AParMooN_USE_SYSTEM_MUMPS TRUE)
 set(AParMooN_USE_SYSTEM_GRIDGEN TRUE)
 set(AParMooN_USE_SYSTEM_TETGEN TRUE)
+set(AParMooN_USE_SYSTEM_MLPACK FALSE)
 
 # set(USE_PARMOON_DEFINE -D__PRIVATE__)
 # SET(DAI_WITH_BP ON CACHE BOOL "Belief Propagation" FORCE)
@@ -120,9 +121,11 @@ endif()
     set(PARMOON_PRG_DEFINE "-D_SEQ -D_SMPI")
  endif()
 
+
+
  if("${AParMooN_ARCH}" STREQUAL "LINUX64")  
-   set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -fopenmp -std=c++11 ")
-   set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -DREDUCED -DNO_TIMER -m64 -fopenmp  ")
+   set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -fopenmp -std=c++11 " )
+   set(PARMOON_C_DEF "  ${PARMOON_C_DEF}  -DREDUCED -DNO_TIMER -m64 -fopenmp  ")
    set(PARMOON_CUDA_DEF "${PARMOON_CUDA_DEF} -arch=sm_70 -Xcompiler -fopenmp -w ")
 
   ##  ------------- Changes made by Thivin ---------
@@ -133,7 +136,7 @@ endif()
 
    if("${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI" )
     set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -no-pie ")
-    set(PARMOON_C_DEF "  ${PARMOONx_C_DEF}  -no-pie  ")
+    set(PARMOON_C_DEF "  ${PARMOON_C_DEF}  -no-pie  ")
    endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI") 
 
 

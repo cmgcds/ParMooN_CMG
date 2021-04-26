@@ -11,13 +11,14 @@
 
 int main(int argc, char* argv[])
 {
-
   // Create a new parameter reader (takes argument .dat file)
   TANNParamReader paramReader(argv[1]);
-
   paramReader.print();
+
+
   // Create a new dataset handler (to create train and test datasets and labels)
   TANNDatasetHandler datasetHandler(&paramReader);
+  std::cout << " Here 1 " <<std::endl;
 
   // Create a new ANN model (template arguments can be found in ./include/ANN/ANNIncludes.h)
   TANN<MEAN_SQUARED_ERROR,RANDOM_INITIALIZATION> ann(&paramReader);
@@ -26,9 +27,9 @@ int main(int argc, char* argv[])
   ann.trainNetwork(&datasetHandler);
 
   // Test
-  ann.testNetwork(&datasetHandler);
+  // ann.testNetwork(&datasetHandler);
 
-  datasetHandler.saveModel();
+  // datasetHandler.saveModel();
 
   return 0;
 } // end main

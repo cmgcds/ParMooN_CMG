@@ -1437,12 +1437,22 @@ void TSystemTNSE3D::Solve(double *sol)
 
 	  P_DS->Solve(sol,B,true);
 
-#else
-             DirectSolver(SqmatrixM11[N_Levels-1], SqmatrixM12[N_Levels-1], SqmatrixM13[N_Levels-1], 
+#else         
+          #ifdef INTELMKLBLAS
+             PardisoDirectSolver(SqmatrixM11[N_Levels-1], SqmatrixM12[N_Levels-1], SqmatrixM13[N_Levels-1], 
                           SqmatrixM21[N_Levels-1], SqmatrixM22[N_Levels-1], SqmatrixM23[N_Levels-1],  
                           SqmatrixM31[N_Levels-1], SqmatrixM32[N_Levels-1], SqmatrixM33[N_Levels-1],  
                           MatrixB1T[N_Levels-1], MatrixB2T[N_Levels-1], MatrixB3T[N_Levels-1],
                           MatrixB1[N_Levels-1], MatrixB2[N_Levels-1], MatrixB3[N_Levels-1], B, sol,0);
+          #else
+          DirectSolver(SqmatrixM11[N_Levels-1], SqmatrixM12[N_Levels-1], SqmatrixM13[N_Levels-1], 
+                          SqmatrixM21[N_Levels-1], SqmatrixM22[N_Levels-1], SqmatrixM23[N_Levels-1],  
+                          SqmatrixM31[N_Levels-1], SqmatrixM32[N_Levels-1], SqmatrixM33[N_Levels-1],  
+                          MatrixB1T[N_Levels-1], MatrixB2T[N_Levels-1], MatrixB3T[N_Levels-1],
+                          MatrixB1[N_Levels-1], MatrixB2[N_Levels-1], MatrixB3[N_Levels-1], B, sol,0);
+          #endif
+
+          if(!INTELMKLBLAS_flag)
 
 #endif
 #endif

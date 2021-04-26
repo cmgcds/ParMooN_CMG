@@ -306,6 +306,10 @@ struct TParaDB
   int MIN_MAX_ADJOINT;
   int INITIAL_STEEPEST_DESCENT_ADJOINT;
 
+  // PAramaters for mesh Scaling
+  double MESH_SCALE_X;
+  double MESH_SCALE_Y;
+  double MESH_SCALE_Z;
 
   /** parameter for superconvergence */
   int SUPERCONVERGENCE_ORDER;

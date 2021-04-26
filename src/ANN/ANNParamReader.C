@@ -96,7 +96,6 @@ TANNParamReader::TANNParamReader(char *paramFile){
 
   //_________________________________________
   //Read the param file
-
   this->readParamFile(paramFile);
 };
 
@@ -338,7 +337,7 @@ void TANNParamReader::readParamFile(char *paramFile){
     };
   }
   else{
-    std::cout << " File " + varToString(paramFile) + " can not be opened" << std::endl;
+    std::cerr << " File " + varToString(paramFile) + " can not be opened" << std::endl;
   };
   file.close();
 };

@@ -34,6 +34,7 @@
 #include <MeshPartition.h>
 #endif
 
+
 double bound = 0;
 double timeC = 0;
 
@@ -45,7 +46,7 @@ double timeC = 0;
 // =======================================================================
 //  #include "../Examples/NSE_3D/BSExample.h" // smooth sol in unit square
 // #include "../Examples/NSE_3D/AnsatzLinConst.h"
-  #include "../Examples/NSE_3D/CircularChannel.h"
+  #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
 // #include "../Examples/NSE_3D/StaticBubble.h"
 // #include "../Examples/NSE_3D/DrivenCavity3D.h"
 // =======================================================================
@@ -69,6 +70,8 @@ int main(int argc, char* argv[])
   
   TDomain *Domain;
   TDatabase *Database = new TDatabase();
+
+  
   
   int profiling;
 #ifdef _MPI
@@ -467,7 +470,18 @@ int main(int argc, char* argv[])
 
    Output->AddFEVectFunct(u);
    Output->AddFEFunction(p);
-        
+  
+    if(TDatabase::ParamDB->WRITE_VTK)
+     {
+      os.seekp(std::ios::beg);
+       if(img<10) os <<  "VTK/"<<VtkBaseName<<".0000"<<img<<".vtk" << ends;
+         else if(img<100) os <<  "VTK/"<<VtkBaseName<<".000"<<img<<".vtk" << ends;
+          else if(img<1000) os <<  "VTK/"<<VtkBaseName<<".00"<<img<<".vtk" << ends;
+           else if(img<10000) os <<  "VTK/"<<VtkBaseName<<".0"<<img<<".vtk" << ends;
+            else  os <<  "VTK/"<<VtkBaseName<<"."<<img<<".vtk" << ends;
+      Output->WriteVtk(os.str().c_str());
+      img++;
+     }   
 // exit(0)
 //======================================================================
 // SystemMatrix construction and solution

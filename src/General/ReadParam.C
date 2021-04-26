@@ -187,6 +187,24 @@ int TDomain::ReadParam(char *ParamFile)
       dat >> TDatabase::ParamDB->SAVESOL;
       N_Param++;
     }
+
+      if (!strcmp(line, "MESH_SCALE_X:"))
+    {
+      dat >> TDatabase::ParamDB->MESH_SCALE_X;
+      N_Param++;
+    }
+    
+    if (!strcmp(line, "MESH_SCALE_Y:"))
+    {
+      dat >> TDatabase::ParamDB->MESH_SCALE_Y;
+      N_Param++;
+    }
+    if (!strcmp(line, "MESH_SCALE_Z:"))
+    {
+      dat >> TDatabase::ParamDB->MESH_SCALE_Z;
+      N_Param++;
+    }
+    
     
     if (!strcmp(line, "TETGEN_QUALITY:"))
     {

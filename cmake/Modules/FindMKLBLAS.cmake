@@ -22,12 +22,12 @@ if(NOT BLAS_FOUND)
   
   find_library(BLAS_LIBRARY NAMES mkl_core PATHS $ENV{BLASDIR}/lib ${CMAKE_LIBRARY_PATH})
   get_filename_component(BLAS_LIBDIR ${BLAS_LIBRARY} PATH)
-  find_library(BLAS_LIBRARY_MP NAMES mkl_intel_lp64 PATHS ${BLAS_LIBDIR})
-  find_library(BLAS_LIBRARY_SQ NAMES mkl_sequential PATHS ${BLAS_LIBDIR})
+ find_library(BLAS_LIBRARY_MP NAMES mkl_intel_lp64 PATHS ${BLAS_LIBDIR})
   find_library(BLAS_LIBRARY_SQ NAMES mkl_intel_thread PATHS ${BLAS_LIBDIR})
+
   
   if(BLAS_LIBRARY)  
-    # combine mumps and its deps 
+  
     if(BLAS_LIBRARY_SQ)
       set(BLAS_LIBRARY   ${BLAS_LIBRARY_SQ} ${BLAS_LIBRARY}  ) 
     else(BLAS_LIBRARY_SQ)   
@@ -39,17 +39,17 @@ if(NOT BLAS_FOUND)
     else(BLAS_LIBRARY_MP)   
       set(BLAS_LIBRARY FALSE)
     endif(BLAS_LIBRARY_MP)
-    
+
     # set BLAS
     if(BLAS_LIBRARY)
       include(FindPackageHandleStandardArgs)
-    
+
       set(BLAS_LIBRARIES ${BLAS_LIBRARY})
       set(BLAS_INCLUDE_DIRS ${BLAS_INCLUDE_DIR})
 
       # handle the QUIETLY and REQUIRED arguments and set BLAS_FOUND to TRUE
       # if all listed variables are TRUE
-      find_package_handle_standard_args(BLAS  DEFAULT_MSG
+      find_package_handle_standard_args(MKLBLAS  DEFAULT_MSG
                                         BLAS_LIBRARY BLAS_INCLUDE_DIR)
 
       mark_as_advanced(BLAS_INCLUDE_DIR BLAS_LIBRARY)

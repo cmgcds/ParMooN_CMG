@@ -3523,18 +3523,48 @@ int TDomain::GmshGen(char *GeoFile)
 //    cout <<"N_Vertices "<<N_Vertices<<endl;
    NewVertices = new TVertex*[N_Vertices];  
   
-   // THIVIN - Added mesh scalling based on the parameter values 
-  cout << "=============================================================================================================================" << endl;
-   cout<< " THIVIN - Mesh has been scalled for ship, Please check the readgeo file for further information  " << endl;
-  cout << "=============================================================================================================================" << endl;
+  // THIVIN - Added mesh scalling based on the parameter values
+   // Scalling Parameters : 
+   double scale_x = TDatabase::ParamDB->MESH_SCALE_X;
+   double scale_y = TDatabase::ParamDB->MESH_SCALE_Y;
+   double scale_z = TDatabase::ParamDB->MESH_SCALE_Z; 
+   cout << " SCALE VAL : " << scale_x << " " << scale_y << " " << scale_z <<endl;
+   int counterrr;
+    if ( counterrr == 0 )
+    {
+        counterrr ++;
+      if(fabs(scale_x - 1.0) > 1e-8 || fabs(scale_y - 1.0) > 1e-8 || fabs(scale_z - 1.0) > 1e-8)
+      {
+          cout << " ================================= MESH HAS BEEN SCALLED  =================================== " <<endl;
+          cout << " ==================== File Name ; Read Geo  , FunctionName : GmshGen ======================= " <<endl;
+          cout << " ========= " << " Scale X = " <<scale_x << " Scale X = " <<scale_y << " Scale X = " <<scale_z << "==============="<<endl;
+      }
+          
+    } 
    for(i=0;i<N_Vertices; i++)
     {
      dat.getline (line, 99);
      dat >> X >> Y >> Z;      
      
-    // X = X*10;
-    // Y = Y + 10;                        
-    // Z = Z*0.01068;
+    X *= scale_x;
+    X += 53.10985 + 0.1064357;
+    Y *= scale_y;
+    Y += 0.002429178;
+    Z *= scale_z;
+    Z += 153.0149 + 0.3066288;
+
+    if(fabs(X) < 1e-5 ) X = 0.;
+    if(fabs(Y) < 1e-5 ) Y = 0.;
+    if(fabs(Z) < 1e-5 ) Z = 0.;
+    
+
+     NewVertices[i] = new TVertex(X, Y, Z);
+      if (X > Xmax) Xmax = X;
+      if (X < Xmin) Xmin = X;
+      if (Y > Ymax) Ymax = Y;
+      if (Y < Ymin) Ymin = Y;
+      if (Z > Zmax) Zmax = Z;
+      if (Z < Zmin) Zmin = Z;  
      
      NewVertices[i] = new TVertex(X, Y, Z);
       if (X > Xmax) Xmax = X;
@@ -3551,6 +3581,13 @@ int TDomain::GmshGen(char *GeoFile)
     BoundX = Xmax - Xmin;
     BoundY = Ymax - Ymin;
     BoundZ = Zmax - Zmin;
+
+
+    cout <<std::setprecision(7) <<endl;
+    cout << " ------------------------------------ MESH DETAILS ---------------------------------------- "<<endl;
+    cout << " X - CO -ORDINATES ( Start , End , Length ):  " <<setw(12) << Xmin << setw(12) << Xmax <<setw(12) << BoundX <<setw(12)  << endl;
+    cout << " Y - CO -ORDINATES ( Start , End , Length ):  " <<setw(12) << Ymin << setw(12) << Ymax <<setw(12) << BoundY <<setw(12) << endl;
+    cout << " Z - CO -ORDINATES ( Start , End , Length ):  " <<setw(12) << Zmin << setw(12) << Zmax <<setw(12) << BoundZ <<setw(12) << endl;
 
    this->SetBoundBox(StartX, StartY, StartZ, BoundX, BoundY, BoundZ);
    

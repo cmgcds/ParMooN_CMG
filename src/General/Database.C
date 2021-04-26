@@ -590,6 +590,11 @@ void TDatabase::SetDefaultParameters()
   strcpy(tmp,"MooNMD_default_snap_filename");
   ParamDB->SNAP_FILENAME=tmp;
 
+  /*  PARAMETERS FOR MESH SCALLING */
+  ParamDB->MESH_SCALE_X = 1.0;
+  ParamDB->MESH_SCALE_Y = 1.0;
+  ParamDB->MESH_SCALE_Z = 1.0;
+
 
    /** parameters for SOLD schemes */
   ParamDB->SOLD_TYPE = 0;

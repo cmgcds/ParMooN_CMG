@@ -121,6 +121,14 @@
         "TBE2D_ParMooN.C": "cpp",
         "TBE2D_MC_ParMooN.C": "cpp",
         "ANN_SUPG.C": "cpp",
-        "ANN.C": "cpp"
+        "ANN.C": "cpp",
+        "NSE3D_ParMooN.C": "cpp",
+        "SystemNSE3D.C": "cpp",
+        "TNSE3D_ParMooN.C": "cpp",
+        "SystemTNSE2D_ALE.C": "cpp",
+        "SystemTNSE3D.C": "cpp",
+        "DeformMesh3D.C": "cpp",
+        "ANNParamReader.C": "cpp",
+        "filesystem": "cpp"
     }
 }

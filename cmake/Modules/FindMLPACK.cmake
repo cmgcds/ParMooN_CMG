@@ -24,7 +24,7 @@ if(NOT MLPACK_FOUND)
                                         "${PARMOON_EXTLIB_PATH}/mlpack/include/mlpack/hdf5")
     
     find_library(MLPACK_LIBRARY NAMES mlpack_${AParMooN_ARCH} PATHS ${PARMOON_EXTLIB_PATH}/mlpack/lib)
-    find_library(MLPACK_LIBRARY_HDF NAMES hdf5_${AParMooN_ARCH} PATHS ${PARMOON_EXTLIB_PATH}/mlpack/lib)
+    #  find_library(MLPACK_LIBRARY_HDF NAMES hdf5_${AParMooN_ARCH} PATHS ${PARMOON_EXTLIB_PATH}/mlpack/lib)
     find_library(MLPACK_LIBRARY_BOOST_SEQ NAMES boost_math_c99_${AParMooN_ARCH} PATHS ${PARMOON_EXTLIB_PATH}/mlpack/lib)
     find_library(MLPACK_LIBRARY_BOOST_MATH NAMES boost_serialization_${AParMooN_ARCH} PATHS ${PARMOON_EXTLIB_PATH}/mlpack/lib)
     find_library(MLPACK_LIBRARY_BOOST_UNIT NAMES boost_unit_test_framework_${AParMooN_ARCH} PATHS ${PARMOON_EXTLIB_PATH}/mlpack/lib)

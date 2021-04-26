@@ -37,16 +37,16 @@ SET(BUILD_SHARED_LIBS ON)
  
 # set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/local/lib)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/lib)
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/intel/mkl/lib/intel64)
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} $ENV{HOME}/intel/mkl/lib/intel64)
+set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/intel/oneapi/mkl/latest/lib/intel64)
+set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} $ENV{HOME}/intel/oneapi/mkl/latest/lib/intel64)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} $ENV{HOME}/lib)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} $ENV{HOME}/software/lib)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} $ENV{HOME}/Software/lib)
 
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} /opt/local/include)
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} /opt/include)
-set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} /opt/intel/mkl/include)
-set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/intel/mkl/include)
+set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} /opt/intel/oneapi/mkl/latest/include)
+set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/intel/oneapi/mkl/latest/include)
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/include)
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/software/include)
 set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} $ENV{HOME}/Software/include)
@@ -72,10 +72,13 @@ if(AParMooN_USE_SYSTEM_MKLBLAS)
     if(CMAKE_VERBOSE_MAKEFILE)
       if(BLAS_FOUND)
         message("Available system BLAS_LIB =${BLAS_LIBRARIES}")
+        message()
       elseif(NOT BLAS_FOUND)
         message("MKL BLAS_NOT_FOUND in your system, searching ...")
       endif(BLAS_FOUND)
     endif(CMAKE_VERBOSE_MAKEFILE)  
+   
+
 endif(AParMooN_USE_SYSTEM_MKLBLAS)
 
 if(NOT BLAS_FOUND)
@@ -93,14 +96,13 @@ if(NOT BLAS_FOUND)
 endif(NOT BLAS_FOUND)
 message("==================Searching BLAS in the System - end=====================================================")
 
-message("BLAS_LIBRARIES  = ${BLAS_LIBRARIES}")
 
 
 if("${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "HYBRID" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI")
 
 
 #   message("==================Searching MPI in the System - begin===================================================")
-find_package(MPI)
+find_package(MPIBLACS)
 
    if("${AParMooN_MPI_IMPLEMENTATION}" STREQUAL "MPICH")
        set(MPI_LIBS -lmpich -lmpichf90 -lmpichcxx -lgfortran )
@@ -195,7 +197,7 @@ message("==================Searching TECPLOT in the System - end================
 
 message("==================Add mlpack from EXT_LIB - begin====================================================")
 
-if("${AParMooN_USE_ANN}" STREQUAL "TRUE")
+if(AParMooN_USE_ANN)
 
   list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR/EXT_LIB/Armadillo}")
   find_package(ARMADILLO REQUIRED)
@@ -212,7 +214,17 @@ if("${AParMooN_USE_ANN}" STREQUAL "TRUE")
     elseif(NOT MLPACK_FOUND)
       message(FATAL_ERROR "MLPACK_NOT_FOUND in your system or in the ParMooN")
     endif()
-endif("${AParMooN_USE_ANN}" STREQUAL "TRUE")
+
+    list(APPEND CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR/EXT_LIB/Ensmallen}")
+    find_package(ENSMALLEN REQUIRED)
+    include_directories(${ENSMALLEN_INCLUDE_DIRS})
+    # if(ENSMALLEN_FOUND)
+    #    message("ENSMALLEN_LIB (read from EXT_LIB/Ensmallen) = ${ENSMALLEN_LIBRARIES}")
+    #  elseif(NOT ENSMALLEN_FOUND)
+    #    message(FATAL_ERROR "ENSMALLEN_NOT_FOUND in your system or in the ParMooN")
+    #  endif() 
+
+endif(AParMooN_USE_ANN)
 message("==================Add mlpack from EXT_LIB - end====================================================")
 
 
@@ -328,9 +340,11 @@ add_subdirectory(src/Solvers)
 
 if("${AParMooN_USE_ANN}" STREQUAL "TRUE")
   add_subdirectory(src/ANN)
+  set(ANN_LIBRARIES "ann")
 else("${AParMooN_USE_ANN}" STREQUAL "FALSE")
   set(MLPACK_LIBRARIES "")
   set(ARMADILLO_LIBRARIES "")
+  set(ANN_LIBRARIES "")
 endif("${AParMooN_USE_ANN}" STREQUAL "TRUE")
 
  
@@ -352,7 +366,7 @@ if( "${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI"  OR "${AParMooN_PARALLEL_TYPE}" S
                       ${MPIBLACS_LIBRARIES}  ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  ${MUMPS_LIBRARIES}   ${BLAS_LIBRARIES} ${MPI_LIBS} )  
 elseif( "${AParMooN_PARALLEL_TYPE}" STREQUAL "SEQUENTIAL"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "OMPONLY")
    target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "solver" "sys" "geo"  "fe" "gen" "geo" "fe" "gen" "fe"
-                      "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "solver" "sys" "fe" "geo" "ann" ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
+                      "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "solver" "sys" "fe" "geo" ${ANN_LIBRARIES} ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
                        ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES} ${MLPACK_LIBRARIES} ${ARMADILLO_LIBRARIES} ${BLAS_LIBRARIES})
 
 elseif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")

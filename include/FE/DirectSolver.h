@@ -216,6 +216,9 @@ void DirectSolver_without_removing_dirichlet(TSquareMatrix3D **sqmatrices, int n
 		  double *sol, double *rhs);
 
 
+
+// The below routines will only work if INTEL MKL LIBRARIES have been found in the system 
+#ifdef INTELMKLBLAS
 //THIVIN
 //INTEL mkl Pardiso - Direct solver routine
 void solve_pardiso(int N_DOF, int *rowptr, int *colIndex, double *entries, double *rhs, double *sol);
@@ -229,6 +232,19 @@ void PardisoDirectSolver_without_removing_dirichlet(TSquareMatrix3D **sqmatrices
 void PardisoDirectSolver(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
 		  double *sol, double *rhs);
 
+
+//THIVIN - PArdiso Direct Solver for main Routine - NSE TYPE 4
+void PardisoDirectSolver(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
+                         TSquareMatrix3D *sqmatrixA13,
+                         TSquareMatrix3D *sqmatrixA21, TSquareMatrix3D *sqmatrixA22,
+                         TSquareMatrix3D *sqmatrixA23,
+                         TSquareMatrix3D *sqmatrixA31, TSquareMatrix3D *sqmatrixA32,
+                         TSquareMatrix3D *sqmatrixA33,
+                         TMatrix3D *matrixB1T, TMatrix3D *matrixB2T, TMatrix3D *matrixB3T,
+                         TMatrix3D *matrixB1, TMatrix3D *matrixB2, TMatrix3D *matrixB3,
+                         double *rhs, double *sol, int flag);
+
+
 //THIVIN
 // NSE type 4 -- Routine to call PARDISO direct solver routine [  solve_pardiso(..)   ] 
 void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
@@ -241,6 +257,8 @@ TMatrix3D *matrixB1T, TMatrix3D *matrixB2T, TMatrix3D *matrixB3T,
 TMatrix3D *matrixB1,  TMatrix3D *matrixB2, TMatrix3D *matrixB3,
 double *rhs, double *sol, int flag);
 
+
+#endif
 void DirectSolver(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
                   double *sol, double *rhs, double *&Entries,
                    int *&KCol, int *&RowPtr, void *&Symbolic, void *&Numeric, int rb_flag);

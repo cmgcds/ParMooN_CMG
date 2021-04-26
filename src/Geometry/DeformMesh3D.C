@@ -250,8 +250,11 @@ void deformMesh3D::moveMesh()
 	int N_BDDof = N_DOF - N_Active;
 
 	// ------ Start of SOLVER ----------------------------- // 
+	#ifdef INTELMKLBLAS
     PardisoDirectSolver(SQMATRICES_GRID, 3, 3, sol, rhs);
-
+	#else
+	DirectSolver(SQMATRICES_GRID, 3, 3, sol, rhs);
+	#endif
 	// ------ SOLVER ----------------------------- //
 	for ( int i=0; i< 3*N_DOF ; i++)
     	gridpos[i] += sol[i];

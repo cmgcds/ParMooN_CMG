@@ -57,7 +57,7 @@ double timeC = 0;
 //   #include "../Examples/TNSE_3D/Hole3D.h"
 //  #include "../Examples/TNSE_3D/AnsatzLinConst.h"
 //  #include "../Examples/TNSE_3D/Bsp3.h"
- #include "../Examples/TNSE_3D/climate_2.h"
+ #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
 //  #include "../Examples/TNSE_3D/Channel3D_volker.h"
 // #include "../Examples/TNSE_3D/Channel3D_slip.h"
 // #include "../Examples/TNSE_3D/test_slip.h"

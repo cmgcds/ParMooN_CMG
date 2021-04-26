@@ -14,16 +14,23 @@ if(ARMADILLO_INCLUDES AND ARMADILLO_LIBRARIES)
 endif(ARMADILLO_INCLUDES AND ARMADILLO_LIBRARIES)
 
 find_path(ARMADILLO_INCLUDE_DIR 
-                       NAMES armadillo
-                       PATHS "${PARMOON_EXTLIB_PATH}/Armadillo/include/")
+                       NAMES armadillo supermatrix.h slu_cdefs.h slu_dcomplex.h slu_ddefs.h slu_sdefs.h slu_util.h superlu_enum_consts.h
+                       PATHS "${PARMOON_EXTLIB_PATH}/Armadillo/include/"
+                       "${PARMOON_EXTLIB_PATH}/mlpack/include/mlpack/hdf5")
 find_library(ARMADILLO_LIBRARY 
                        NAMES armadillo
                        PATHS "${PARMOON_EXTLIB_PATH}/Armadillo/lib/")
+
+find_library(ARMADILLO_LIBRARY_SUPERLU 
+                        NAMES superlu_${AParMooN_ARCH} 
+                        PATHS "${PARMOON_EXTLIB_PATH}/Armadillo/lib")
+
+
   
 if(ARMADILLO_LIBRARY)
   include(FindPackageHandleStandardArgs)
 
-  set(ARMADILLO_LIBRARIES ${ARMADILLO_LIBRARY})
+  set(ARMADILLO_LIBRARIES ${ARMADILLO_LIBRARY} ${ARMADILLO_LIBRARY_SUPERLU}   )
   set(ARMADILLO_INCLUDE_DIRS ${ARMADILLO_INCLUDE_DIR})
 
   # handle the QUIETLY and REQUIRED arguments and set ARMADILLO_FOUND to TRUE

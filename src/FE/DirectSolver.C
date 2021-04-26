@@ -5921,6 +5921,8 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
     delete[] KCol;
   }
 
+
+#ifdef INTELMKLBLAS
   // THIVIN
   // Function to form the global Rowptr, colptr and values from the blovk matrices and send them to the pardiso solve.
   void PardisoDirectSolver_without_removing_dirichlet(TSquareMatrix3D **sqmatrices, int n_row, int n_column,
@@ -6074,6 +6076,315 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
     solve_pardiso(N_Row, RowPtr, KCol, Entries, rhs, sol);
   }
 
+
+  // THIVIN - PARDISO DIRECT SOLVER
+  // 
+void PardisoDirectSolver(TSquareMatrix3D *sqmatrixA11, TSquareMatrix3D *sqmatrixA12,
+                         TSquareMatrix3D *sqmatrixA13,
+                         TSquareMatrix3D *sqmatrixA21, TSquareMatrix3D *sqmatrixA22,
+                         TSquareMatrix3D *sqmatrixA23,
+                         TSquareMatrix3D *sqmatrixA31, TSquareMatrix3D *sqmatrixA32,
+                         TSquareMatrix3D *sqmatrixA33,
+                         TMatrix3D *matrixB1T, TMatrix3D *matrixB2T, TMatrix3D *matrixB3T,
+                         TMatrix3D *matrixB1, TMatrix3D *matrixB2, TMatrix3D *matrixB3,
+                         double *rhs, double *sol, int flag)
+{
+
+  if (TDatabase::ParamDB->SC_VERBOSE > 3)
+    OutPut("umf3d" << endl);
+  int *KColA, *RowPtrA;
+  int *KColB, *RowPtrB;
+  int *KColBT, *RowPtrBT;
+  double *EntriesA11, *EntriesA12, *EntriesA13, *EntriesA21;
+  double *EntriesA22, *EntriesA23, *EntriesA31, *EntriesA32, *EntriesA33;
+  double *EntriesB1, *EntriesB2, *EntriesB3, *EntriesB1T, *EntriesB2T, *EntriesB3T;
+  int N_, N_U, N_P, N_Entries;
+  // static double *Entries;
+  static double *TEntries;
+  static int *TKCol, *TRowPtr;
+
+  double *null = (double *)NULL;
+  static void *Symbolic, *Numeric;
+  int i, j, k, l, begin, end, ret, pos;
+  double value;
+  int N_Active;
+  double t1, t2, t3, t4, t5;
+  int verbose = TDatabase::ParamDB->SC_VERBOSE;
+
+  if (verbose > 3)
+  {
+    
+  }
+  OutPut("flag: " << flag << endl);
+  t1 = GetTime();
+  if (flag == 0 || flag == 3)
+  {
+    N_U = sqmatrixA11->GetN_Rows();
+    N_P = matrixB1->GetN_Rows();
+    N_ = 3 * N_U + N_P;
+    N_Active = sqmatrixA11->GetActiveBound();
+
+    KColA = sqmatrixA11->GetKCol();
+    RowPtrA = sqmatrixA11->GetRowPtr();
+
+    KColB = matrixB1->GetKCol();
+    RowPtrB = matrixB1->GetRowPtr();
+
+    KColBT = matrixB1T->GetKCol();
+    RowPtrBT = matrixB1T->GetRowPtr();
+
+    EntriesA11 = sqmatrixA11->GetEntries();
+    EntriesA12 = sqmatrixA12->GetEntries();
+    EntriesA13 = sqmatrixA13->GetEntries();
+    EntriesA21 = sqmatrixA21->GetEntries();
+    EntriesA22 = sqmatrixA22->GetEntries();
+    EntriesA23 = sqmatrixA23->GetEntries();
+    EntriesA31 = sqmatrixA31->GetEntries();
+    EntriesA32 = sqmatrixA32->GetEntries();
+    EntriesA33 = sqmatrixA33->GetEntries();
+
+    EntriesB1 = matrixB1->GetEntries();
+    EntriesB2 = matrixB2->GetEntries();
+    EntriesB3 = matrixB3->GetEntries();
+    EntriesB1T = matrixB1T->GetEntries();
+    EntriesB2T = matrixB2T->GetEntries();
+    EntriesB3T = matrixB3T->GetEntries();
+
+    N_Entries = (9 * RowPtrA[N_U]) + (3 * RowPtrB[N_P]) + 3 * RowPtrBT[N_U];
+
+    // THIVIN
+    // New copy Procedure to the local matrix to global without the need for sorting at the end
+
+    TEntries = new double[N_Entries]();
+    TKCol = new int[N_Entries]();
+    TRowPtr = new int[N_ + 1]();
+    TRowPtr[0] = 0;
+    int Tpos = 0;
+
+    //THIVIN COPY
+    //A11
+    for (i = 0; i < N_U; i++)
+    {
+      begin = RowPtrA[i];
+      end = RowPtrA[i + 1];
+      int temp = 0;
+      for (j = begin; j < end; j++)
+      {
+        // A11
+        TEntries[Tpos] = EntriesA11[j];
+        TKCol[Tpos] = KColA[j];
+        Tpos++;
+      }
+
+      for (j = begin; j < end; j++)
+      {
+        // A12
+        TEntries[Tpos] = (i < N_Active) ? EntriesA12[j] : 0;
+        TKCol[Tpos] = KColA[j] + N_U;
+        Tpos++;
+      }
+
+      for (j = begin; j < end; j++)
+      {
+        // A13
+        TEntries[Tpos] = (i < N_Active) ? EntriesA13[j] : 0;
+        TKCol[Tpos] = KColA[j] + (2 * N_U);
+        Tpos++;
+      }
+
+      if (i < N_Active)
+      {
+        // B1T
+        begin = RowPtrBT[i];
+        end = RowPtrBT[i + 1];
+        for (j = begin; j < end; j++)
+        {
+          TEntries[Tpos] = EntriesB1T[j];
+          TKCol[Tpos] = KColBT[j] + (3 * N_U);
+          Tpos++;
+          temp++;
+        }
+      }
+
+      TRowPtr[i + 1] = Tpos;
+    }
+
+    for (i = 0; i < N_U; i++)
+    {
+      begin = RowPtrA[i];
+      end = RowPtrA[i + 1];
+      int temp = 0;
+      for (j = begin; j < end; j++)
+      {
+        // A11
+        TEntries[Tpos] = (i < N_Active) ? EntriesA21[j] : 0;
+        TKCol[Tpos] = KColA[j];
+        Tpos++;
+      }
+
+      for (j = begin; j < end; j++)
+      {
+        // A12
+        TEntries[Tpos] = EntriesA22[j];
+        TKCol[Tpos] = KColA[j] + N_U;
+        Tpos++;
+      }
+
+      for (j = begin; j < end; j++)
+      {
+        // A13
+        TEntries[Tpos] = (i < N_Active) ? EntriesA23[j] : 0;
+        TKCol[Tpos] = KColA[j] + (2 * N_U);
+        Tpos++;
+      }
+
+      if (i < N_Active)
+      {
+        // B1T
+        begin = RowPtrBT[i];
+        end = RowPtrBT[i + 1];
+        for (j = begin; j < end; j++)
+        {
+          TEntries[Tpos] = EntriesB2T[j];
+          TKCol[Tpos] = KColBT[j] + (3 * N_U);
+          Tpos++;
+        }
+      }
+
+      TRowPtr[N_U + i + 1] = Tpos;
+    }
+
+    for (i = 0; i < N_U; i++)
+    {
+      begin = RowPtrA[i];
+      end = RowPtrA[i + 1];
+      int temp = 0;
+      for (j = begin; j < end; j++)
+      {
+        // A11
+        TEntries[Tpos] = (i < N_Active) ? EntriesA31[j] : 0;
+        TKCol[Tpos] = KColA[j];
+        Tpos++;
+      }
+
+      for (j = begin; j < end; j++)
+      {
+        // A12
+        TEntries[Tpos] = (i < N_Active) ? EntriesA32[j] : 0;
+        TKCol[Tpos] = KColA[j] + N_U;
+        Tpos++;
+      }
+
+      for (j = begin; j < end; j++)
+      {
+        // A13
+        TEntries[Tpos] = EntriesA33[j];
+        TKCol[Tpos] = KColA[j] + 2 * N_U;
+        Tpos++;
+      }
+
+      if (i < N_Active)
+      {
+        // B1T
+        begin = RowPtrBT[i];
+        end = RowPtrBT[i + 1];
+        for (j = begin; j < end; j++)
+        {
+          TEntries[Tpos] = EntriesB3T[j];
+          TKCol[Tpos] = KColBT[j] + (3 * N_U);
+          Tpos++;
+        }
+      }
+
+      TRowPtr[(2 * N_U) + i + 1] = Tpos;
+    }
+
+    for (i = 0; i < N_P; i++)
+    {
+      begin = RowPtrB[i];
+      end = RowPtrB[i + 1];
+      for (j = begin; j < end; j++)
+      {
+        // B1
+        TEntries[Tpos] = EntriesB1[j];
+        TKCol[Tpos] = KColB[j];
+        Tpos++;
+      }
+      for (j = begin; j < end; j++)
+      {
+        // B2
+        TEntries[Tpos] = EntriesB2[j];
+        TKCol[Tpos] = KColB[j] + N_U;
+        Tpos++;
+      }
+      for (j = begin; j < end; j++)
+      {
+        // B3
+        TEntries[Tpos] = EntriesB3[j];
+        TKCol[Tpos] = KColB[j] + 2 * N_U;
+        Tpos++;
+      }
+      TRowPtr[3 * N_U + i + 1] = Tpos;
+    }
+
+    if (TDatabase::ParamDB->INTERNAL_PROJECT_PRESSURE)
+    {
+      // pressure constant
+      begin = TRowPtr[3 * N_U];
+      end = TRowPtr[3 * N_U + 1];
+      for (j = begin + 1; j < end; j++)
+        TEntries[j] = 0;
+      TEntries[begin] = 1;
+      TKCol[begin] = 3 * N_U;
+      rhs[3 * N_U] = 0;
+    }
+  }
+
+
+      // sort matrix
+    for (int i = 0; i < N_; i++)
+    {
+      begin = TRowPtr[i];
+      end = TRowPtr[i + 1];
+
+      for (int j = begin; j < end; j++)
+      {
+        for (int k = j + 1; k < end; k++)
+        {
+          if (TKCol[j] > TKCol[k])
+          {
+            l = TKCol[j];
+            value = TEntries[j];
+            TKCol[j] = TKCol[k];
+            TEntries[j] = TEntries[k];
+            TKCol[k] = l;
+            TEntries[k] = value;
+          } // endif
+        }   // endfor k
+      }     // endfor j
+    }
+
+  t1 = omp_get_wtime();
+
+  solve_pardiso(N_, TRowPtr, TKCol, TEntries, rhs, sol);
+
+  t2 = omp_get_wtime();
+
+  // cout << " SOLVING time : " << t2 - t1 << endl;
+
+  //  cout << " Solution norm main : "<< cblas_ddot(N_,sol,1.0,sol,1.0) <<endl;
+  /*
+  for(i=0;i<N_;i++)
+    cout << setw(6) << i << setw(30) << sol[i] << endl;
+  */
+  delete[] TEntries;
+  delete[] TRowPtr;
+  delete[] TKCol;
+}
+
+
+
+
   // THIVIN
   // Added INtel MKL Pardiso Solver
 
@@ -6188,5 +6499,6 @@ void PardisoDirectSolver_without_removing_dirichlet_dof(TSquareMatrix3D *sqmatri
     //     std::cout << "Error in pardiso" << std::endl << std::endl;
     // }
   }
+#endif
 
 #endif

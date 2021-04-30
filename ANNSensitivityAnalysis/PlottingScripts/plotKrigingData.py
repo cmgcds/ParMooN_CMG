@@ -228,7 +228,7 @@ def plotKrigingMetamodel(projectName, runNumber, size):
 
 
 
-    input_names = ['OPLTYPE', 'HL_0_DIM', 'HL_0_TYPE']
+    input_names = ['OPLTYPE', 'HL0-D', 'HL0-A']
 
     output_names = ['L1Error', 'MSError','MinError','MaxError'];
     #_______________________________________________________
@@ -304,6 +304,9 @@ def plotKrigingMetamodel(projectName, runNumber, size):
 
 
 if __name__=="__main__":
+    plt.rcParams["text.usetex"] = True
+    plt.rcParams["font.family"] = "serif"
+    plt.rcParams["font.serif"] = ["Computer Modern"]
     plt.rcParams['xtick.labelsize'] = 18
     plt.rcParams['ytick.labelsize'] = 18
 

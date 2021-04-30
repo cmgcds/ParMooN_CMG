@@ -25,12 +25,16 @@ find_library(ARMADILLO_LIBRARY_SUPERLU
                         NAMES superlu_${AParMooN_ARCH} 
                         PATHS "${PARMOON_EXTLIB_PATH}/Armadillo/lib")
 
+find_library(ARMADILLO_LIBRARY_HDF5
+                        NAMES hdf5_serial 
+                        PATHS "${PARMOON_EXTLIB_PATH}/Armadillo/lib" NO_DEFAULT_PATH)
+
 
   
 if(ARMADILLO_LIBRARY)
   include(FindPackageHandleStandardArgs)
 
-  set(ARMADILLO_LIBRARIES ${ARMADILLO_LIBRARY} ${ARMADILLO_LIBRARY_SUPERLU}   )
+  set(ARMADILLO_LIBRARIES ${ARMADILLO_LIBRARY} ${ARMADILLO_LIBRARY_SUPERLU} ${ARMADILLO_LIBRARY_HDF5}  )
   set(ARMADILLO_INCLUDE_DIRS ${ARMADILLO_INCLUDE_DIR})
 
   # handle the QUIETLY and REQUIRED arguments and set ARMADILLO_FOUND to TRUE

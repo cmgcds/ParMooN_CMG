@@ -26,7 +26,7 @@ find_library(ARMADILLO_LIBRARY_SUPERLU
                         PATHS "${PARMOON_EXTLIB_PATH}/Armadillo/lib")
 
 find_library(ARMADILLO_LIBRARY_HDF5
-                        NAMES hdf5_serial 
+                        NAMES libhdf5_serial.so.100
                         PATHS "${PARMOON_EXTLIB_PATH}/Armadillo/lib" NO_DEFAULT_PATH)
 
 

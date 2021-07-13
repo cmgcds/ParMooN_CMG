@@ -26,6 +26,8 @@ bool Load(const std::string& filename,
           const bool fatal)
 {
   // First load into auxiliary matrix.
+    std::cout << " Comes Gere - load_vec_imp - line 29" <<std::endl;
+
   arma::Mat<eT> tmp;
   bool success = Load(filename, tmp, fatal, false);
   if (!success)
@@ -89,6 +91,7 @@ bool Load(const std::string& filename,
           arma::Row<eT>& rowvec,
           const bool fatal)
 {
+  std::cout << " Comes Gere - load_vec_imp - line 94" <<std::endl;
   arma::Mat<eT> tmp;
   bool success = Load(filename, tmp, fatal, false);
   if (!success)

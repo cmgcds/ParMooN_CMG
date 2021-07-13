@@ -42,7 +42,7 @@ void BilinearCoeffs(int n_points, int N_Dim, double **Coords,
   double eps_L, *coeff;
   // double inn[5], out[3];
  
- 
+  // cout << " INT : N DOM : " << N_Dim <<endl;
   if(TDatabase::ParamDB->PE_NR)
     eps_L = 1.0/TDatabase::ParamDB->PE_NR;
   else

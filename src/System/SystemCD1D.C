@@ -41,6 +41,7 @@ TSystemCD1D::TSystemCD1D(int N_L, double start, double end, BoundCond1D *boundCo
 	// cout<<"test TSystemCD1D " <<endl;
 	// exit(0);
 
+
 } // SystemCD1D::TSystemCD1D
 
 void TSystemCD1D::Init(CoeffFctND *bilinear)
@@ -133,7 +134,7 @@ void TSystemCD1D::Solve()
 		break;
 	case SDFEM: // SUPG
 		this->AssembleARhs_SUPG();
-
+		cout<<" ------------------------------------ SUPG DISCRETISATION __-----------------------------"<<endl;
 		MatAdd(A_Intl, K_Intl, 1.0);
 		break;
 
@@ -621,27 +622,42 @@ void TSystemCD1D::AssembleARhs_SUPG()
 			// double D_L =  TDatabase::ParamDB->REACTOR_P3;
 			// double delta0 = TDatabase::ParamDB->DELTA0;
 			// double delta1 = TDatabase::ParamDB->DELTA1;
+			double kk =   TDatabase::ParamDB->GLOBAL_TAU ;
 
-			if (fabs(g0) > 0)
+			//USE ANN TO PREDICT TAU
+			if(TDatabase::ParamDB->USE_ANN_PREDICTED_TAU)
 			{
-
-				// Based on Paper
-				// https://www.wias-berlin.de/people/john/ELECTRONIC_PAPERS/JKS11.CMAME.pdf
-
-				Pe_K = hE * fabs(g0) / (2. * c0 * order);
-				// 	beta based on Lutz book
-				//         if(Pe_K>1.)
-				//           beta = delta0 * hE/g0;
-				//         else
-				//           beta = delta1 *hE*hE/D_L ;
-				//
-				// beta based on 1d Green's formula
-				beta = hE * (1. / tanh(Pe_K) - 1. / Pe_K) / (2. * fabs(g0) * order);
+				#ifdef __ANN__
+				// cout << " BAD PLACE " <<endl;
+				beta = PredictTauANN(g0, c0, hE);
+				#endif
 			}
-			else
+			else  // USE THE ANALYTICAL TAU
 			{
-				beta = 0.0;
+				if (fabs(g0) > 0)
+				{
+
+					// Based on Paper
+					// https://www.wias-berlin.de/people/john/ELECTRONIC_PAPERS/JKS11.CMAME.pdf
+
+					Pe_K = hE * fabs(g0) / (2. * c0 * order);
+					// 	beta based on Lutz book
+					//         if(Pe_K>1.)
+					//           beta = delta0 * hE/g0;
+					//         else
+					//           beta = delta1 *hE*hE/D_L ;
+					//
+					// beta based on 1d Green's formula
+					beta = hE * (1. / tanh(Pe_K) - 1. / Pe_K) / (2. * fabs(g0) * order);
+				}
+				else
+				{
+					beta = 0.0;
+				}
 			}
+			
+
+			
 
 			//  cout<< " Pe_K  " << Pe_K  <<" beta  " << beta  <<endl;
 			//  cout<< " c  " << c0 << " g " <<g0 << " c1 " << c1 <<endl;
@@ -1304,3 +1320,20 @@ TSystemCD1D::~TSystemCD1D()
 	//  delete [] B;
 	//  delete [] defect;
 }
+
+
+#ifdef  __ANN__
+void TSystemCD1D::InitialiseANNParameters(TANNDatasetHandler* _datasetHandler,TANNParamReader*  _paramReader,TANN<MEAN_SQUARED_ERROR, RANDOM_INITIALIZATION>* _ann )
+{
+	datasetHandler = _datasetHandler;
+	paramReader    = _paramReader;
+	ann            = _ann;
+}
+
+double TSystemCD1D::PredictTauANN(double b, double eps, double h)
+{
+	double Predictedtau = ann->predictTau(b, eps, h, datasetHandler);
+	return Predictedtau;
+}
+
+#endif

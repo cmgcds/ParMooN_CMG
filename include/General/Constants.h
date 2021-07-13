@@ -215,6 +215,8 @@ typedef void EvaluateSolutionFunct2D(TFEFunction2D **, TFEVectFunct2D **,
 
 #define OSEEN_PROBLEM    13
 
+#define DO_DISCTYPE 101
+
 #define HMM86            0 
 #define TP86_1           1
 #define TP86_2           2 

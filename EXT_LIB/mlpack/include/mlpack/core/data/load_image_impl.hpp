@@ -26,6 +26,7 @@ bool Load(const std::string& filename,
           ImageInfo& info,
           const bool fatal)
 {
+  std::cout << " CTesting load" <<std::endl;
   Timer::Start("loading_image");
 
   // STB loads into unsigned char matrices, so we may have to convert once
@@ -52,6 +53,7 @@ bool Load(const std::vector<std::string>& files,
           ImageInfo& info,
           const bool fatal)
 {
+  std::cout << " CTesting load" <<std::endl;
   if (files.size() == 0)
   {
     std::ostringstream oss;

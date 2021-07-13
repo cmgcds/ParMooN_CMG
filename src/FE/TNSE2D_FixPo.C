@@ -4387,6 +4387,60 @@ double ***LocMatrices, double **LocRhs)
 
 
 // ======================================================================
+// The RHS AUX For Solving DO Equations 
+// Please note that param[0] and Param[1] are X and Y Co-ordinates 
+// ======================================================================
+void TimeNSRHSAuxDO(double Mult, double *coeff,
+double *param, double hK,
+double **OrigValues, int *N_BaseFuncts,
+double ***LocMatrices, double **LocRhs)
+{
+  double *Rhs1, *Rhs2;
+  double test00;
+  double *Orig0;
+  int i, N_U;
+  double c1, c2;
+
+  Rhs1 = LocRhs[0];
+  Rhs2 = LocRhs[1];
+
+  N_U = N_BaseFuncts[0];
+
+  Orig0 = OrigValues[0];         // u
+
+  c1 = param[0];                 // f1
+  c2 = param[1];                 // f2
+
+  for(i=0;i<N_U;i++)
+  {
+    test00 = Orig0[i];
+    // Compute Sum of all Modes 
+    double val1  = 0;
+    double val2 = 0;
+    // Total param per vector [u,v] mode component is 6
+    // Param[k]   = u
+    // Param[k+1] = u_x
+    // Param[k+2] = u_y
+    // Param[k+3] = v
+    // Param[k+4] = v_x
+    // Param[k+5] = v_y
+    int N_S = TDatabase::ParamDB->N_ENERGY_MODES;
+    for ( int a = 0 ; a < TDatabase::ParamDB->N_ENERGY_MODES ; a++)
+    {
+      for ( int b = 0 ; b < TDatabase::ParamDB->N_ENERGY_MODES ; b++)
+      {
+        val1 += (param[a*6 + 2] *     param[b*6 + 1 + 2]) + ( param[a*6 + 3 + 2] * param[b*6 + 2 + 2]) * TDatabase::ParamDB->COVARIANCE_MATRIX_DO[a*N_S + b] ;   // { u(a)*u_x(b) } + { v(a)*u_y(b) }
+        val2 += (param[a*6 + 3 + 2] * param[b*6 + 5 + 2]) + ( param[a*6 + 2]     * param[b*6 + 4 + 2]) * TDatabase::ParamDB->COVARIANCE_MATRIX_DO[a*N_S + b] ;   // { u(a)*u_x(b) } + { v(a)*u_y(b) }
+      }
+    } 
+    Rhs1[i] += Mult*test00*val1;
+    Rhs2[i] += Mult*test00*val2;
+    //cout <<  Rhs1[i] << " " <<  Rhs2[i] << " ";
+  }                              // endfor i
+}
+
+
+// ======================================================================
 // right-hand side ONLY, Coletti model
 // ======================================================================
 void TimeNSRHSColetti(double Mult, double *coeff,

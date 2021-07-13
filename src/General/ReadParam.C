@@ -116,6 +116,12 @@ int TDomain::ReadParam(char *ParamFile)
       dat >> TDatabase::ParamDB->GLOBAL_TAU;
       N_Param++;
     }
+
+           if (!strcmp(line, "USE_ANN_PREDICTED_TAU:"))
+    {
+      dat >> TDatabase::ParamDB->USE_ANN_PREDICTED_TAU;
+      N_Param++;
+    }
     
     
     if (!strcmp(line, "DOF_Reorder:"))

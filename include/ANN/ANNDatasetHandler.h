@@ -105,8 +105,6 @@ class TANNDatasetHandler
     
     // // Load the model 
     // void loadModel(std::string filename,std::string modelname);
-    // save the model 
-    void saveModel();
 };
 
 #endif

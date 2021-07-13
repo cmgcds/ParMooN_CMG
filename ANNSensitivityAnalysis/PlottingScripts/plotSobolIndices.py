@@ -114,6 +114,11 @@ def plotIndices(projectName, NHL):
         pass;
 
 
+    # Median values for plotting 
+    MedianFirst = np.median(indicesListFirst, axis = 0);
+    MedianTotal = np.median(indicesListTotal, axis = 0);
+
+
     #__________________________________________
     # Plot Sobol indices with x axis as hyperP
     #__________________________________________
@@ -183,6 +188,36 @@ def plotIndices(projectName, NHL):
         handles, labels = axs[location].get_legend_handles_labels()
         pass;
 
+
+    # Plot the median values
+    #__________________________________________
+    # L1 error plot
+    #__________________________________________
+    location = (0,0);
+    for i in range(indicesCount[NHL]):
+        axs[location].hlines(MedianFirst[0][i], -0.4+i, -0.4+i+0.8, linewidth=2, color='k')
+
+    #__________________________________________
+    # MS error plot
+    #__________________________________________
+    location = (0,1);
+    for i in range(indicesCount[NHL]):
+        axs[location].hlines(MedianFirst[1][i], -0.4+i, -0.4+i+0.8, linewidth=2, color='k')
+
+    #__________________________________________
+    # Min error plot
+    #__________________________________________
+    location = (1,0);
+    for i in range(indicesCount[NHL]):
+        axs[location].hlines(MedianFirst[2][i], -0.4+i, -0.4+i+0.8, linewidth=2, color='k')
+
+    #__________________________________________
+    # Max error plot
+    #__________________________________________
+    location = (1,1);
+    for i in range(indicesCount[NHL]):
+        axs[location].hlines(MedianFirst[3][i], -0.4+i, -0.4+i+0.8, linewidth=2, color='k')
+
     fig.tight_layout(rect=[0,0,1,0.9])
     fig.legend(handles, labels, loc='upper center',ncol=4)
 
@@ -250,6 +285,35 @@ def plotIndices(projectName, NHL):
         axs[location].tick_params(axis='x', rotation=60)
         handles, labels = axs[location].get_legend_handles_labels()
         pass;
+
+    # Plot the median values
+    #__________________________________________
+    # L1 error plot
+    #__________________________________________
+    location = (0,0);
+    for i in range(indicesCount[NHL]):
+        axs[location].hlines(MedianTotal[0][i], -0.4+i, -0.4+i+0.8, linewidth=2, color='k')
+
+    #__________________________________________
+    # MS error plot
+    #__________________________________________
+    location = (0,1);
+    for i in range(indicesCount[NHL]):
+        axs[location].hlines(MedianTotal[1][i], -0.4+i, -0.4+i+0.8, linewidth=2, color='k')
+
+    #__________________________________________
+    # Min error plot
+    #__________________________________________
+    location = (1,0);
+    for i in range(indicesCount[NHL]):
+        axs[location].hlines(MedianTotal[2][i], -0.4+i, -0.4+i+0.8, linewidth=2, color='k')
+
+    #__________________________________________
+    # Max error plot
+    #__________________________________________
+    location = (1,1);
+    for i in range(indicesCount[NHL]):
+        axs[location].hlines(MedianTotal[3][i], -0.4+i, -0.4+i+0.8, linewidth=2, color='k')
 
     fig.tight_layout(rect=[0,0,1,0.9])
     fig.legend(handles, labels, loc='upper center',ncol=4)

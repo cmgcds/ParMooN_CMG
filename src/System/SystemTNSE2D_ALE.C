@@ -171,6 +171,7 @@ void TSystemTNSE2D_ALE::Init(CoeffFct2D *lincoeffs, BoundCondFunct2D *BoundCond,
   TDiscreteForm2D *DiscreteFormRHSLESModel;
   TDiscreteForm2D *DiscreteFormRHSAuxProblemU;
   TDiscreteForm2D *DiscreteFormMatrixAuxProblemU;
+  TDiscreteForm2D *DiscreteFormRHSAuxDO;
   
   // save the boundary condition
   BoundaryConditions[0] = BoundCond;
@@ -226,6 +227,7 @@ else
               DiscreteFormRHSSmagorinskyExpl,
               DiscreteFormMatrixAuxProblemU,
               DiscreteFormRHSAuxProblemU,
+              DiscreteFormRHSAuxDO,
               LinCoeffs[0], NSEType);
 }
   

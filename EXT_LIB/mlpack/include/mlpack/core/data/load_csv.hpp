@@ -56,6 +56,8 @@ class LoadCSV
             DatasetMapper<PolicyType> &infoSet,
             const bool transpose = true)
   {
+
+    std::cout << " CTesting load" <<std::endl;
     CheckOpen();
 
     if (transpose)

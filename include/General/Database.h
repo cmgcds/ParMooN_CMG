@@ -7,6 +7,7 @@
 //              parameter database
 //
 // Author:      Volker Behns  24.07.97
+
 //
 // =======================================================================
 #if defined(_MPI) || defined(_SMPI)
@@ -624,6 +625,16 @@ struct TParaDB
   double START_X;
   double END_X;
   double GLOBAL_TAU;
+  int USE_ANN_PREDICTED_TAU;
+
+
+
+  ///===========================================================================
+  // ** Parameters for DO 
+  //============================================================================
+  double* COVARIANCE_MATRIX_DO;
+
+
 
   //======================================================================
   /** parameters for free surface calculation */
@@ -894,6 +905,9 @@ struct TParaDB
   // a prescribed pressure drop at the periodic boundary (to have a flow at all)
   double StoDa_periodicBoundaryPressureDrop; 
   
+  // For DO PART
+  int N_ENERGY_MODES;
+
 
   //======================================================================
   /** internal parameters

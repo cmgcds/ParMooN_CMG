@@ -8,7 +8,7 @@
 #define __TNSE2D_FIXPO__
 
 // ======================================================================
-// declaration for all Navier-Stokes problems of type 1
+// declaration for all Navier-Stokes problems of type
 //      one A block, 
 //      M block from time discretization
 //      B1, B2 (divergence blocks)
@@ -1127,6 +1127,16 @@ void TimeBurgersNLGalerkin(double Mult, double *coeff,
                 double *param, double hK, 
                 double **OrigValues, int *N_BaseFuncts,
                 double ***LocMatrices, double **LocRhs);
+
+
+// ======================================================================
+// DO Equations - Standard Gakerkin
+// ======================================================================
+
+void TimeNSRHSAuxDO(double Mult, double *coeff,
+double *param, double hK,
+double **OrigValues, int *N_BaseFuncts,
+double ***LocMatrices, double **LocRhs);
 
 
 #endif  // __TNSE2D_FIXPO__

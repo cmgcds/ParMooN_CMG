@@ -39,6 +39,7 @@ bool Load(const std::string& filename,
           const bool fatal,
           format f)
 {
+  std::cout << " CTesting load" <<std::endl;
   if (f == format::autodetect)
   {
     std::string extension = Extension(filename);

@@ -3261,6 +3261,7 @@ void InitializeDiscreteForms(
   TDiscreteForm2D *&DiscreteFormRHSSmagorinskyExpl,
   TDiscreteForm2D *&DiscreteFormMatrixAuxProblemU,
   TDiscreteForm2D *&DiscreteFormRHSAuxProblemU,
+  TDiscreteForm2D *&DiscreteFormRHSAuxDO,
   CoeffFct2D *LinCoeffs, int NSTYPE)
 {
   char GalerkinString[] = "Galerkin";
@@ -3275,17 +3276,23 @@ void InitializeDiscreteForms(
   char auxprobString[] = "aux prob";
   char Layton96String[] = "Layton96";
 
-  DiscreteFormRHS = new TDiscreteForm2D(GalerkinString, rhsString,
+      DiscreteFormRHS = new TDiscreteForm2D(GalerkinString, rhsString,
             TimeNSRHSN_Terms, TimeNSRHSDerivatives, TimeNSRHSSpaceNumbers,
             TimeNSRHSN_Matrices, TimeNSRHSN_Rhs, 
             TimeNSRHSRowSpace, TimeNSRHSColumnSpace,
             TimeNSRHSRhsSpace, TimeNSRHS, LinCoeffs, NULL);
 
-  DiscreteFormRHSAuxProblemU = new TDiscreteForm2D(GalerkinString, rhsString,
+      DiscreteFormRHSAuxProblemU = new TDiscreteForm2D(GalerkinString, rhsString,
             TimeNSRHSN_Terms, TimeNSRHSDerivatives, TimeNSRHSSpaceNumbers,
             TimeNSRHSN_Matrices, TimeNSRHSN_Rhs, 
             TimeNSRHSRowSpace, TimeNSRHSColumnSpace,
             TimeNSRHSRhsSpace, TimeNSRHSAuxProblemU, LinCoeffs, NULL);
+      
+      DiscreteFormRHSAuxDO = new TDiscreteForm2D(GalerkinString, rhsString,
+            TimeNSRHSN_Terms, TimeNSRHSDerivatives, TimeNSRHSSpaceNumbers,
+            TimeNSRHSN_Matrices, TimeNSRHSN_Rhs, 
+            TimeNSRHSRowSpace, TimeNSRHSColumnSpace,
+            TimeNSRHSRhsSpace, TimeNSRHSAuxDO, LinCoeffs, NULL);
 
   DiscreteFormMatrixAuxProblemU = new TDiscreteForm2D(auxprobString, allString,
             MatrixAuxiliaryProblemN_Terms, MatrixAuxiliaryProblemDerivatives, 

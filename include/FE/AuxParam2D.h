@@ -10,12 +10,14 @@
 //
 // =======================================================================
 
+
 #ifndef __AUXPARAM2D__
 #define __AUXPARAM2D__
 
 #include <Constants.h>
 #include <FESpace2D.h>
 #include <FEFunction2D.h>
+// #include <FEVectFunct2D.h>
 #include <string>
 
 /** store parameter functions and FE functions */
@@ -86,6 +88,14 @@ class TAuxParam2D
                 ParamFct **parameterfct,
                 int *fevalue_fctindex, MultiIndex2D *fevalue_multiindex,
                 int n_parameters, int *beginparameter);
+
+    //** Constructor 2 ** // -- For FEVECT FUNCTION 
+    TAuxParam2D(int n_fespace2d, TFEVectFunct2D* fevectfunc2d, int n_paramfct,
+        int n_fevalues_per_fct,
+        TFESpace2D **fespaces2d_per_funct,
+        ParamFct **parameterfct,
+         MultiIndex2D *fevalue_multiindex_per_func,
+        int n_parameters_per_func, int *beginparameter);
 
     /** @brief standard constructor
      * 

@@ -92,6 +92,7 @@ bool Load(const std::string& filename,
           const bool transpose,
           const arma::file_type inputLoadType)
 {
+  std::cout << " CTesting load" <<std::endl;
   Timer::Start("loading_data");
 
   // Catch nonexistent files by opening the stream ourselves.
@@ -204,6 +205,7 @@ bool Load(const std::string& filename,
           const bool fatal,
           const bool transpose)
 {
+  std::cout << " CTesting load" <<std::endl;
   // Get the extension and load as necessary.
   Timer::Start("loading_data");
 
@@ -299,6 +301,7 @@ bool Load(const std::string& filename,
           const bool fatal,
           const bool transpose)
 {
+  std::cout << " CTesting load" <<std::endl;
   Timer::Start("loading_data");
 
   // Get the extension.

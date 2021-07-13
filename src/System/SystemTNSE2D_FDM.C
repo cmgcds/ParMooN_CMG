@@ -223,7 +223,7 @@ void TSystemTNSE2D_FDM::Init(CoeffFct2D *lincoeffs, BoundCondFunct2D *BoundCond,
   TDiscreteForm2D *DiscreteFormRHSLESModel;
   TDiscreteForm2D *DiscreteFormRHSAuxProblemU;
   TDiscreteForm2D *DiscreteFormMatrixAuxProblemU;
-  
+  TDiscreteForm2D *DiscreteFormRHSAuxDO;
   // save the boundary condition
   BoundaryConditions[0] = BoundCond;
   BoundaryConditions[1] = BoundCond;  
@@ -244,24 +244,30 @@ void TSystemTNSE2D_FDM::Init(CoeffFct2D *lincoeffs, BoundCondFunct2D *BoundCond,
   NSEaux_error = nseaux_error;
   
   // set the Discreteforms
-  InitializeDiscreteForms(DiscreteFormGalerkin,DiscreteFormUpwind,
-              DiscreteFormSmagorinsky,DiscreteFormColetti,
-              DiscreteFormGL00Convolution,DiscreteFormGL00AuxProblem,
-              DiscreteFormVMSProjection,
-              DiscreteFormNLGalerkin,
-              DiscreteFormNLUpwind, DiscreteFormNLSmagorinsky,
-              DiscreteFormNLColetti,DiscreteFormNLGL00Convolution,
-              DiscreteFormNLGL00AuxProblem,
-              DiscreteFormNLVMSProjection,
-              DiscreteFormRHS,
-              DiscreteFormRHSColetti,
-              DiscreteFormRHSLESModel,
-              DiscreteFormMatrixGL00AuxProblem,
-              DiscreteFormGL00AuxProblemRHS,
-              DiscreteFormRHSSmagorinskyExpl,
-              DiscreteFormMatrixAuxProblemU,
-              DiscreteFormRHSAuxProblemU,
-              LinCoeffs[0], NSEType);
+  InitializeDiscreteForms(DiscreteFormGalerkin,
+							DiscreteFormUpwind,
+							DiscreteFormSmagorinsky,
+							DiscreteFormColetti,
+							DiscreteFormGL00Convolution,
+							DiscreteFormGL00AuxProblem,
+							DiscreteFormVMSProjection,
+							DiscreteFormNLGalerkin,
+							DiscreteFormNLUpwind,
+							DiscreteFormNLSmagorinsky,
+							DiscreteFormNLColetti,
+							DiscreteFormNLGL00Convolution,
+							DiscreteFormNLGL00AuxProblem,
+							DiscreteFormNLVMSProjection,
+							DiscreteFormRHS,
+							DiscreteFormRHSColetti,
+							DiscreteFormRHSLESModel,
+							DiscreteFormMatrixGL00AuxProblem,
+							DiscreteFormGL00AuxProblemRHS,
+							DiscreteFormRHSSmagorinskyExpl,
+							DiscreteFormMatrixAuxProblemU,
+							DiscreteFormRHSAuxProblemU,
+							DiscreteFormRHSAuxDO,
+							LinCoeffs[0], NSEType);
 
     // find discrete form
     switch(Disctype)

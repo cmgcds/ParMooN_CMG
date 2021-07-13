@@ -288,6 +288,7 @@ void Assemble2D(int n_fespaces, TFESpace2D **fespaces,
         TDatabase::ParamDB->CELL_MEASURE = 0;
         break;
     }   
+
     // ####################################################################
     // find local used elements on this cell
     // ####################################################################
@@ -301,6 +302,7 @@ void Assemble2D(int n_fespaces, TFESpace2D **fespaces,
 
     N_LocalUsedElements = n_fespaces;
 
+
     // ####################################################################
     // calculate values on original element
     // ####################################################################
@@ -310,7 +312,7 @@ void Assemble2D(int n_fespaces, TFESpace2D **fespaces,
                            N_Points, xi, eta, weights, X, Y, AbsDetjk);
     
     Parameters->GetParameters(N_Points, Coll, cell, i, xi, eta, X, Y, Param);
- 
+
     if((TDatabase::ParamDB->DISCTYPE == SDFEM)
       || (TDatabase::ParamDB->BULK_REACTION_DISC == SDFEM)
       || (TDatabase::ParamDB->CELL_MEASURE == 4))
@@ -333,6 +335,7 @@ void Assemble2D(int n_fespaces, TFESpace2D **fespaces,
 #endif
     // use DiscreteForm to assemble a few matrices and
     // right-hand sides at once
+    
 
     if(DiscreteForm)
     {

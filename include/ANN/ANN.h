@@ -94,9 +94,17 @@ class TANN
 
   void testNetwork(TANNDatasetHandler *datasetHandler);
 
+  // Function to save the model to the external file
+  void saveModel();
+
+  // FUnction to load the model from external source
+  void loadExternalModel(char* filename);
+
+  // Predict the Tau Value
+  double predictTau(double b, double eps, double h,TANNDatasetHandler* dataHandler);
+
   private:
   /** Methods */
-
   // Function to set up the mlpack model
   void setupModel();
 
@@ -488,10 +496,92 @@ template<
   typename... CustomLayers
 >
 void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::testNetwork(TANNDatasetHandler *datasetHandler){
+  datasetHandler->testData.print(" TEST DATA : ");
   this->model.template Predict(datasetHandler->testData, datasetHandler->predictionTemp);
   datasetHandler->postProcessResults();
   std::cout << "Test error (MSE): " << datasetHandler->errorMSE << std::endl;
 };
+
+
+//Load the model from the external Saved 
+template<
+  typename OutputLayerType ,
+  typename InitializationRuleType, 
+  typename... CustomLayers
+>
+void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::saveModel(){
+  
+  bool save = mlpack::data::Save("model.txt", "model", model, false);
+
+  if(save)
+    std::cout << "Model saved successfully " << std::endl;
+  else
+    std::cout <<"[ERROR] :  Model not saved "<< std::endl;
+};
+
+
+template<
+  typename OutputLayerType ,
+  typename InitializationRuleType, 
+  typename... CustomLayers
+>
+void TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::loadExternalModel(char* filename){
+  
+  bool successState = mlpack::data::Load(filename, "model", model);
+  
+  if(successState)
+    std::cout << "Model Loaded successfully into the ANN class " << std::endl;
+  else
+    std::cout <<"[ERROR] :  Model not loaded "<< std::endl;
+};
+
+
+// Predict the Tau Value
+template<
+  typename OutputLayerType ,
+  typename InitializationRuleType, 
+  typename... CustomLayers
+>
+double TANN<OutputLayerType, InitializationRuleType, CustomLayers...>::predictTau(double b, double eps, double h,TANNDatasetHandler* datasetHandler){
+  
+  // Create a Arma Matrix
+  arma::mat inputTestData(3,1);
+  inputTestData(0) = b;
+  inputTestData(1) = eps;
+  inputTestData(2) = h;
+  // std::cout << "INPUT TEST DATA :  roes : " << inputTestData.n_rows << "  col: " << inputTestData.n_cols  << " " << inputTestData(0) << "   " << inputTestData(1) << "  " << inputTestData(2)<<std::endl;
+  // inputTestData.print(" INPUT TEST DATA : ");
+
+
+  // std::cout << " DATASET HANDLER : " << datasetHandler->testData.n_rows << " col : "<< datasetHandler->testData.n_cols <<std::endl;
+  arma::mat outputResult;
+
+
+  // TRANSFORM THE PREDICT DATA based on scaling of training
+  datasetHandler->dataScaler.Transform(inputTestData, inputTestData);
+
+  //  inputTestData.print(" INPUT TEST DATA : ");
+
+  // std::cout << "[SUCCESS] :  Prediction Before  \n"; 
+
+  // Predict the data using given Values
+  this->model.template Predict(inputTestData, outputResult);
+
+  // std::cout << " Prediction Scalled before  : " << outputResult <<std::endl;
+  // outputResult.print("outputResult:");
+
+  // std::cout << "[SUCCESS] :  Prediction complted  \n";
+  // Scale the values back
+  datasetHandler->labelScaler.InverseTransform(outputResult, outputResult);
+
+  double PredictedTau = outputResult(0,0);
+  // std::cout<< " Predicted Tau Value : " << PredictedTau << "\n";
+
+  
+  return PredictedTau;
+
+};
+
 
 
 #endif

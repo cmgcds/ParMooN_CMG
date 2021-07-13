@@ -107,6 +107,10 @@ class TFEFunction2D
         the given point */
     void FindGradient(double x, double y, double *values);
 
+    /** determine the value of function and its first and second derivatives at
+        the given point */
+    void FindGradient(double x, double y, double *values, bool SecondDer);
+
     /** determine the value of function and its first derivatives at
         the given point */
     void FindGradientLocal(TBaseCell *cell, int cell_no, double x, double y, double *values);

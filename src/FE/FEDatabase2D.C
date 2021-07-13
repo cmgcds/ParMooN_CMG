@@ -2279,6 +2279,43 @@ void TFEDatabase2D::GetOrigFromRef(RefTrans2D RefTrans, int n_points,
   } // endswitch
 }
 
+
+void TFEDatabase2D::GetOrigValues(RefTrans2D RefTrans,int N_Sets, BaseFunct2D *BaseFuncts,
+                            int N_Points, double *xi, double *eta,
+                            QuadFormula2D QuadFormula,
+                            bool *Needs2ndDer)
+{
+      TRefTrans2D *rt;
+
+      rt = ReferenceTrans2D[RefTrans];
+      switch(RefTrans)
+      {
+
+        case TriaAffin: 
+          ((TTriaAffin *)rt)->GetOrigValues(N_Sets, BaseFuncts,
+                                    N_Points, xi, eta,
+                                  QuadFormula,
+                                  Needs2ndDer);
+        break;
+        case QuadAffin:
+            ((TQuadAffin *)rt)->GetOrigValues(N_Sets, BaseFuncts,
+                                    N_Points, xi, eta,
+                                  QuadFormula,
+                                  Needs2ndDer);
+       break;
+        case QuadBilinear:
+          ((TQuadBilinear *)rt)->GetOrigValues(N_Sets, BaseFuncts,
+                                    N_Points, xi, eta,
+                                  QuadFormula,
+                                  Needs2ndDer);
+          break;
+
+        default:
+          cout << "wrong reference transformation identifier" << endl;
+          break;
+      } // endswitch
+}
+
 /** calculate points on reference element */
 void TFEDatabase2D::GetRefFromOrig(RefTrans2D RefTrans,
                                  double X, double Y,
@@ -2734,4 +2771,5 @@ QuadFormula2D TFEDatabase2D::GetQFFromDegree(int accuracy,
       exit(0);
   }
 };
+
 

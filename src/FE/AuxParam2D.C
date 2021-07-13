@@ -10,10 +10,12 @@
 //
 // =======================================================================
 
+
 #include <AuxParam2D.h>
 #include <FEDatabase2D.h>
 #include <MooNMD_Io.h>
 // #include <NSE2D_ParamRout.h>
+#include<FEVectFunct2D.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fstream>
@@ -28,6 +30,76 @@ TAuxParam2D::TAuxParam2D(
         int *fevalue_fctindex, MultiIndex2D *fevalue_multiindex,
         int n_parameters, int *beginparameter)
 {
+  N_FESpace2D = n_fespace2d;
+  N_FEFunction2D = n_fefunction2d;
+  N_ParamFct = n_paramfct;
+  N_FEValues = n_fevalues;
+
+  FESpaces2D = fespaces2d;
+  FEFunctions2D = fefunctions2d;
+  ParameterFct = parameterfct;
+
+  FEValue_FctIndex = fevalue_fctindex;
+  FEValue_MultiIndex = fevalue_multiindex;
+
+  N_Parameters = n_parameters;
+  BeginParameter = beginparameter;
+
+  Temp = new double[2 + N_FEValues];
+
+  Values = new double* [N_FEValues];
+  OrigValues = new double** [N_FEValues];
+  Index = new int* [N_FEValues];
+  N_BaseFunct = new int[N_FEValues];
+}
+
+
+/// COnstructor For passing VectFunction as input.
+// Pass Vect function as Input ( 2nd parameter ),
+// Provide the values that you want to provide for a single component in the other parameters,
+// It will extrapolate the parameters to the optimal values.
+ 
+TAuxParam2D::TAuxParam2D(
+        int n_fespace2d, TFEVectFunct2D* fevectfunc2d, int n_paramfct,
+        int n_fevalues_per_fct,
+        TFESpace2D **fespaces2d,
+        ParamFct **parameterfct,
+         MultiIndex2D *fevalue_multiindex_per_func,
+        int n_parameters_per_func, int *beginparameter)
+{
+
+  // Gte the number of Components of FEVECTFUNCTION 2D
+  int N_Components = fevectfunc2d->GetN_Components();
+
+  // Assign Value of Number of fevectFunctions
+  int n_fefunction2d = N_Components;
+
+  int n_fevalues = n_fevalues_per_fct;
+
+  int n_parameters = n_parameters_per_func * N_Components;
+  // Get pointers for all the Fefunctions
+  TFEFunction2D** fefunctions2d = new TFEFunction2D*[N_Components];
+  for ( int i = 0 ; i < N_Components; i++)
+  {
+    fefunctions2d[i] = fevectfunc2d->GetComponent(i);
+  }
+    
+  MultiIndex2D *fevalue_multiindex = new MultiIndex2D[n_parameters_per_func*N_Components];
+  int* fevalue_fctindex            = new int[n_parameters_per_func*N_Components];
+
+  for ( int i = 0 ; i < N_Components ; i++)
+  {
+      for ( int j = 0 ; j < n_parameters_per_func ; j++)
+      {
+        fevalue_multiindex[i*n_parameters_per_func + j] = fevalue_multiindex_per_func[j];
+        fevalue_fctindex[i*n_parameters_per_func + j]   = i;
+      }
+  }
+  
+
+
+
+
   N_FESpace2D = n_fespace2d;
   N_FEFunction2D = n_fefunction2d;
   N_ParamFct = n_paramfct;

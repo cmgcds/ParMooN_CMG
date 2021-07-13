@@ -64,6 +64,10 @@ class TSystemTNSE2D : public TSystemNSE2D
     /** Initilize the discrete forms and the matrices */    
     void Init(CoeffFct2D *lincoeffs, BoundCondFunct2D *BoundCond, BoundValueFunct2D *U1BoundValue, BoundValueFunct2D *U2BoundValue,
               TAuxParam2D *aux, TAuxParam2D *nseaux_error);
+
+    /** Initialise Discrete form with NSE-RHS Aux included **/
+    void Init(CoeffFct2D *lincoeffs, BoundCondFunct2D *BoundCond, BoundValueFunct2D *U1BoundValue, BoundValueFunct2D *U2BoundValue,
+						 TAuxParam2D *aux, TAuxParam2D *nseaux_error, TAuxParam2D *nseaux_rhs);
     
     
     /** return the stiffness matrix */

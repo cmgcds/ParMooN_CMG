@@ -8,6 +8,7 @@
 //
 // =======================================================================
 
+
 #ifndef __FEDATABASE2D__
 #define __FEDATABASE2D__
 
@@ -614,6 +615,13 @@ class TFEDatabase2D
      static void GetOrigFromRef(RefTrans2D RefTrans, int n_points, 
                         double *xi, double *eta,
                         double *X, double *Y, double *absdetjk);
+
+
+      static void GetOrigValues(RefTrans2D RefTrans,int N_Sets, BaseFunct2D *BaseFuncts,
+                            int N_Points, double *xi, double *eta,
+                            QuadFormula2D QuadFormula,
+                            bool *Needs2ndDer);
+
 
      /** calculate base functions with derivatives and coordinates
          from reference to original element */

@@ -21,6 +21,11 @@
 // #include <FEFunction1D.h>
 // #include <SquareMatrix1D.h>
 
+#ifdef  __ANN__
+  #include <ANNDatasetHandler.h>
+  #include <ANN.h>
+#endif  //__ANN__
+
 /** general super class for 1D */
 class TSystemCD1D : public TSystem1D
 {
@@ -60,6 +65,24 @@ class TSystemCD1D : public TSystem1D
   // ** Generate Output in GNUPLOT ** //
   void plotGNU();
 
+
+  #ifdef  __ANN__
+
+  TANNParamReader* paramReader;
+	// Create a new dataset handler (to create train and test datasets and labels)
+	TANNDatasetHandler* datasetHandler;
+
+	// Create a new ANN model (template arguments can be found in ./include/ANN/ANNIncludes.h)
+	TANN<MEAN_SQUARED_ERROR, RANDOM_INITIALIZATION>* ann;
+
+
+  // HARDCODED -- ann variable is hardcoded for the template arguments
+  void InitialiseANNParameters(TANNDatasetHandler* datasetHandler,TANNParamReader*  paramReader,TANN<MEAN_SQUARED_ERROR, RANDOM_INITIALIZATION>* ann );
+
+
+  // Setup a model to predict the ANN tau
+  double PredictTauANN(double b, double eps, double h);
+  #endif  //__ANN__
 
 
     /** destrcutor */

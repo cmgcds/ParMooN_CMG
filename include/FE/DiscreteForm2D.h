@@ -221,6 +221,7 @@ void InitializeDiscreteForms(
   TDiscreteForm2D *&DiscreteFormRHSSmagorinskyExpl,
   TDiscreteForm2D *&DiscreteFormMatrixAuxProblemU,
   TDiscreteForm2D *&DiscreteFormRHSAuxProblemU,
+  TDiscreteForm2D *&DiscreteFormRHSAuxDO,
   CoeffFct2D *LinCoeffs, int NSTYPE);
   
 void InitializeDiscreteForms(  

@@ -59,6 +59,7 @@ extern "C"
 }
 
 
+
 // Constructor
 TDomain::TDomain()
 {
@@ -495,7 +496,11 @@ int TDomain::GenInitGrid()
 
   opts << "pq" << TDatabase::ParamDB->MESHGEN_REF_QUALITY;
   opts << "zneQA" << ends;
-  triangulate((char *)(opts.str().c_str()), &inn, &outt, (struct triangulateio *) NULL);
+  // COMMENTED OUT FOR LIBRARY ERROR IN GRID GEN -- PLease look into it
+  cout << "[ERROR] :  COMMENTED OUT THE TRIANGLE LIBRRY CALL "<<endl;
+  cout << " FILE : Domain.C - Function - GenInitgrid"<<endl;
+  exit(0);
+ // triangulate((char *)(opts.str().c_str()), &inn, &outt, (struct triangulateio *) NULL);
   //SaveTri(outt);
 
   N_RootCells = outt.numberoftriangles;

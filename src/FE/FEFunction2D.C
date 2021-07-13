@@ -1181,6 +1181,132 @@ void TFEFunction2D::FindGradient(double x, double y, double *values)
   
 }
 
+/** determine the value of function and its first derivatives at
+    the given point */
+void TFEFunction2D::FindGradient(double x, double y, double *values,bool SecondDer)
+{
+  int i,j,k, N_Cells;
+  double xv, yv, xi, eta;
+  TBaseCell *cell;
+  TCollection *Coll;
+  FE2D FE_ID;
+  TFE2D *FE_Obj;
+  RefTrans2D RefTrans;
+  TBaseFunct2D *bf;
+  int N_BaseFunct;
+  double *uorig, *uxorig, *uyorig, *uref, *uxiref, *uetaref;
+  double *uxxorig, *uyyorig, *uxxref,*uyyref;
+
+  int *Numbers, N_Found;
+  double u, ux, uy,uxx,uyy;
+  double val;
+  int *GlobalNumbers, *BeginIndex;
+
+  N_Found = 0;
+  values[0] = 0;
+  values[1] = 0;
+  values[2] = 0;
+  values[3] = 0;
+
+  BeginIndex = FESpace2D->GetBeginIndex();
+  GlobalNumbers = FESpace2D->GetGlobalNumbers();
+
+  Coll = FESpace2D->GetCollection();
+  N_Cells = Coll->GetN_Cells();
+  for(i=0;i<N_Cells;i++)
+  {
+    cell = Coll->GetCell(i);
+    if(cell->PointInCell(x,y))
+    {
+      N_Found++;
+      // cout << "point found" << endl;
+      FE_ID = FESpace2D->GetFE2D(i, cell);
+      FE_Obj = TFEDatabase2D::GetFE2D(FE_ID);
+      RefTrans = FE_Obj->GetRefTransID();
+
+      // set cell for reference transformation
+      TFEDatabase2D::SetCellForRefTrans(cell, RefTrans);
+
+      // find local coordinates of the given point
+      TFEDatabase2D::GetRefFromOrig(RefTrans, x, y, xi, eta);
+      // cout << " xi: " << xi << endl;
+      // cout << "eta: " << eta << endl;
+
+      // get base function object
+      bf = FE_Obj->GetBaseFunct2D();
+      N_BaseFunct = bf->GetDimension();
+
+      uorig = new double[N_BaseFunct];
+      uxorig = new double[N_BaseFunct];
+      uyorig = new double[N_BaseFunct];
+      uxxorig = new double[N_BaseFunct];
+      uyyorig = new double[N_BaseFunct];
+
+      uref = new double[N_BaseFunct];
+      uxiref = new double[N_BaseFunct];
+      uetaref = new double[N_BaseFunct];
+      uxxref = new double[N_BaseFunct];
+      uyyref = new double[N_BaseFunct];
+
+      bf->GetDerivatives(D00, xi, eta, uref);
+      bf->GetDerivatives(D10, xi, eta, uxiref);
+      bf->GetDerivatives(D01, xi, eta, uetaref);
+      bf->GetDerivatives(D20, xi, eta, uxxref);
+      bf->GetDerivatives(D02, xi, eta, uyyref);
+
+      TFEDatabase2D::GetOrigValues(RefTrans, xi, eta, bf, Coll, (TGridCell *)cell,
+        uref, uxiref, uetaref, uorig, uxorig, uyorig);
+      
+
+      u = 0;
+      ux = 0;
+      uy = 0;
+      uxx = 0;
+      uyy = 0;
+      Numbers = GlobalNumbers + BeginIndex[i];
+      for(j=0;j<N_BaseFunct;j++)
+      {
+        val = Values[Numbers[j]];      
+        u += uorig[j]*val;
+        ux += uxorig[j]*val;
+        uy += uyorig[j]*val;
+      }
+
+      values[0] += u;
+      values[1] += ux;
+      values[2] += uy;
+
+      delete uorig;
+      delete uxorig;
+      delete uyorig;
+      delete uref;
+      delete uxiref;
+      delete uetaref;
+
+    }                                             // endif
+  }                                               // endfor
+
+  if(N_Found>0)
+  {
+    values[0] /= N_Found;
+    values[1] /= N_Found;
+    values[2] /= N_Found;
+  }
+  else
+  {
+   OutPut(" Point not found " <<   "x " <<x <<   " y " << y <<  endl);
+   exit(0);
+  }
+  
+}
+
+
+
+
+
+
+
+
 
 /** determine the value of function and its first derivatives at
     the given point which lies within !! the cell *cell (not on the boundary

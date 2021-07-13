@@ -106,6 +106,12 @@ class TSystem1D
     {return N_Dof; }
 
 
+    double* getSolutionVector()
+    {
+      return Sol;
+    }
+
+
     bool IsdGdisc()
     { return dGDisc; }
 

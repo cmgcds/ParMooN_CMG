@@ -13,8 +13,9 @@ TANNDatasetHandler::TANNDatasetHandler(TANNParamReader *paramReader){
 
   // Load the training and validation data
   // NOTE: allData contains the training as well as the validation data
+  std::cout << " CTesting" <<std::endl;
   mlpack::data::Load(paramReader->trainingDatasetName.c_str(), this->allData, true);
-
+ std::cout << " CTesting" <<std::endl;
   // Find the total number of samples in the dataset
   this->totalNumberOfSamples = allData.n_cols;
 
@@ -103,12 +104,12 @@ TANNDatasetHandler::TANNDatasetHandler(TANNParamReader *paramReader){
 
 
 // Export the Data 
-void TANNDatasetHandler::saveModel(){
+// void TANNDatasetHandler::saveModel(){
 
-  // save the data
-  mlpack::data::Save("model.txt", "model",  this->allData, false);
+//   // save the data
+//   mlpack::data::Save("model.txt", "model",  this->allData, false);
 
-}
+// }
 
 TANNDatasetHandler::~TANNDatasetHandler(){};
 
@@ -117,10 +118,17 @@ void TANNDatasetHandler::postProcessResults(){
     // Regression problem
     prediction = predictionTemp;
 
+    this->prediction.print("prediction - Before Scaling: ");
+
+    this->testLabels.print("testLabels - Before Scaling: ");
     // First scale back the result values
     // NOTE: The values were scaled when the arrays were created in the constructor.
     this->labelScaler.InverseTransform(this->prediction, this->prediction);
     this->labelScaler.InverseTransform(this->testLabels, this->testLabels);
+
+    this->prediction.print("prediction:");
+
+    this->testLabels.print("testLabels : ");
 
     errorL1Absolute = this->computeError(testLabels, prediction, "L1","ABS");
     errorL1Relative = this->computeError(testLabels, prediction, "L1","REL");

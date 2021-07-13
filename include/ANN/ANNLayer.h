@@ -30,7 +30,6 @@ class TANNLayer
 
   public:
   /** Data members */
-
   /** Rank in the neural network. 
    *  e.g. 0: Input, 1: First hidden layer ..., N-1: Output 
    *  for a N layered network */

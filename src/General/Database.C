@@ -7,6 +7,7 @@
 //              parameter database
 //
 // Author:      Volker Behns  29.07.97
+
 //
 // =======================================================================
 #if defined(_MPI) || defined(_SMPI)
@@ -962,7 +963,11 @@ void TDatabase::SetDefaultParameters()
   ParamDB->RE_CONTACT_ANGLE = 0;  
   ParamDB->DY_CONTACT_ANGLE = 0;     
   ParamDB->CONTACT_ANGLE_TYPE = 0;  
-   
+  
+//**** Parameters for 1D ANN SUPG Parameters ***** //
+ ParamDB->USE_ANN_PREDICTED_TAU = 0;
+
+
   // ******** parameters for VMS *********//
   ParamDB->VMS_LARGE_VELOCITY_SPACE = 0;
   ParamDB->VMS_COARSE_MG_SMAGO = 1;

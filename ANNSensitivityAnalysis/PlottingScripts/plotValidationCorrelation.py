@@ -3,9 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc
 
-# NOTE: get the correlation coefficients for all 50 experiments by running plotValidationCorrelation.py
 
-def plotValid(runNumber, sampleNumber):
+def plotValid(runNumber, sampleNumber, exptNumber):
     #_______________________________________________________
     # Set paths and variables
     #_______________________________________________________
@@ -15,27 +14,12 @@ def plotValid(runNumber, sampleNumber):
 
     #_______________________________________________________
     # Plot for Expt1
-    projectName = "Expt11"; # For Best L1, MS
+    projectName = "Expt"+str(exptNumber);
     projectOutputDir = outputPath+'/'+projectName; 
     runDir = projectOutputDir+'/'+str(runNumber); 
     sampleDir = runDir+'/'+str(sampleNumber);
     data1 = np.loadtxt(sampleDir+"/testResults.csv",delimiter=',');
 
-    #_______________________________________________________
-    # Plot for Expt2
-    projectName = "Expt12"; # For Best L1, MS
-    projectOutputDir = outputPath+'/'+projectName; 
-    runDir = projectOutputDir+'/'+str(runNumber); 
-    sampleDir = runDir+'/'+str(sampleNumber);
-    data2 = np.loadtxt(sampleDir+"/testResults.csv",delimiter=',');
-
-    #_______________________________________________________
-    # Plot for Expt3
-    projectName = "Expt34"; # For Best L1, MS
-    projectOutputDir = outputPath+'/'+projectName; 
-    runDir = projectOutputDir+'/'+str(runNumber); 
-    sampleDir = runDir+'/'+str(sampleNumber);
-    data3 = np.loadtxt(sampleDir+"/testResults.csv",delimiter=',');
 
 
     s1color = 'red';
@@ -50,47 +34,9 @@ def plotValid(runNumber, sampleNumber):
 
     corr1 = np.corrcoef(data1[:,0], data1[:,1])[0,1];
     label1 = "Expt 1 (Corr: %0.2f"%corr1 + ")";
-    corr2 = np.corrcoef(data2[:,0], data2[:,1])[0,1];
-    label2 = "Expt 2 (Corr: %0.2f"%corr2 + ")";
-    corr3 = np.corrcoef(data3[:,0], data3[:,1])[0,1];
-    label3 = "Expt 3 (Corr: %0.2f"%corr3 + ")";
 
+    print(corr1);
 
-    # For plotting, split data into +ve & -ve
-    data1p = data1[data1[:,1] > 0,:];
-    data1n = data1[data1[:,1] < 0,:];
-    data2p = data2[data2[:,1] > 0,:];
-    data2n = data2[data2[:,1] < 0,:];
-    data3p = data3[data3[:,1] > 0,:];
-    data3n = data3[data3[:,1] < 0,:];
-
-    plt.figure(figsize=(6.4,4.8), dpi=300, constrained_layout = True);
-
-
-    plt.loglog(data1p[:,0], data1p[:,1],"o",color=s1color,markersize=s1size,label= label1);
-    plt.loglog(data2p[:,0], data2p[:,1],"s",color=s2color,markersize=s2size,label=label2);
-    plt.loglog(data3p[:,0], data3p[:,1],"^",color=s3color,markersize=s3size,label=label3);
-
-    plt.loglog(data1n[:,0], abs(data1n[:,1]),"o",color="grey",markersize=s1size);
-    plt.loglog(data2n[:,0], abs(data2n[:,1]),"s",color="grey",markersize=s2size);
-    plt.loglog(data3n[:,0], abs(data3n[:,1]),"^",color="grey",markersize=s3size);
-
-    lineData = np.linspace(10**-8, 1,1000);
-    plt.plot(lineData, lineData,linewidth='1',color=s4color);
-
-    plt.legend(loc=4, fontsize=20);
-
-    plt.xlabel(r"$\tau^{ref}$", fontsize=24);
-    #plt.xlim(10**-6, 1);
-    #plt.ylim(10**-6, 1);
-
-    plt.ylabel(r"$\tau^{ANN}$", fontsize=24);
-    #print(np.corrcoef(data[:,0], data[:,1]));
-    plt.grid();
-
-
-    #plt.savefig("ValidBestMSE.pdf");
-    plt.savefig("ValidWorstMSE.pdf");
     pass;
 
 
@@ -107,7 +53,6 @@ if __name__ == "__main__":
 
 
     ''' 
-    # NOTE: get the correlation coefficients for all 50 experiments by running plotValidationCorrelation.py
     # BEST and WORST networks for all dataset sizes:
     # accoring to [L1, MS, Min, Max] errors
     __________________________________
@@ -172,5 +117,6 @@ if __name__ == "__main__":
     sampleNumber = BestMSEID;
     sampleNumber = WorstMSEID;
 
-    # NOTE: get the correlation coefficients for all 50 experiments by running plotValidationCorrelation.py
-    plotValid(runNumber, sampleNumber);
+    for exptNumber in range(50):
+        plotValid(runNumber, sampleNumber, exptNumber);
+        pass;

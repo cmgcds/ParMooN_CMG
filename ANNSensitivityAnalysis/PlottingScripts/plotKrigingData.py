@@ -30,7 +30,7 @@ def plot_kriging_bounds(vLow,vUp,n_test):
     polyData = [[vLow[i], vLow[i+1], vUp[i+1], vUp[i]] for i in range(n_test-1)]
     polygonList = [ot.Polygon(polyData[i], myPaletteColor, myPaletteColor) for i in range(n_test-1)]
     boundsPoly = ot.PolygonArray(polygonList)
-    boundsPoly.setLegend("95% bounds")
+    boundsPoly.setLegend(r"$95 \%$ Confidence Interval")
     return boundsPoly
 
 
@@ -41,7 +41,7 @@ def plotBasicKriging(krigResult, meta, xMin, xMax, X, Y, level = 0.95):
     '''
     samplesize = np.size(X)
     graphKriging = meta.draw(xMin, xMax)
-    graphKriging.setLegends(["Kriging"])
+    graphKriging.setLegends(["Mean Value"])
     # Create a grid of points and evaluate the function and the kriging
     nbpoints = 100
     Index = 2;
@@ -72,7 +72,7 @@ def plotBasicKriging(krigResult, meta, xMin, xMax, X, Y, level = 0.95):
     vUp = [[xGrid[i,Index],dataUpper[i]] for i in range(nbpoints)]
     # Compute the Polygon graphics
     boundsPoly = plot_kriging_bounds(vLow,vUp,nbpoints)
-    boundsPoly.setLegend("95% bounds")
+    #boundsPoly.setLegend("95% bounds")
     # Validate the kriging metamodel
     #mmv = ot.MetaModelValidation(xGrid, yFunction, meta)
     #Q2 = mmv.computePredictivityFactor()[0]
@@ -228,9 +228,9 @@ def plotKrigingMetamodel(projectName, runNumber, size):
 
 
 
-    input_names = ['OPLTYPE', 'HL0-D', 'HL0-A']
+    input_names = ['OPLTYPE', 'HL1-D', 'HL1-A']
 
-    output_names = ['L1Error', 'MSError','MinError','MaxError'];
+    output_names = ['L1 Error', 'MS Error','Min Error','Max Error'];
     #_______________________________________________________
     # Find sobol indices
     #_______________________________________________________
@@ -285,15 +285,16 @@ def plotKrigingMetamodel(projectName, runNumber, size):
 
         axes = view.getAxes();
         location = 0;
-        axes[location].figure.set_size_inches(6.4,6.4)
+        axes[location].figure.set_size_inches(6.4,4.8)
         axes[location].figure.tight_layout(rect=[0.1,0.1,0.95,0.95])
         axes[location].legend(loc = 9, fontsize=18);
         axes[location].set_ylabel(output_names[i], fontsize=20);
         axes[location].set_xlabel(input_names[inputIndex], fontsize=20);
-        axes[location].set_ylim(-0.5,2);
+        axes[location].set_ylim(-0.5,3);
         axes[location].set_xlim(-0.25,3.25);
         axes[location].set_xticks([0,1,2,3]);
         axes[location].set_xticklabels(["AF1","AF2","AF3","AF4"], rotation=60);
+
 
         #plt.show();
         plt.savefig("KrigingExpt"+str(runNumber)+input_names[inputIndex]+output_names[i]+".pdf");
@@ -307,8 +308,8 @@ if __name__=="__main__":
     plt.rcParams["text.usetex"] = True
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.serif"] = ["Computer Modern"]
-    plt.rcParams['xtick.labelsize'] = 18
-    plt.rcParams['ytick.labelsize'] = 18
+    plt.rcParams['xtick.labelsize'] = 20
+    plt.rcParams['ytick.labelsize'] = 20
 
     # Name of the project
     projectName = "Avg";

@@ -463,6 +463,9 @@ def plotIndices(projectName, NHL):
     if (NHL == 0):
         VMIN = 1e-3;
         VMAX = 1e0
+        FontSize = 10;
+        aspect = 0.7;
+        Rot = 60;
         #__________________________________________
         # Plot SO Sobol indices
         #__________________________________________
@@ -483,7 +486,8 @@ def plotIndices(projectName, NHL):
 
 
 
-        FigSize = (6.4,4.8);
+        #FigSize = (6.4,4.8);
+        FigSize = (10,5);
         fig, axs = plt.subplots(2,2, figsize=FigSize, dpi=300);
         locations = [(0,0),(0,1),(1,0),(1,1)];
         # Legend location
@@ -498,6 +502,7 @@ def plotIndices(projectName, NHL):
         axs[location].set_yticks(np.arange(8));
         axs[location].set_yticklabels(x);
         axs[location].tick_params(axis='x', bottom=False, top=False, labeltop = False)
+        axs[location].set_aspect(aspect, adjustable='box')
         axs[location].grid();
 
         #__________________________________________
@@ -508,6 +513,7 @@ def plotIndices(projectName, NHL):
         axs[location].set_title(r"MS Error");
         axs[location].tick_params(axis='x', bottom=False, top=False, labeltop = False, labelbottom = False)
         axs[location].tick_params(axis='y', left=False, right=False, labelleft = False)
+        axs[location].set_aspect(aspect, adjustable='box')
         axs[location].grid();
 
         #__________________________________________
@@ -521,7 +527,8 @@ def plotIndices(projectName, NHL):
         axs[location].xaxis.tick_bottom();
         axs[location].set_yticks(np.arange(8));
         axs[location].set_yticklabels(x);
-        axs[location].tick_params(axis='x', rotation=75)
+        axs[location].tick_params(axis='x', rotation=Rot)
+        axs[location].set_aspect(aspect, adjustable='box')
         axs[location].grid();
 
         #__________________________________________
@@ -533,8 +540,9 @@ def plotIndices(projectName, NHL):
         axs[location].set_xticks(np.arange(8));
         axs[location].set_xticklabels(x);
         axs[location].xaxis.tick_bottom();
-        axs[location].tick_params(axis='x', rotation=75)
+        axs[location].tick_params(axis='x', rotation=Rot)
         axs[location].tick_params(axis='y', left=False, right=False, labelleft = False)
+        axs[location].set_aspect(aspect, adjustable='box')
         axs[location].grid();
 
 
@@ -559,9 +567,11 @@ if __name__== "__main__":
     plt.rcParams["text.usetex"] = True
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.serif"] = ["Computer Modern"]
-    plt.rcParams['xtick.labelsize'] = 12
-    plt.rcParams['ytick.labelsize'] = 12
-    plt.rcParams['axes.labelsize'] = 14
+    plt.rcParams["axes.titlesize"] = "medium"
+    plt.rcParams["legend.fontsize"] = 8
+    plt.rcParams['xtick.labelsize'] = 8
+    plt.rcParams['ytick.labelsize'] = 8
+    plt.rcParams['axes.labelsize']  = 8
     plt.rcParams['axes.grid'] = True
     plt.rcParams['axes.prop_cycle'] = cycler(color=['darkblue', '#d62728', '#2ca02c', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
     for i in range(4):

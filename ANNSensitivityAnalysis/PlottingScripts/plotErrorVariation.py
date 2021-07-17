@@ -110,7 +110,7 @@ def plotErrorVariation(projectName):
     fig, axs = plt.subplots(2,2, figsize=(6.4,4.8), dpi=300, constrained_layout=True);
 
     # Title:
-    plt.suptitle("Variation of error vs. size of training dataset", fontsize=16);
+    plt.suptitle("Variation of error vs. size of training dataset", fontsize=10);
 
     # Legend location
     legendLocation = "upper right";
@@ -200,8 +200,8 @@ if __name__ == "__main__":
     plt.rcParams["text.usetex"] = True
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.serif"] = ["Computer Modern"]
-    plt.rcParams['xtick.labelsize'] = 12
-    plt.rcParams['ytick.labelsize'] = 12
-    plt.rcParams['axes.labelsize'] = 14
+    plt.rcParams['xtick.labelsize'] = 10
+    plt.rcParams['ytick.labelsize'] = 10
+    plt.rcParams['axes.labelsize'] = 10
     plt.rcParams['axes.prop_cycle'] = cycler(color=['darkblue', '#d62728', '#2ca02c', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
     plotErrorVariation("Avg");

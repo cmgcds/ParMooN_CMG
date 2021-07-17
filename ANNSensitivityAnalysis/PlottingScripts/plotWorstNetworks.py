@@ -288,5 +288,5 @@ if __name__=="__main__":
 
     # Name of the project
     projectName = "Avg";
-    runNumber = 6;
+    runNumber = 4;
     plotFrequencies(projectName, runNumber);

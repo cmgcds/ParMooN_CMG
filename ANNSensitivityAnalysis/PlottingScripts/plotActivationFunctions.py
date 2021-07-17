@@ -24,16 +24,16 @@ def plotAF():
     # Sigmoid function
     location = (0);
     y = sigmoid(x);
-    axs[location].set_title("(a)Sigmoid Function", fontsize=10,y=0, pad=-40);
+    axs[location].set_title("(a)Sigmoid Function", fontsize=8,y=0, pad=-40);
     axs[location].plot(x,y,color='red');
     axs[location].set_xlim(-1,1);
     axs[location].set_xticks([-1,-0.5,0,0.5,1]);
-    axs[location].set_xticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"]);
+    axs[location].set_xticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"], fontsize=8);
     axs[location].set_ylim(-1,1);
     axs[location].set_yticks([-1,-0.5,0,0.5,1]);
-    axs[location].set_yticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"]);
-    axs[location].set_xlabel(r"$x$");
-    axs[location].set_ylabel(r"$f(x)$", labelpad=-5);
+    axs[location].set_yticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"], fontsize=8);
+    axs[location].set_xlabel(r"$x$", fontsize=8);
+    axs[location].set_ylabel(r"$f(x)$", fontsize=8, labelpad=-5);
     axs[location].axhline(0, color='black', linewidth = 1);
     axs[location].axvline(0, color='black', linewidth = 1);
     axs[location].grid();
@@ -41,16 +41,16 @@ def plotAF():
     # Leaky-ReLU function
     y = lrelu(x);
     location = (1);
-    axs[location].set_title("(b)Leaky-ReLU Function", fontsize=10, y=0, pad=-40);
+    axs[location].set_title("(b)Leaky-ReLU Function", fontsize=8, y=0, pad=-40);
     axs[location].plot(x,y,color='red');
     axs[location].set_xlim(-1,1);
     axs[location].set_xticks([-1,-0.5,0,0.5,1]);
-    axs[location].set_xticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"]);
+    axs[location].set_xticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"], fontsize=8);
     axs[location].set_ylim(-1,1);
     axs[location].set_yticks([-1,-0.5,0,0.5,1]);
-    axs[location].set_yticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"]);
-    axs[location].set_xlabel(r"$x$");
-    axs[location].set_ylabel(r"$f(x)$", labelpad=-5);
+    axs[location].set_yticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"], fontsize=8);
+    axs[location].set_xlabel(r"$x$", fontsize=8);
+    axs[location].set_ylabel(r"$f(x)$", fontsize=8, labelpad=-5);
     axs[location].axhline(0, color='black', linewidth = 1);
     axs[location].axvline(0, color='black', linewidth = 1);
     axs[location].grid();
@@ -58,16 +58,16 @@ def plotAF():
     # Hyperbolic Tangent function
     location = (2);
     y = tanH(5.*x);
-    axs[location].set_title("(c)TanH Function", fontsize=10, y=0, pad=-40);
+    axs[location].set_title("(c)TanH Function", fontsize=8, y=0, pad=-40);
     axs[location].plot(x,y,color='red');
     axs[location].set_xlim(-1,1);
     axs[location].set_xticks([-1,-0.5,0,0.5,1]);
-    axs[location].set_xticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"]);
+    axs[location].set_xticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"], fontsize=8);
     axs[location].set_ylim(-1,1);
     axs[location].set_yticks([-1,-0.5,0,0.5,1]);
-    axs[location].set_yticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"]);
-    axs[location].set_xlabel(r"$x$");
-    axs[location].set_ylabel(r"$f(x)$", labelpad=-5);
+    axs[location].set_yticklabels([r"$-1$",r"$-0.5$",r"$0$",r"$0.5$",r"$1$"], fontsize=8);
+    axs[location].set_xlabel(r"$x$", fontsize=8);
+    axs[location].set_ylabel(r"$f(x)$", fontsize=8, labelpad=-5);
     axs[location].axhline(0, color='black', linewidth = 1);
     axs[location].axvline(0, color='black', linewidth = 1);
     axs[location].grid();

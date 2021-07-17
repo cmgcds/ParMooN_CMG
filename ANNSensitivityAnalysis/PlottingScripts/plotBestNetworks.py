@@ -188,7 +188,7 @@ def addPlot(projectName, runNumber, axs):
 
     
 
-    Size = 14;
+    Size = 10;
     Rot = 45;
 
     # NHL frequencies
@@ -286,13 +286,13 @@ def addPlot(projectName, runNumber, axs):
 def plotFrequencies(projectName):
 
     RunNumbers = [0,1,2];
-    fig, axs = plt.subplots(3,3, figsize=(6.4,6.4), dpi=300, constrained_layout=True);
+    fig, axs = plt.subplots(3,3, figsize=(6.4,4.8), dpi=300, constrained_layout=True);
 
     for runNumber in RunNumbers:
         addPlot(projectName, runNumber,axs);
         pass;
 
-    fig.legend(bbox_to_anchor=(0.27, 0.26, 0.4, .4),fontsize=16);
+    fig.legend(bbox_to_anchor=(0.2, 0.25, 0.4, .4),fontsize=10);
     plt.savefig("BestNetwork.pdf");
 
 
@@ -303,9 +303,10 @@ if __name__=="__main__":
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.serif"] = ["Computer Modern"]
 
-    plt.rcParams['xtick.labelsize'] = 14
-    plt.rcParams['ytick.labelsize'] = 14
-    plt.rcParams['axes.prop_cycle'] = cycler(color=['lightsteelblue', 'mediumpurple', 'midnightblue', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
+    plt.rcParams['xtick.labelsize'] = 10
+    plt.rcParams['ytick.labelsize'] = 10
+    #plt.rcParams['axes.prop_cycle'] = cycler(color=['lightsteelblue', 'mediumpurple', 'midnightblue', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
+    plt.rcParams['axes.prop_cycle'] = cycler(color=['lavender', 'mediumpurple', 'midnightblue', '#ff7f0e', '#bcbd22', '#8c564b', '#17becf', '#9467bd', '#e377c2', '#7f7f7f'])
 
     # Name of the project
     projectName = "Avg";

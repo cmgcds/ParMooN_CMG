@@ -6,10 +6,9 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "/opt/intel/compilers_and_libraries_2020.0.166/linux/bin/clang",
+            "compilerPath": "/opt/intel/oneapi/compiler/2022.0.2/linux/bin/intel64/icc",
             "cStandard": "c11",
-            "cppStandard": "c++14",
-            "intelliSenseMode": "clang-x64"
+            "cppStandard": "c++14"
         }
     ],
     "version": 4

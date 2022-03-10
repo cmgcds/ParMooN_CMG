@@ -22,7 +22,7 @@
 #else /* not SINGLE */
 #define REAL double
 #endif /* not SINGLE */
-
+#define REAL double
 #define VOID int
 /*****************************************************************************/
 /*                                                                           */

@@ -129,6 +129,7 @@
         "SystemTNSE3D.C": "cpp",
         "DeformMesh3D.C": "cpp",
         "ANNParamReader.C": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "Assemble2D.C": "cpp"
     }
 }

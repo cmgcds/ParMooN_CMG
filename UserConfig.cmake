@@ -13,7 +13,7 @@ set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimensio 
 
 #...................................................................................................................................................
 # select this line accordingly to include your main program
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/CD2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
+set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/CD2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TCD2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TCD2D_ParMooN_ALE.C" CACHE STRING "Enter to select the Main file of the model") 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/NSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
@@ -26,10 +26,10 @@ set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimensio 
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/TNSE3D/thivin_TNSE3D.cpp" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/Sample_mesh_move_2d.cpp" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TBE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_SUPG.C" CACHE STRING "Enter to select the Main file of the model")
+# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_SUPG.C" CACHE STRING "Enter to select the Main file of the model")
 
 # selection of architect type (LINUX64 MAC64 INTEL64 TYRONE64 CRAY64)
-set(AParMooN_ARCH "LINUX64" CACHE STRING "select the machine type")
+set(AParMooN_ARCH "INTEL64" CACHE STRING "select the machine type")
 
 #  selection of program type (SEQUENTIAL SMPI MPI OMPONLY HYBRID SCUDA)
 set(AParMooN_PARALLEL_TYPE "SEQUENTIAL" CACHE STRING "select the parallel type")
@@ -40,12 +40,12 @@ set(AParMooN_MPI_IMPLEMENTATION "INTELMPI" CACHE STRING "select the MPI Implemen
 # set the path to save the exe file ....................................................................................
 #.......................................................................................................................
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/aletnse3d" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/CD2D" CACHE STRING "select the model")
+set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/CD2D" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/NSE3D" CACHE STRING "select the model")
 #  set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/TNSE3D" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/thivin3d" CACHE STRING "select the model")
 #set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/burger" CACHE STRING "select the model")
-set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/cd1dANN" CACHE STRING "select the model")
+# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/cd1dANN" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/ANNRegression" CACHE STRING "select the model")
 
 set(USE_PARMOON_DEFINE -D__PRIVATE__)
@@ -55,7 +55,7 @@ set(EXE_BUILD_TYPE RELEASE)
 
 
 ## Flags for ANN
-set(AParMooN_USE_ANN TRUE)
+set(AParMooN_USE_ANN FALSE)
 
 # set FALSE, if you want to use libs provided in PARMOON 
 # if you set TRUE, it will search in all you lib paths and if not found, PARMOON libs will be used

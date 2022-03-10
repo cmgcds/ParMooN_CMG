@@ -377,6 +377,47 @@ target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "sol
                   ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  -lcusparse -lculibos -lcublas -lcusolver -lnvToolsExt  "${ARMADILLO_LIBRARIES}"  "${MLPACK_LIBRARIES}" "ann")
 endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "HYBRID" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI")
 
+
+string(CONCAT runScriptString [=[#!/bin/bash
+## Color Codes
+# Black        0;30     Dark Gray     1;30
+# Red          0;31     Light Red     1;31S
+# Green        0;32     Light Green   1;32
+# Brown/Orange 0;33     Yellow        1;33
+# Blue         0;34     Light Blue    1;34
+# Purple       0;35     Light Purple  1;35
+# Cyan         0;36     Light Cyan    1;36
+# Light Gray   0;37     White         1;37
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+GREEN='\033[0;32m'
+if (( $# != 1 )); then
+    printf "${RED} Please pass the dat file as parameter${NC}\n"
+    exit;
+fi
+cd ]=] "${CMAKE_CURRENT_BINARY_DIR}" 
+[=[
+
+make -j8 | tee make.out
+OUTPUT=`make -j8 &> make.out`
+OUTPUT=`cat make.out`
+case "${OUTPUT}" in 
+  *Error*)
+  printf "${RED}******** ERROR ******** \n"
+  printf "${RED}*Error in the make Process*\n"
+  exit;
+  ;;
+esac
+printf "${GREEN}******** SUCCESS ******** \n"
+printf "${GREEN}*Make Process completed without any errors*\n${NC}"
+cd ]=] "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}" 
+[=[
+
+./]=]
+"parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe" [=[ $1]=]
+ )
+write_file("${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/runscript.sh" "${runScriptString}")
+
 message("============================================================================================================"  )  
 message("AParMooN_GEO=${AParMooN_GEO}")
 message("AParMooN_MODEL=${AParMooN_MODEL}")

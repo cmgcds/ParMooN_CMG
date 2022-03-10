@@ -58,7 +58,6 @@ extern "C"
                    struct triangulateio *);
 }
 
-
 // Constructor
 TDomain::TDomain()
 {

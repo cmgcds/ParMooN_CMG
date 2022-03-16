@@ -58,6 +58,20 @@ class TSystemTCD2D : public TSystemCD2D
 
     /** methods */
     void Init(CoeffFct2D *BilinearCoeffs, BoundCondFunct2D *BoundCond, BoundValueFunct2D *BoundValue);
+
+    // THIVIN - 
+    // Added a method which will generate the customised discrete forms 
+    // Rather than trying to create a discrete form through the inbuilt routines
+    // we will pass the parameters requried for the discrete form inside the main program which 
+    // will ctreate the custom discreteform for us 
+
+
+    void Init_WithDiscreteform(CoeffFct2D *BilinearCoeffs, BoundCondFunct2D *BoundCond, BoundValueFunct2D *BoundValue,char *name, char *description,
+        int n_terms, MultiIndex2D *derivatives, int *fespacenumber,
+        int n_matrices, int n_rhs,
+        int *rowspace, int *columnspace, int *rhsspace,
+        AssembleFctParam2D *assembleparam, CoeffFct2D *coeffs,
+        ManipulateFct2D *manipulate);
     
     /** return the stiffness matric */
     TSquareMatrix2D *GetAMatrix()

@@ -132,6 +132,7 @@ void TFEFunction2D::GetErrors(DoubleFunct2D *Exact, int N_Derivatives,
   }
 
   N_Parameters = Aux->GetN_Parameters();
+  
   aux = new double [MaxN_QuadPoints_2D*N_Parameters];
   for(j=0;j<MaxN_QuadPoints_2D;j++)
     Param[j] = aux + j*N_Parameters;

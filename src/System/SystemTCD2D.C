@@ -127,6 +127,22 @@ void TSystemTCD2D::Init(CoeffFct2D *BilinearCoeffs, BoundCondFunct2D *BoundCond,
 } // Init
 
 
+void TSystemTCD2D::Init_WithDiscreteform(CoeffFct2D *BilinearCoeffs, BoundCondFunct2D *BoundCond, BoundValueFunct2D *BoundValue,char *name, char *description,
+        int n_terms, MultiIndex2D *derivatives, int *fespacenumber,
+        int n_matrices, int n_rhs,
+        int *rowspace, int *columnspace, int *rhsspace,
+        AssembleFctParam2D *assembleparam, CoeffFct2D *coeffs,
+        ManipulateFct2D *manipulate)
+{
+  BoundaryConditions[0] =  BoundCond;
+  BoundaryValues[0] = BoundValue;
+  
+  
+   
+   
+} // Init
+
+
 void TSystemTCD2D::AssembleMRhs(TAuxParam2D *aux, double *sol, double *rhs)
 {
   int N_SquareMatrices;

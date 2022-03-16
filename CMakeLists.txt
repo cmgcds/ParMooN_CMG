@@ -275,13 +275,15 @@ elseif("${AParMooN_ARCH}" STREQUAL "INTEL64")
     set(CMAKE_CXX_COMPILER ${MPI_CXXPATH}/mpiicpc)      
   elseif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SEQUENTIAL"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "OMPONLY" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
   
-    include_directories("/opt/intel/include")
+    include_directories("/opt/intel/oneapi/include")
   
     find_path(CPATH  icc)
-    set(CMAKE_C_COMPILER ${CPATH}/icc)
+    set(CMAKE_C_COMPILER icc)
     find_path(CXXPATH icpc)  
-    set(CMAKE_CXX_COMPILER ${CXXPATH}/icpc)  
-  endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "HYBRID" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI")  
+    set(CMAKE_CXX_COMPILER icpc)  
+
+
+    endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "HYBRID" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI")  
   
 # message("MPI_CXXPATH  = ${CXXPATH}")
 
@@ -376,6 +378,52 @@ target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "sol
                   "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "solver" "sys" "fe" "geo" "cudaSpLinSolver" ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
                   ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  -lcusparse -lculibos -lcublas -lcusolver -lnvToolsExt  "${ARMADILLO_LIBRARIES}"  "${MLPACK_LIBRARIES}" "ann")
 endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "HYBRID" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI")
+
+
+## Written by Thivin
+## the following codes generates a shell script at the corresponding output location ( defined in cmake )
+## the user can just make and run in a single command
+## the script stops if there is any error during the make process
+
+string(CONCAT runScriptString [=[#!/bin/bash
+## Color Codes
+# Black        0;30     Dark Gray     1;30
+# Red          0;31     Light Red     1;31S
+# Green        0;32     Light Green   1;32
+# Brown/Orange 0;33     Yellow        1;33
+# Blue         0;34     Light Blue    1;34
+# Purple       0;35     Light Purple  1;35
+# Cyan         0;36     Light Cyan    1;36
+# Light Gray   0;37     White         1;37
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+GREEN='\033[0;32m'
+if (( $# != 1 )); then
+    printf "${RED} Please pass the dat file as parameter${NC}\n"
+    exit;
+fi
+cd ]=] "${CMAKE_CURRENT_BINARY_DIR}" 
+[=[
+
+make -j8 | tee make.out
+OUTPUT=`make -j8 &> make.out`
+OUTPUT=`cat make.out`
+case "${OUTPUT}" in 
+  *Error*)
+  printf "${RED}******** ERROR ******** \n"
+  printf "${RED}*Error in the make Process*\n"
+  exit;
+  ;;
+esac
+printf "${GREEN}******** SUCCESS ******** \n"
+printf "${GREEN}*Make Process completed without any errors*\n${NC}"
+cd ]=] "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}" 
+[=[
+
+./]=]
+"parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe" [=[ $1]=]
+ )
+write_file("${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/runscript.sh" "${runScriptString}")
 
 message("============================================================================================================"  )  
 message("AParMooN_GEO=${AParMooN_GEO}")

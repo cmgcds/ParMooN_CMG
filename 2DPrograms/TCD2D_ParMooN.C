@@ -36,7 +36,7 @@
 // =======================================================================
 // include current example
 // =======================================================================
-#include "../Examples/TCD_2D/exp.h"
+#include "../Main_Users/Thivin/SPADE/advection.h"
 // #include "../Examples/TCD_2D/SinCos1.h"
 // #include "../Examples_All/TCD_2D/Time3.h"
 // #include "../Examples/TCD_2D/exp_0.h"
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 	else if (TDatabase::ParamDB->MESH_TYPE == 2) //triangle mesh
 	{
 		OutPut("Triangle.h used for meshing !!!" << endl);
-		TriaReMeshGen(Domain);
+		// TriaReMeshGen(Domain);
 	}
 	else
 	{
@@ -167,6 +167,11 @@ int main(int argc, char *argv[])
 
 	// initilize the system matrix with the functions defined in Example file
 	SystemMatrix->Init(BilinearCoeffs, BoundCondition, BoundValue);
+
+
+
+
+
 
 	// assemble the system matrix with given aux, sol and rhs
 	// aux is used to pass  addition fe functions (eg. mesh velocity) that is nedded for assembling,

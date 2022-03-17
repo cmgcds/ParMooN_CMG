@@ -32,6 +32,7 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <FEVectFunct2D.h>
 
 // =======================================================================
 // include current example
@@ -64,13 +65,15 @@ int main(int argc, char *argv[])
 	TFEFunction2D *Scalar_FeFunction_Mean;
 	TOutput2D *Output;
 	TSystemTCD2D *SystemMatrix_Mean;
-    TSystemTCD2D *SystemMatrix_Mode;
     TSystemTCD2D *SystemMatrix_Coefficient;
 	TAuxParam2D *aux;
 	MultiIndex2D AllDerivatives[3] = {D00, D10, D01};
 
 	std::ostringstream os;
 	os << " ";
+	std::ostringstream os_mode;
+	os_mode << " ";
+	
 
 	// ======================================================================
 	// set the database values and generate mesh
@@ -161,9 +164,11 @@ int main(int argc, char *argv[])
 	// Disc type: GALERKIN (or) SDFEM  (or) UPWIND (or) SUPG (or) LOCAL_PROJECTION
 	// Solver: AMG_SOLVE (or) GMG  (or) DIRECT
 	SystemMatrix_Mean = new TSystemTCD2D(Scalar_FeSpace, GALERKIN, DIRECT);
+    TSystemTCD2D* SystemMatrix_Mode =  new TSystemTCD2D(Scalar_FeSpace, GALERKIN, DIRECT);
 
 	// initilize the system matrix with the functions defined in Example file
 	SystemMatrix_Mean->Init(DO_Mean_Equation_Coefficients, BoundCondition, BoundValue);
+	SystemMatrix_Mode->Init(DO_Mode_Equation_Coefficients, BoundCondition, BoundValue);
 
     // -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0---0-0--0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0--00-0-0-0-0-0-0-0-0-0-0-0--0-0-0-0-//
     //------------------------------------------ MEAN EQUATION SETUP -----------------------------------------------------//
@@ -184,7 +189,7 @@ int main(int argc, char *argv[])
                                                 N_Matrices_MatrixARhs_Mean, N_Rhs_MatrixARhs_Mean,
                                                 RowSpace_MatrixARhs_Mean,ColumnSpace_MatrixARhs_Mean, RhsSpace_MatrixARhs_Mean,
                                                 DO_Mean_Equation_Assembly, DO_Mean_Equation_Coefficients,
-                                                NULL);
+											NULL);
 
     // Aux Setup for the RHS -- There is no Aux for the Mean equation, So set the values as NULL
     fesp[0] = Scalar_FeSpace;
@@ -193,6 +198,26 @@ int main(int argc, char *argv[])
     /* -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0---0-0--0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0--00-0-0-0-0-0-0-0-0-0-0-0--0-0-0-0-
     --------------------------------------[[[ END  ]]] MEAN EQUATION SETUP -----------------------------------------------------
      -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0---0-0--0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0--00-0-0-0-0-0-0-0-0-0-0-0--0-0-0-0- */
+
+
+
+	 // -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0---0-0--0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0--00-0-0-0-0-0-0-0-0-0-0-0--0-0-0-0-//
+    //------------------------------------------ CO EFFICIENT EQUATION SETUP -----------------------------------------------------//
+    // -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0---0-0--0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0--00-0-0-0-0-0-0-0-0-0-0-0--0-0-0-0-//
+	int N_Realisations = 10;
+	int subDim = 5;
+
+	double* CoefficientVector = new double[N_Realisations * subDim]();
+	TFEVectFunct2D* FeVector_Coefficient = new TFEVectFunct2D(Scalar_FeSpace, (char *)"sol", (char *)"sol",CoefficientVector, N_Realisations, subDim);
+
+    // Aux Setup for the RHS -- There is no Aux for the Mean equation, So set the values as NULL
+    fesp[0] = Scalar_FeSpace;
+    aux = new TAuxParam2D(1, 0, 0, 0, fesp, NULL, NULL, NULL, NULL, 0, NULL);
+
+    /* -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0---0-0--0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0--00-0-0-0-0-0-0-0-0-0-0-0--0-0-0-0-
+    --------------------------------------[[[ END  ]]] MEAN EQUATION SETUP -----------------------------------------------------
+     -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0---0-0--0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0--00-0-0-0-0-0-0-0-0-0-0-0--0-0-0-0- */
+
 
 
 
@@ -218,9 +243,15 @@ int main(int argc, char *argv[])
                                                 DO_Mode_Equation_Assembly, DO_Mode_Equation_Coefficients,
                                                 NULL);
 
+
+	double* ModeVector = new double[N_DOF* subDim]();
+	double* ModeVector_RHS = new double[N_DOF* subDim]();
+	double* ModeVector_OldRHS = new double[N_DOF]();
+	TFEVectFunct2D* FEFVector_Mode = new TFEVectFunct2D(Scalar_FeSpace, (char *)"sol", (char *)"sol",ModeVector, N_DOF, subDim);
+
     // Set up a FE VECT FUNCTION TO STORE ALL THE Components of CTilde  
 
- 
+    // TFEVectFunct2D* linModesFeVectFunct = 
 
     int TimeLinear_FESpaces_DO = 1;
 	int TimeLinear_Fct_DO = 1; // \tilde(C)
@@ -235,17 +266,17 @@ int main(int argc, char *argv[])
     TFEFunction2D* fefct_RHS[4];
 	TFESpace2D* fesp_RHS[2];
 
-
+;
     // Set Up Aux  Param for the given MOde 
     // The mode equation needs the entire values of the C_tilde matrix array 
-    TAuxParam2D* aux_RHS_DO = new TAuxParam2D (	TimeLinear_FESpaces_DO, <FE VECT FUNCTION>, TimeLinear_ParamFct_DO,
-												TimeLinear_FEValues_DO,
-												fesp_RHS,
-												TimeNSFct_DO,
-												TimeNSFEMultiIndex_DO,
-												TimeLinear_Params_DO, TimeNSBeginParam_DO);
+    // TAuxParam2D* aux_RHS_DO = new TAuxParam2D (	TimeLinear_FESpaces_DO, <FE VECT FUNCTION>, TimeLinear_ParamFct_DO,
+	// 											TimeLinear_FEValues_DO,
+	// 											fesp_RHS,
+	// 											TimeNSFct_DO,
+	// 											TimeNSFEMultiIndex_DO,
+	// 											TimeLinear_Params_DO, TimeNSBeginParam_DO);
 
-
+	TAuxParam2D* aux_RHS_DO = new TAuxParam2D(1, 0, 0, 0, fesp, NULL, NULL, NULL, NULL, 0, NULL);
 
 
     // -0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0---0-0--0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0--00-0-0-0-0-0-0-0-0-0-0-0--0-0-0-0-//
@@ -257,18 +288,21 @@ int main(int argc, char *argv[])
 	// aux is used to pass  addition fe functions (eg. mesh velocity) that is nedded for assembling,
 	// otherwise, just pass with NULL
 	SystemMatrix_Mean->AssembleMRhs(NULL, sol, rhs);
+	
+	SystemMatrix_Mode->AssembleMRhs(NULL, ModeVector, ModeVector_RHS);
 
 	//======================================================================
 	// produce outout at t=0
 	//======================================================================
 	VtkBaseName = TDatabase::ParamDB->VTKBASENAME;
 	Output = new TOutput2D(2, 2, 1, 1, Domain);
-
 	Output->AddFEFunction(Scalar_FeFunction_Mean);
+	TOutput2D* Output_Mode = new TOutput2D(2, 2, 1, 1, Domain);
+	char* VtkBaseName_mode ="mode";
+	Output_Mode->AddFEVectFunct(FEFVector_Mode);
+	int modeimg = 0;
 
 
-
-	//     Scalar_FeFunction->Interpolate(Exact);
 	if (TDatabase::ParamDB->WRITE_VTK)
 	{
 		os.seekp(std::ios::beg);
@@ -285,6 +319,20 @@ int main(int argc, char *argv[])
 		Output->WriteVtk(os.str().c_str());
 		img++;
 	}
+	
+	
+	 if(TDatabase::ParamDB->WRITE_VTK)
+     {
+      os.seekp(std::ios::beg);
+       if(modeimg<10) os <<  "VTK/"<<VtkBaseName_mode<<".0000"<<modeimg<<".vtk" << ends;
+         else if(modeimg<100) os <<  "VTK/"<<VtkBaseName_mode<<".000"<<modeimg<<".vtk" << ends;
+          else if(modeimg<1000) os <<  "VTK/"<<VtkBaseName_mode<<".00"<<modeimg<<".vtk" << ends;
+           else if(modeimg<10000) os <<  "VTK/"<<VtkBaseName_mode<<".0"<<modeimg<<".vtk" << ends;
+            else  os <<  "VTK/"<<VtkBaseName_mode<<"."<<modeimg<<".vtk" << ends;
+      Output_Mode->WriteVtk(os.str().c_str());
+      modeimg++;
+     }     
+
 
 
 	coll->GetHminHmax(&hmin, &hmax);
@@ -302,7 +350,7 @@ int main(int argc, char *argv[])
 	end_time = TDatabase::TimeDB->ENDTIME;
 
 	UpdateStiffnessMat = FALSE; //check BilinearCoeffs in example file
-	UpdateRhs = TRUE;			//check BilinearCoeffs in example file
+	UpdateRhs = FALSE;			//check BilinearCoeffs in example file
 	ConvectionFirstTime = TRUE;
 
 	// time loop starts
@@ -332,36 +380,55 @@ int main(int argc, char *argv[])
 
 			//copy rhs to oldrhs
 			memcpy(oldrhs, rhs, N_DOF * SizeOfDouble);
+			
 
 			// unless the stiffness matrix or rhs change in time, it is enough to
 			// assemble only once at the begning
-			if (UpdateStiffnessMat || UpdateRhs || ConvectionFirstTime)
+
+			SystemMatrix_Mean->AssembleARhs(NULL, sol, rhs);
+			exit(0);
+
+			for ( int time_i = 0 ; time_i < 1; time_i ++)
 			{
-				SystemMatrix_Mean->AssembleARhs(NULL, sol, rhs);
-
-				// M:= M + (tau*THETA1)*A
-				// rhs: =(tau*THETA4)*rhs +(tau*THETA3)*oldrhs +[M-(tau*THETA2)A]*oldsol
-				// note! sol contains only the previous time step value, so just pass
-				// sol for oldsol
-				SystemMatrix_Mean->AssembleSystMat(oldrhs, sol, rhs, sol);
-				ConvectionFirstTime = FALSE;
+				DO_CoEfficient(Scalar_FeSpace, FEFVector_Mode ,FeVector_Coefficient, subDim, time_i);
+				double* modeSolution_i = ModeVector + time_i*N_DOF;
+				double* modeSolution_rhs = ModeVector_RHS + time_i*N_DOF;
+				
+				memcpy(ModeVector_OldRHS, modeSolution_rhs, N_DOF * SizeOfDouble);
+				
+				SystemMatrix_Mode->AssembleARhs(NULL, modeSolution_i, modeSolution_rhs);
+				
+				// get the UPDATED RHS VALUE FROM FUNCTION
+				DO_Mode_RHS(Scalar_FeSpace,FEFVector_Mode, subDim, modeSolution_rhs,time_i);
+				
+				SystemMatrix_Mode->AssembleSystMat(oldrhs, modeSolution_i, modeSolution_rhs, modeSolution_i);
+				SystemMatrix_Mode->Solve(modeSolution_i, modeSolution_rhs);
+				SystemMatrix_Mode->RestoreMassMat();
+				
 			}
+			
+		
 
-			// solve the system matrix
+			
+
+			// M:= M + (tau*THETA1)*A
+			// rhs: =(tau*THETA4)*rhs +(tau*THETA3)*oldrhs +[M-(tau*THETA2)A]*oldsol
+			// note! sol contains only the previous time step value, so just pass
+			// sol for oldsol
+			SystemMatrix_Mean->AssembleSystMat(oldrhs, sol, rhs, sol);
+            ////  -- 
 			SystemMatrix_Mean->Solve(sol, rhs);
 
 			// restore the mass matrix for the next time step
 			// unless the stiffness matrix or rhs change in time, it is not necessary to assemble the system matrix in every time step
-			if (UpdateStiffnessMat || UpdateRhs)
-			{
-				SystemMatrix_Mean->RestoreMassMat();
-			}
+			SystemMatrix_Mean->RestoreMassMat();
 		} // for(l=0;l<N_SubSteps;l++)
 
 		//======================================================================
 		// produce outout
 		//======================================================================
 		if (m == 1 || m % TDatabase::TimeDB->STEPS_PER_IMAGE == 0)
+		{
 			if (TDatabase::ParamDB->WRITE_VTK)
 			{
 				os.seekp(std::ios::beg);
@@ -379,6 +446,22 @@ int main(int argc, char *argv[])
 				img++;
 			}
 
+			
+
+			if(TDatabase::ParamDB->WRITE_VTK)
+			{
+				os.seekp(std::ios::beg);
+				if(modeimg<10) os <<  "VTK/"<<VtkBaseName_mode<<".0000"<<modeimg<<".vtk" << ends;
+					else if(modeimg<100) os <<  "VTK/"<<VtkBaseName_mode<<".000"<<modeimg<<".vtk" << ends;
+					else if(modeimg<1000) os <<  "VTK/"<<VtkBaseName_mode<<".00"<<modeimg<<".vtk" << ends;
+					else if(modeimg<10000) os <<  "VTK/"<<VtkBaseName_mode<<".0"<<modeimg<<".vtk" << ends;
+						else  os <<  "VTK/"<<VtkBaseName_mode<<"."<<modeimg<<".vtk" << ends;
+				Output_Mode->WriteVtk(os.str().c_str());
+				modeimg++;
+			} 
+
+
+		}
             //======================================================================
 		// measure errors to known solution
 		//======================================================================

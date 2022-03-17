@@ -181,7 +181,6 @@ void TSystemTCD2D::AssembleMRhs(TAuxParam2D *aux, double *sol, double *rhs)
                BoundaryConditions,
                BoundaryValues,
                aux);
-     
       // copy Dirichlet values from rhs into sol
       memcpy(sol+N_Active, rhs+N_Active, (N_DOF - N_Active)*SizeOfDouble);  
       

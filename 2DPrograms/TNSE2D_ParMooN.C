@@ -29,14 +29,16 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include<FTLE.h>
+#include<vector>
 // =======================================================================
 // include current example
 // =======================================================================
-// #include "../Examples/TNSE_2D/DrivenCavity.h" //   in unit square
+#include "../Examples/TNSE_2D/DrivenCavity.h" //   in unit square
 // #include "../Examples/TNSE_2D/Bsp3.h" // smooth sol in unit square
 // #include "../Examples_All/TNSE_2D/Benchmark2.h"  
 // #include "../Examples/TNSE_2D/SinCos.h" // smooth sol in unit square
-#include "../Examples/TNSE_2D/SinCos2.h" // smooth sol in unit square
+// #include "../Examples/TNSE_2D/SinCos2.h" // smooth sol in unit square
 // =======================================================================
 // main program
 // =======================================================================
@@ -62,7 +64,8 @@ int main(int argc, char* argv[])
   TSystemTNSE2D *SystemMatrix;
   TAuxParam2D *aux, *NSEaux_error;
   MultiIndex2D AllDerivatives[3] = { D00, D10, D01 };
-   
+  std::vector<double*> U_Velocity_Array;
+  std::vector<double*> V_Velocity_Array; 
 #ifdef __PRIVATE__ 
   TFESpace2D *Projection_space;
 #endif
@@ -169,7 +172,10 @@ int main(int argc, char* argv[])
 //  interpolate the initial solution
     u1->Interpolate(InitialU1);
     u2->Interpolate(InitialU2);
-    Pressure->Interpolate(InitialP);    
+    Pressure->Interpolate(InitialP);   
+
+    U_Velocity_Array.emplace_back(u1->GetValues());
+    V_Velocity_Array.emplace_back(u2->GetValues()); 
 
 //======================================================================
 // SystemMatrix construction and solution
@@ -435,6 +441,7 @@ exit(0);      */
       img++;
      }     
 
+     FTLE* ftle = new FTLE(Velocity,4);
   CloseFiles();
   
   return 0;

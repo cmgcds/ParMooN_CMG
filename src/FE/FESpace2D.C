@@ -2352,6 +2352,129 @@ void TFESpace2D::GetDOFPosition(double *x, double *y)
   } // endfor i
 } // end GetDOFPosition
 
+// THIVIN 
+/** return position of all dofs along with the cell number */
+void TFESpace2D::GetDOFPosition(double *x, double *y,int* cellNo)
+{
+  int i,j,k;
+  TBaseCell *cell;
+  int N_Joints;
+  TJoint *joint;
+  JointType jointtype;
+  FE2D FEid;
+  int *DOF;
+  TNodalFunctional2D *nf;
+  double *xi, *eta;
+  int N_Points;
+  RefTrans2D RefTrans, *RefTransArray;
+  int IsIsoparametric;
+  BoundTypes bdtype;
+  BF2DRefElements RefElement;
+  TRefTrans2D *rt;
+  double X[MaxN_BaseFunctions2D], Y[MaxN_BaseFunctions2D];
+  double absdetjk[MaxN_BaseFunctions2D];
+
+  RefTransArray = TFEDatabase2D::GetRefTrans2D_IDFromFE2D();
+
+  for(i=0;i<N_Cells;i++)
+  {
+    DOF = GlobalNumbers + BeginIndex[i];
+
+    cell  = Collection->GetCell(i);
+    FEid = GetFE2D(i, cell); 
+    RefTrans = RefTransArray[FEid];
+
+    RefElement = TFEDatabase2D::GetRefElementFromFE2D(FEid);
+
+    nf = TFEDatabase2D::GetNodalFunctional2DFromFE2D(FEid);
+    nf->GetPointsForAll(N_Points, xi, eta);
+
+    N_Joints = cell->GetN_Joints();
+
+    IsIsoparametric = false;
+    if (TDatabase::ParamDB->USE_ISOPARAMETRIC)
+    {
+      for(j=0;j<N_Joints;j++)
+      {
+        joint = cell->GetJoint(j);
+        jointtype = joint->GetType();
+        if(jointtype == BoundaryEdge)
+        {
+          bdtype = ((TBoundEdge *)(joint))->GetBoundComp()->GetType();
+          if(bdtype != Line)
+            IsIsoparametric = true;
+        }
+        if(jointtype == InterfaceJoint)
+        {
+          bdtype = ((TInterfaceJoint *)(joint))->GetBoundComp()->GetType();
+          if(bdtype != Line)
+            IsIsoparametric = true;
+        }
+        if(jointtype == IsoInterfaceJoint ||
+           jointtype == IsoBoundEdge)
+          IsIsoparametric = true;
+      }
+    }// endif
+
+    if(IsIsoparametric)
+    {
+      switch(RefElement)
+      {
+        case BFUnitSquare:
+         RefTrans = QuadIsoparametric;
+        break;
+ 
+        case BFUnitTriangle:
+          RefTrans = TriaIsoparametric;
+        break;
+      }
+    } // endif IsIsoparametric
+
+    rt = TFEDatabase2D::GetRefTrans2D(RefTrans);
+    switch(RefTrans)
+    {
+      case TriaAffin:
+       ((TTriaAffin *)rt)->SetCell(cell);
+       ((TTriaAffin *)rt)->GetOrigFromRef(N_Points, xi, eta,
+                                                X, Y, absdetjk);
+      break;
+
+      case TriaIsoparametric:
+       ((TTriaIsoparametric *)rt)->SetCell(cell);
+       ((TTriaIsoparametric *)rt)->GetOrigFromRef(N_Points, xi, eta,
+                                                X, Y, absdetjk);
+      break;
+
+      case QuadAffin:
+       ((TQuadAffin *)rt)->SetCell(cell);
+       ((TQuadAffin *)rt)->GetOrigFromRef(N_Points, xi, eta,
+                                                X, Y, absdetjk);
+      break;
+
+      case QuadBilinear:
+       ((TQuadBilinear *)rt)->SetCell(cell);
+       ((TQuadBilinear *)rt)->GetOrigFromRef(N_Points, xi, eta,
+                                                X, Y, absdetjk);
+      break;
+
+      case QuadIsoparametric:
+       ((TQuadIsoparametric *)rt)->SetCell(cell);
+       ((TQuadIsoparametric *)rt)->GetOrigFromRef(N_Points, xi, eta,
+                                                X, Y, absdetjk);
+      break;
+    } // endswitch RefTrans
+
+    for(j=0;j<N_Points;j++)
+    {
+      k = DOF[j];
+      x[k] = X[j];
+      y[k] = Y[j];
+      cellNo[k] = i; 
+    }
+
+  } // endfor i
+} // end GetDOFPosition
+
 /** return position of one given dof */
 void TFESpace2D::GetDOFPosition(int dof, double &x, double &y)
 {

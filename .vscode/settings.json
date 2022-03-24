@@ -130,6 +130,8 @@
         "DeformMesh3D.C": "cpp",
         "ANNParamReader.C": "cpp",
         "filesystem": "cpp",
-        "Assemble2D.C": "cpp"
+        "Assemble2D.C": "cpp",
+        "FTLE.C": "cpp",
+        "Output2D.C": "cpp"
     }
 }

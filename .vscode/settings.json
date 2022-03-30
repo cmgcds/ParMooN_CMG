@@ -132,6 +132,10 @@
         "filesystem": "cpp",
         "Assemble2D.C": "cpp",
         "FTLE.C": "cpp",
-        "Output2D.C": "cpp"
+        "Output2D.C": "cpp",
+        "BdNonUniformSpline.C": "cpp",
+        "BdSpline.C": "cpp",
+        "BdPolygon.C": "cpp",
+        "QuadAffin.C": "cpp"
     }
 }

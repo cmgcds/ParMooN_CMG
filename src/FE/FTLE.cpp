@@ -45,7 +45,7 @@
 
 
 // COnstructor
-FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
+FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth,TFEVectFunct2D* uCombined,TFEVectFunct2D* vCombined)
 {
     fespace = FEVectFunction->GetFESpace2D();
     TCollection *coll = fespace->GetCollection();
@@ -57,16 +57,23 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
     double X[MaxN_BaseFunctions2D], Y[MaxN_BaseFunctions2D];
     RefTrans2D RefTrans, *RefTransArray;
 
+    u_Vectfunc_Combined  = uCombined;
+    v_Vectfunc_Combined  = vCombined;
+
     
     // Construct the arrays for position and the cellId's
     x_pos = new double[N_DOF]();
     y_pos = new double[N_DOF]();
     cellIds = new int[N_DOF]();
+    x_pos_initial =  new double[N_DOF]();
+    y_pos_initial =  new double[N_DOF]();
+
 
     Cell2DOFMapping.resize(N_cells, std::vector<int>());
     DOF2CellMapping.resize(N_DOF, std::vector<int>());
     DOF_Neibhours.resize(N_cells, std::vector<int>());
     DOF_Neibhours_depth.resize(N_cells, std::vector<int>());
+    // INitialise particles inside the domain to be true.
     particleInsideDomain.resize(N_DOF,true);
     neibhourLeft.resize(N_DOF);
     neibhourRight.resize(N_DOF);
@@ -75,6 +82,7 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
 
     // Updates the position of All particles in the domain.
     fespace->GetDOFPosition(x_pos, y_pos, cellIds);
+    fespace->GetDOFPosition(x_pos_initial, y_pos_initial, cellIds);
 
     int *GlobalDOFArray = fespace->GetGlobalNumbers();
     int *BeginIndexArray = fespace->GetBeginIndex();
@@ -114,29 +122,7 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
         }
     }
 
-    // // DOF MAPPING
-    // cout << "DOF MAPPING " <<endl;
-    // for( int i = 0 ; i < DOF2CellMapping.size() ; i++)
-    // {
-    //     cout << " DOF : " << i <<" --> ";
-    //     for ( int j = 0 ; j < DOF2CellMapping[i].size(); j++)
-    //     {
-    //         cout <<  ", "<<DOF2CellMapping[i][j] ;
-    //     }
-    //     cout <<endl;
-    // }
-
-    // // CELL MAPPING
-    // cout << "CELL MAPPING " <<endl;
-    // for( int i = 0 ; i < Cell2DOFMapping.size() ; i++)
-    // {
-    //     cout << " CELL : " << i <<" --> " ;
-    //     for ( int j = 0 ; j < Cell2DOFMapping[i].size(); j++)
-    //     {
-    //         cout <<  ", "<<Cell2DOFMapping[i][j] ;
-    //     }
-    //     cout <<endl;
-    // }
+ 
 
     // Create DOF Neibhous
     for (int cellNo = 0; cellNo < N_cells; cellNo++)
@@ -213,28 +199,25 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
     //     cout<<endl;
     // }
 
-    cout<< FGRN(" [Sucess] Cell Neibhours - Successfully Generated ")<<endl;
+    cout<< FGRN(" [Sucess] Cell Neibhours based on DOF - Successfully Generated ")<<endl;
 
-    // Calculate the neibhours 
+    // Calculate the neibhours // for(int particleId = 0 ; particleId < 3; particleId++)
     for(int particleId = 0 ; particleId < N_Particles; particleId++)
     {
         int currCell = cellIds[particleId];
         //Get all neibhours of the DOF ( )
         std::vector<int> NeibDOFs;
-
+       
         for(int k = 0 ; k < Cell2DOFMapping[currCell].size(); k++)     
         {
             int dof = Cell2DOFMapping[currCell][k];
-            cout << " Pos : " << x_pos[dof] << ", " <<y_pos[dof]<<endl;
-            cout << abs(x_pos[particleId] - x_pos[dof] ) << " , " << (abs(y_pos[particleId] - y_pos[dof]) ) <<endl;
             // Particle is not same as the current particle 
-            if(abs(x_pos[particleId] - x_pos[dof] ) > 1e-9 || (abs(y_pos[particleId] - y_pos[dof]) ) > 1e-9)
+            if(! (abs(x_pos[particleId] - x_pos[dof] ) < 1e-9 && (abs(y_pos[particleId] - y_pos[dof]) ) < 1e-9 ) )
             {
                 NeibDOFs.push_back(dof);
-                cout << " PoAdds : " << x_pos[dof] << ", " <<y_pos[dof]<<endl;
-                
             }
         }
+
 
 
         for (int j = 0 ; j < DOF_Neibhours[currCell].size(); j++)
@@ -243,38 +226,42 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
             for( int k = 0 ; k < Cell2DOFMapping[cell].size(); k++)
             {
                 int dof  = Cell2DOFMapping[cell][k];
-                if(abs(x_pos[particleId] - x_pos[dof] ) > 1e-9 && (abs(y_pos[particleId] - y_pos[dof] )) > 1e-9)
+                if(! (abs(x_pos[particleId] - x_pos[dof] ) < 1e-9 && (abs(y_pos[particleId] - y_pos[dof]) ) < 1e-9 ) )
                     NeibDOFs.push_back(dof);
             }
         }   
 
+        // cout << " Collection of All nebhours " <<endl;
+        // std::for_each(NeibDOFs.begin(),NeibDOFs.end(),[&](auto i){cout << "DOF : " << i << " xpos: " << x_pos[i] << " , " << y_pos[i] <<endl;});
+        // cout<<endl;
+        
+
         std::unordered_set<int> s1(NeibDOFs.begin(),NeibDOFs.end());
         NeibDOFs.assign(s1.begin(),s1.end());
-        
-        std::for_each(NeibDOFs.begin(),NeibDOFs.end(),[&](const int a){cout << x_pos[a] <<" " << y_pos[a] <<endl;});
-        cout <<endl;
 
-        double minLeft = 100000;
+
+        double minLeft = 10000;
         double minBott  = 10000;
         const double par_x = x_pos[particleId];
         const double par_y = y_pos[particleId];
         double samelineTolerance = 0.001;
         int leftDOF ;
         bool leftFound = false;
-        cout << " PARTIcle : " << par_x << " , " << par_y <<endl;
+        // cout << " PARTIcle : " << par_x << " , " << par_y <<endl;
         // Check for left neibhours 
-        for( int i = 0 ; i <  NeibDOFs.size(); i++)
+        for( int i =  0; i < NeibDOFs.size(); i++)
         {
             int dof = NeibDOFs[i];
             double x  = x_pos[NeibDOFs[i]];
-            double y  = x_pos[NeibDOFs[i]];
+            double y  = y_pos[NeibDOFs[i]];
             double left = par_x - x;
             double bott = abs(par_y - y);
             
-            cout << " ( " <<x <<","<<y<<") "<< " -- left : "<< left << " bott : "<<bott <<endl;
+            // cout << " ( " <<x <<","<<y<<") "<< " -- left : "<< left << " bott : "<<bott << " minBottom : " << bott  << "  min left : " << minLeft<<endl;
 
-            if( abs(x - par_x) > samelineTolerance && (left) && (left < minLeft) && (minBott < bott) )
+            if( (left > 0) && (left <= minLeft) && (abs(bott) <= minBott) )
             {
+                //  cout << " &&&&&&&( " <<x <<","<<y<<") "<<endl;
                 leftDOF = dof;
                 minLeft = left;
                 minBott = bott;
@@ -287,7 +274,8 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
                 neibhourLeft[particleId] = -9999;  // LEFT CORNER DOF
 
         }
-        exit(0);
+        // cout << " Neibhour Left : " << neibhourLeft[particleId]  << " x: " << x_pos[neibhourLeft[particleId]] << " y : " << y_pos[neibhourLeft[particleId]]<<endl;
+
 
         // FIND RIGHT DOF 
          double minRight = 100000;
@@ -301,12 +289,12 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
         {
             int dof = NeibDOFs[i];
             double x  = x_pos[NeibDOFs[i]];
-            double y  = x_pos[NeibDOFs[i]];
+            double y  = y_pos[NeibDOFs[i]];
             double right =  x - par_x;
             double bott = abs(par_y - y);
 
 
-            if( abs(x - par_x) > samelineTolerance && (right) && (right < minRight) && (minBott < bott) )
+            if( (right > 0) && (right <= minRight) && (abs(bott) <= minBott) )
             {
                 rightDOF = dof;
                 minRight = right;
@@ -320,7 +308,8 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
                 neibhourRight[particleId] = -9999;  // LEFT CORNER DOF
             
         }
-
+        // cout << " Neibhour Right : " << neibhourRight[particleId]  << " x: " << x_pos[neibhourRight[particleId]] << " y : " << y_pos[neibhourRight[particleId]]<<endl;
+       
         // FIND TOP DOF 
          double minTop = 100000;
         double minSide  = 10000;
@@ -332,12 +321,12 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
         {
             int dof = NeibDOFs[i];
             double x  = x_pos[NeibDOFs[i]];
-            double y  = x_pos[NeibDOFs[i]];
+            double y  = y_pos[NeibDOFs[i]];
             double top =  y - par_y;
             double side = abs(par_x - x);
 
 
-            if( abs(y - par_y) > samelineTolerance && (top) && (top < minTop) && (minSide < side) )
+            if( (top > 0) && (top <= minTop) && (abs(side) <= minSide) )
             {
                 topDOF = dof;
                 minTop = top;
@@ -346,12 +335,13 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
             }
 
             if(topFound)
-                neibhourRight[particleId] = topDOF;
+                neibhourTop[particleId] = topDOF;
             else
-                neibhourRight[particleId] = -9999;  // LEFT CORNER DOF
+                neibhourTop[particleId] = -9999;  // LEFT CORNER DOF
             
         }
-
+        // cout << " Neibhour Top : " << neibhourTop[particleId]  << " x: " << x_pos[neibhourTop[particleId]] << " y : " << y_pos[neibhourTop[particleId]]<<endl;
+        
 
         // FIND BOTTOM DOF 
          double minBottom = 100000;
@@ -365,12 +355,12 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
         {
             int dof = NeibDOFs[i];
             double x  = x_pos[NeibDOFs[i]];
-            double y  = x_pos[NeibDOFs[i]];
+            double y  = y_pos[NeibDOFs[i]];
             double bottom =   par_y-y;
             double side = abs(par_x - x);
 
 
-            if( abs(y - par_y) > samelineTolerance && (bottom) && (bottom < minBottom) && (minSide < side) )
+            if((bottom>0) && (bottom <= minBottom) && (abs(side) < minSide) )
             {
                 bottomDOF = dof;
                 minBottom = bottom;
@@ -385,91 +375,85 @@ FTLE::FTLE(TFEVectFunct2D *FEVectFunction, int searchDepth)
             
         }
 
-
-
+        // cout << " Neibhour Top : " << neibhourBottom[particleId]  << " x: " << x_pos[neibhourBottom[particleId]] << " y : " << y_pos[neibhourBottom[particleId]]<<endl
 
     }
-
-    for(int i = 0 ; i < N_Particles; i++)
-    {
-        cout <<  " par : " << i <<" Pos : " << x_pos[i] << " , " << y_pos[i] <<endl;
-    }
-
-    // for(int i = 0 ; i < N_Particles; i++)
-    // {
-    //     cout << "--- Particle " << i << " ------- "<<endl;
-    //     cout << " Pos : " << x_pos[i] << " , " << y_pos[i] <<endl;
-
-    //     cout << " Left : " ;
-    //     if(neibhourLeft[i])
-    //         cout << x_pos[neibhourLeft[i]] << " , " << y_pos[neibhourLeft[i]]  << " DOF : " << neibhourLeft[i] ;
-    //     else
-    //         cout << " *** Corner left *** ";
-    //     cout <<endl;
-
-    //     cout << " Right : " ;
-    //     if(neibhourRight[i])
-    //         cout << x_pos[neibhourRight[i]] << " , " << y_pos[neibhourRight[i]] << " DOF : " << neibhourRight[i];
-    //     else
-    //         cout << " *** Corner Right *** ";
-    //     cout <<endl;
-
-    //     cout << " Top : " ;
-    //     if(neibhourTop[i])
-    //         cout << x_pos[neibhourTop[i]] << " , " << y_pos[neibhourTop[i]] << " DOF : " << neibhourTop[i];
-    //     else
-    //         cout << " *** Corner Top *** ";
-    //     cout <<endl;
-
-    //     cout << " Bottom : " ;
-    //     if(neibhourBottom[i])
-    //         cout << x_pos[neibhourBottom[i]] << " , " << y_pos[neibhourBottom[i]]<< " DOF : " << neibhourBottom[i] ;
-    //     else
-    //         cout << " *** Corner Bottom *** ";
-    //     cout <<endl;
-    // }
-
+    cout<< FGRN(" [Sucess] Directional Neibhours Obtained Successfully ")<<endl;
 
 }
 
-double *FTLE::obtainVelocity(double* uVelocityatPoint, double* vVelocityatPoint)
+
+
+double* FTLE::computeFTLE(double* uVelocityatPoint, double* vVelocityatPoint, double timeStep, double T, double startT)
 {
-    double *uVector = VelocityVectFunction->GetComponent(0)->GetValues();
-    double *vVector = VelocityVectFunction->GetComponent(1)->GetValues();
 
-    for (int i = 0; i < N_Particles; i++)
+    double* xpos_final =  new double[N_Particles]();
+    double* ypos_final =  new double[N_Particles]();
+    double* FTLE =  new double[N_Particles]();
+
+    //Copy the intial position to the given particles. 
+
+    std::copy(xpos_final,xpos_final + N_Particles , x_pos_initial);
+    std::copy(ypos_final,ypos_final + N_Particles , y_pos_initial);
+
+    for( int time = startT ; time < startT+T -1 ; time++ )
     {
-        if(!particleInsideDomain[i]) continue; // If particle is not inside the domain , then proceed to next particle
-
-        int currentCellNo = cellIds[i];
-        std::vector<int> neibhours = DOF_Neibhours_depth[currentCellNo];
-        bool insideDomain = false;
-        TBaseCell* cell;
-        for ( int cellId = 0 ; cellId < neibhours.size(); cellId++)
-        {
-            cell =  fespace->GetCollection()->GetCell(cellId);
-
-            if(cell->PointInCell(x_pos[i],y_pos[i]))
-            {
-                insideDomain = true;
-                currentCellNo =  cellId;
-                break;
-            }
-        }
-
-        if(!insideDomain)  
-        {
-            particleInsideDomain[i] = false;
-            continue;
-        }
-        double uVal[3];
-        double vVal[3];
-       VelocityVectFunction->GetComponent(0)->FindGradientLocal(cell,currentCellNo ,x_pos[i],y_pos[i],uVal);
-       VelocityVectFunction->GetComponent(1)->FindGradientLocal(cell,currentCellNo ,x_pos[i],y_pos[i],vVal);
         
-        // The first value will be the velocity value, others are derivative values
-        uVelocityatPoint[i] = uVal[0];
-        vVelocityatPoint[i] = vVal[0];
+        for (int i = 0; i < N_Particles; i++)
+        {
+            if(!particleInsideDomain[i]) continue; // If particle is not inside the domain , then proceed to next particle
+
+            int currentCellNo = cellIds[i];
+            std::vector<int> neibhours = DOF_Neibhours_depth[currentCellNo];
+            bool insideDomain = false;
+            TBaseCell* cell;
+            for ( int cellId = 0 ; cellId < neibhours.size(); cellId++)
+            {
+                cell =  fespace->GetCollection()->GetCell(cellId);
+
+                if(cell->PointInCell(x_pos[i],y_pos[i]))
+                {
+                    insideDomain = true;
+                    currentCellNo =  cellId;
+                    break;
+                }
+            }
+
+            if(!insideDomain)  
+            {
+                particleInsideDomain[i] = false;
+                continue;
+            }
+
+            double uVal[3];
+            double vVal[3];
+
+            double uValNew[3];
+            double vValNew[3];
+
+            double uValCurrent,vValCurrent;
+            double uValNext,vValNext;
+
+
+            u_Vectfunc_Combined->GetComponent(time)->FindGradientLocal(cell,currentCellNo ,xpos_final[i],ypos_final[i],uVal);
+            v_Vectfunc_Combined->GetComponent(time)->FindGradientLocal(cell,currentCellNo ,xpos_final[i],ypos_final[i],vVal);
+            uValCurrent = uVal[0];
+            vValCurrent = vVal[0];
+
+
+            u_Vectfunc_Combined->GetComponent(time+1)->FindGradientLocal(cell,currentCellNo ,xpos_final[i],ypos_final[i],uVal);
+            v_Vectfunc_Combined->GetComponent(time+1)->FindGradientLocal(cell,currentCellNo ,xpos_final[i],ypos_final[i],vVal);
+            uValNext = uVal[0];
+            vValNext = vVal[0];
+
+            xpos_final[i] += timeStep*0.5*(uValCurrent+uValNext );
+            ypos_final[i] += timeStep*0.5*(vValCurrent+vValNext );
+        }
+    }
+
+    // After computing Displacement, Compute the FTLE Coefficients
+    for ( int i = 0 ; i < N_Particles; i++)
+    {
 
     }
 }

@@ -15,6 +15,10 @@ class FTLE
     public:
         double* x_pos;  // Stores x position
         double* y_pos;  // Stores y position
+
+        double* x_pos_initial;  // Stores x position
+        double* y_pos_initial;  // Stores y position
+
         int* cellIds;    // Stores the cell ID of all the cells;
         int N_Particles;
         int searchDepth;  // to how many levels the particles have to be tracked. 
@@ -34,14 +38,16 @@ class FTLE
 
         TFEVectFunct2D* VelocityVectFunction;
         TFESpace2D* fespace;
+        TFEVectFunct2D* u_Vectfunc_Combined;
+        TFEVectFunct2D* v_Vectfunc_Combined;
 
         
 
         // COnstructor
-        FTLE(TFEVectFunct2D* FEVectFunction,int searchDepth);
+        FTLE(TFEVectFunct2D* FEVectFunction,int searchDepth,TFEVectFunct2D* uVect_combined,TFEVectFunct2D* vVect_combined );
 
         // Get the Velocity of the particle based on current position. 
-        double* obtainVelocity(double* uVelocityatPoint, double* vVelocityatPoint);
+        double* computeFTLE(double* uVelocityatPoint, double* vVelocityatPoint,double timeStep,double T,double startTime);
 
 
 

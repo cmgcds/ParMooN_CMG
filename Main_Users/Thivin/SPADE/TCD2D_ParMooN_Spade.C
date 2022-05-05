@@ -244,7 +244,7 @@ double* RealisationGenerator(TFESpace2D* Scalar_FeSpace,int N_DOF, double* solut
     for( energyVal =0 ; energyVal< N_DOF; energyVal++)
     {
         val += S[energyVal];
-        if(val/sumSingularVal > 0.8) break;
+    if(val/sumSingularVal > 0.8) break;
     }
 
     cout << " MODES : "  << energyVal+1 <<endl;

@@ -32,14 +32,17 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include<fstream>
 
 // =======================================================================
 // include current example
 // =======================================================================
-#include "../Examples/TCD_2D/exp.h"
+#include "../Examples/TCD_2D/Temperature.h"
+// #include "../Examples/TCD_2D/OscillatingExp.h"
+
 // #include "../Examples/TCD_2D/SinCos1.h"
 // #include "../Examples_All/TCD_2D/Time3.h"
-// #include "../Examples/TCD_2D/exp_0.h"
+// #include "../Examples/TCD_2D/exp.h"
 //    #include "../Examples/TCD_2D/exp_2.h"
 // #include "../Examples_All/TCD_2D/exp_1.h"
 // #include "../Main_Users/Sashi/TCD_2D/Hemker.h"
@@ -55,7 +58,7 @@ int main(int argc, char *argv[])
 	bool UpdateStiffnessMat, UpdateRhs, ConvectionFirstTime;
 	char *VtkBaseName;
 	const char vtkdir[] = "VTK";
-
+	
 	TDomain *Domain;
 	TDatabase *Database = new TDatabase();
 	TFEDatabase2D *FEDatabase = new TFEDatabase2D();
@@ -99,7 +102,9 @@ int main(int argc, char *argv[])
 	else if (TDatabase::ParamDB->MESH_TYPE == 2) //triangle mesh
 	{
 		OutPut("Triangle.h used for meshing !!!" << endl);
-		TriaReMeshGen(Domain);
+		OutPut("Triangle Mesh is Not Supported " << endl);
+		exit(0);
+		// TriaReMeshGen(Domain);
 	}
 	else
 	{
@@ -150,6 +155,11 @@ int main(int argc, char *argv[])
 	rhs = new double[N_DOF];
 	oldrhs = new double[N_DOF];
 
+	std::ofstream outputSolution;
+	outputSolution.open("solution.txt");
+	//Write the number of DOF's and the active number of DOF 
+	outputSolution << N_DOF << "," << N_Active <<endl;
+
 	memset(sol, 0, N_DOF * SizeOfDouble);
 	memset(rhs, 0, N_DOF * SizeOfDouble);
 
@@ -180,6 +190,7 @@ int main(int argc, char *argv[])
 	Output = new TOutput2D(2, 2, 1, 1, Domain);
 
 	Output->AddFEFunction(Scalar_FeFunction);
+	Output->AddFEFunction(Scalar_FeFunction);
 
 	//     Scalar_FeFunction->Interpolate(Exact);
 	if (TDatabase::ParamDB->WRITE_VTK)
@@ -198,6 +209,7 @@ int main(int argc, char *argv[])
 		Output->WriteVtk(os.str().c_str());
 		img++;
 	}
+
 
 	// measure errors to known solution
 	if (TDatabase::ParamDB->MEASURE_ERRORS)
@@ -258,8 +270,8 @@ int main(int argc, char *argv[])
 			tau = TDatabase::TimeDB->CURRENTTIMESTEPLENGTH;
 			TDatabase::TimeDB->CURRENTTIME += tau;
 
-			OutPut(endl
-				   << "CURRENT TIME: ");
+			OutPut(endl<< "CURRENT TIME: ");
+				   
 			OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
 
 			//copy rhs to oldrhs
@@ -310,6 +322,9 @@ int main(int argc, char *argv[])
 				Output->WriteVtk(os.str().c_str());
 				img++;
 			}
+		for ( int i = 0 ; i < N_DOF; i++)
+			outputSolution << sol[i] << ",";
+		outputSolution <<endl;
 
 		//======================================================================
 		// measure errors to known solution
@@ -357,9 +372,45 @@ int main(int argc, char *argv[])
 			os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
 		Output->WriteVtk(os.str().c_str());
 		img++;
+
+
+
 	}
 
+	
+
+	// Write a VTK file which generates the Position of DOF's in the VTk FIle
+	for ( int i = 0 ; i < N_DOF; i++)
+	{
+		sol[i] = i;
+	}
+
+	if (TDatabase::ParamDB->WRITE_VTK)
+	{
+		os.seekp(std::ios::beg);
+			os << "VTK/" << "Mapping.vtk" << ends;
+
+		Output->WriteVtk(os.str().c_str());
+		img++;
+	}
+
+	std::ofstream DOFFile;
+	DOFFile.open("DOFMappingFile.txt");
+
+	double* xx = new double[N_DOF]();
+	double* yy = new double[N_DOF]();
+
+	for ( int i = 0 ; i < N_DOF ; i++)
+	{
+		Scalar_FeSpace->GetDOFPosition(i,xx[i],yy[i]);
+		DOFFile << i <<"\t"<< xx[i] << "\t" << yy[i] <<endl;
+	}
+		
+
+	DOFFile.close();
+
 	CloseFiles();
+	
 
 	return 0;
 } // end main

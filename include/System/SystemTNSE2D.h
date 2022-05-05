@@ -14,7 +14,8 @@
 #ifdef _SMPI
 #include <SeqParDirectSolver.h>
 #endif
-
+#include<vector>
+#include<algorithm>
 /**class for 2D  TNSE system matrix */
 class TSystemTNSE2D : public TSystemNSE2D
 {
@@ -67,6 +68,12 @@ class TSystemTNSE2D : public TSystemNSE2D
     
     
     /** return the stiffness matrix */
+
+     // Variables for freeslip 
+    std::vector<int> freeslipDOFs;  
+    std::vector< double > freeslipNormal_n1;
+    std::vector< double > freeslipNormal_n2;
+
     
     
     /** assemble the M, A and rhs */
@@ -95,6 +102,15 @@ class TSystemTNSE2D : public TSystemNSE2D
  
     /** measure the error in the NSE */
     void MeasureTNSEErrors(DoubleFunct2D *ExactU1, DoubleFunct2D *ExactU2, DoubleFunct2D *ExactP, double *AllErrors);
+
+     /** Print all the matrices **/
+    void printall();
+    
+    /**  Get all the DOF's in the given Edge**/
+    void PickFreeSlipDOFs(std::vector<int> bdid);
+  
+    /** Apply the no penetration condition for system Matrix **/
+    void modifyMatrixFreeSlip();
 };
 
 #endif

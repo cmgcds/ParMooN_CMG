@@ -176,7 +176,8 @@ void TSystemTNSE2D::Init(CoeffFct2D *lincoeffs, BoundCondFunct2D *BoundCond, Bou
                           DiscreteFormMatrixAuxProblemU,
                           DiscreteFormRHSAuxProblemU,
                           LinCoeffs[0], NSEType);
-  
+    
+    
     // find discrete form
     switch(Disctype)
        {
@@ -610,7 +611,7 @@ void TSystemTNSE2D::AssembleSystMat(double scale, double *oldrhs, double *rhs, d
             MatAdd(SqmatrixA21,SqmatrixM21 , MHD_K/TDatabase::ParamDB->RE_NR);
             MatAdd(SqmatrixA22,SqmatrixM21 , MHD_K/TDatabase::ParamDB->RE_NR);
 
-            printall(SqmatrixA11,(char*)"SqmatrixA11",SqmatrixM11,(char*)"SqmatrixM11"); 
+            // printall(SqmatrixA11,(char*)"SqmatrixA11",SqmatrixM11,(char*)"SqmatrixM11"); 
        
 //       cout << Ha << " " << TDatabase::ParamDB->RE_NR << "  " << MHD_K/TDatabase::ParamDB->RE_NR << endl;
        }
@@ -1101,5 +1102,335 @@ void printall( TSquareMatrix2D * MAT1, char *MAT1_name
        
        cout << endl;
  }
+
+
+void TSystemTNSE2D::printall()
+{
+
+	TSquareMatrix2D *MAT1 = SqmatrixA21;
+	TSquareMatrix2D *MAT2 = SqmatrixA22;
+	TSquareMatrix2D *MAT3 = SqmatrixM21;
+	TSquareMatrix2D *MAT4 = SqmatrixM22;
+	cout << "\n*******************************************************************************\n";
+	cout << " MATRIX : A21 "
+		 << "\t";
+	double *entries = MAT1->GetEntries();
+	int *rowPtr = MAT1->GetRowPtr();
+	int *colIndex = MAT1->GetKCol();
+
+	int i = 9072; // HARDCODED , PRINTING THE 482th row.
+
+	for (int index = rowPtr[i]; index < rowPtr[i + 1]; index++)
+	{
+		if (colIndex[index] == i)
+			cout << " ** " << entries[index] << " **"
+				 << "\t";
+		else
+			cout << entries[index] << "\t";
+	}
+
+	cout << "\n*******************************************************************************\n";
+	cout << " MATRIX : A22 "
+		 << "\t";
+	entries = MAT2->GetEntries();
+	rowPtr = MAT2->GetRowPtr();
+	colIndex = MAT2->GetKCol();
+
+	for (int index = rowPtr[i]; index < rowPtr[i + 1]; index++)
+	{
+		if (colIndex[index] == i)
+			cout << " ** " << entries[index] << " **"
+				 << "\t";
+		else
+			cout << entries[index] << "\t";
+	}
+
+	cout << "\n*******************************************************************************\n";
+	cout << " MATRIX : M21 "
+		 << "\t";
+	entries = MAT3->GetEntries();
+	rowPtr = MAT3->GetRowPtr();
+	colIndex = MAT3->GetKCol();
+
+	for (int index = rowPtr[i]; index < rowPtr[i + 1]; index++)
+	{
+		if (colIndex[index] == i)
+			cout << " ** " << entries[index] << " **"
+				 << "\t";
+		else
+			cout << entries[index] << "\t";
+	}
+
+	cout << "\n*******************************************************************************\n";
+	cout << " MATRIX : M22 "
+		 << "\t";
+	entries = MAT4->GetEntries();
+	rowPtr = MAT4->GetRowPtr();
+	colIndex = MAT4->GetKCol();
+
+	for (int index = rowPtr[i]; index < rowPtr[i + 1]; index++)
+	{
+		if (colIndex[index] == i)
+			cout << " ** " << entries[index] << " **"
+				 << "\t";
+		else
+			cout << entries[index] << "\t";
+	}
+
+	TMatrix2D *MAT5 = MatrixB1T;
+	TMatrix2D *MAT6 = MatrixB2T;
+
+	cout << "\n*******************************************************************************\n";
+	cout << " MATRIX : B1T "
+		 << "\t";
+	entries = MAT5->GetEntries();
+	rowPtr = MAT5->GetRowPtr();
+	colIndex = MAT5->GetKCol();
+
+	for (int index = rowPtr[i]; index < rowPtr[i + 1]; index++)
+	{
+		if (colIndex[index] == i)
+			cout << " ** " << entries[index] << " **"
+				 << "\t";
+		else
+			cout << entries[index] << "\t";
+	}
+
+	cout << "\n*******************************************************************************\n";
+	cout << " MATRIX : B2T "
+		 << "\t";
+	entries = MAT6->GetEntries();
+	rowPtr = MAT6->GetRowPtr();
+	colIndex = MAT6->GetKCol();
+
+	for (int index = rowPtr[i]; index < rowPtr[i + 1]; index++)
+	{
+		if (colIndex[index] == i)
+			cout << " ** " << entries[index] << " **"
+				 << "\t";
+		else
+			cout << entries[index] << "\t";
+	}
+
+	cout << "\n*******************************************************************************\n";
+	cout << " RHS "
+		 << "\t";
+	TFEVectFunct2D *vel = VelocityFct;
+	int len = VelocityFct->GetComponent(0)->GetLength();
+	cout << B[i + len] << endl;
+
+	cout << "\n################################################################################################";
+	cout << "\n################################################################################################\n";
+}
+
+void TSystemTNSE2D::PickFreeSlipDOFs(std::vector<int> bdid)
+{
+	TFESpace2D *fespace = FeSpaces[0];
+	TCollection *coll = fespace->GetCollection();
+	int N_Cells = coll->GetN_Cells();
+	int *GlobalNumbers = fespace->GetGlobalNumbers();
+	int *BeginIndex = fespace->GetBeginIndex();
+
+	int dof =  fespace->GetN_DegreesOfFreedom();
+	int ActiveDOF =  fespace->GetActiveBound();
+
+	cout << " DOF : " << dof << endl;
+	cout << " Act DOF : " << ActiveDOF << endl;
+
+	double *xx = new double[dof];
+	double *yy = new double[dof];
+
+	for ( int i = 0 ; i < dof ; i++)
+		fespace->GetDOFPosition(i,xx[i],yy[i]);
+
+	cout << " position Obtained " << endl;
+
+
+
+
+	for (int cellNo = 0; cellNo < N_Cells; cellNo++)
+	{
+		TBaseCell *currentCell = coll->GetCell(cellNo);
+		FE2D currentElement = fespace->GetFE2D(cellNo, currentCell);
+
+		int N_Joints = currentCell->GetN_Edges();
+		TFE2D *ele = TFEDatabase2D::GetFE2D(currentElement);
+		TFEDesc2D *FEDesc_Obj = ele->GetFEDesc2D();
+		int N_EdgeDOF = FEDesc_Obj->GetN_JointDOF();
+
+		int *GlobalDOF = GlobalNumbers + BeginIndex[cellNo];
+
+		// for ( int i = 0 ; i < 9 ; i++)
+		// {
+		// 	cout << "i :" << i  << "  " << GlobalDOF[i] <<endl;
+		// }
+
+		for (int jointId = 0; jointId < N_Joints; jointId++)
+		{
+			double x0, y0, x1, y1, nx, ny, tx, ty, hE;
+			currentCell->GetVertex(jointId)->GetCoords(x0, y0);
+			currentCell->GetVertex((jointId + 1) % N_Joints)->GetCoords(x1, y1);
+
+			// compute length of the boundary edge
+			hE = sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+			// compute normal vector to this boundary (normalized)
+			nx = (y1 - y0) / hE;
+			ny = (x0 - x1) / hE;
+			// tangential normal vector to this boundary (normalized)
+			tx = (x1 - x0) / hE;
+			ty = (y1 - y0) / hE;
+
+			TJoint *joint = currentCell->GetJoint(jointId);
+
+			// Filter out joints on Boundary Edges
+			if (!(joint->GetType() == BoundaryEdge) )
+				continue;
+
+			TBoundEdge *boundedge = (TBoundEdge *)joint;
+			TBoundComp *BoundComp = boundedge->GetBoundComp();
+
+			int comp = BoundComp->GetID();
+
+			
+
+			// If the current BD id not is in the input vector, then terminate the loop
+			if (std::find(bdid.begin(), bdid.end(), comp) == bdid.end())
+				continue;
+			cout << comp << endl;
+
+			int *JointDOF = FEDesc_Obj->GetJointDOF(jointId);
+
+			// for (int i = 0 ; i < 9 ; i++)
+			// 		cout << GlobalDOF[i] << "\t";
+			// 	cout << endl;
+
+			for (int vert = 0; vert < FEDesc_Obj->GetN_JointDOF(); vert++)
+			{
+				
+
+				int glob_vertex_no = GlobalDOF[JointDOF[vert]];
+				// cout << " DOF IDENTIFIED : " << glob_vertex_no <<endl;
+
+				if(std::find(freeslipDOFs.begin(),freeslipDOFs.end(),glob_vertex_no) != freeslipDOFs.end() )
+					continue;
+				if(glob_vertex_no >= ActiveDOF)
+					continue;
+				
+				freeslipDOFs.emplace_back(glob_vertex_no);
+				freeslipNormal_n1.emplace_back(nx);
+				freeslipNormal_n2.emplace_back(ny);
+			}
+		}
+	}
+
+	// Remove the duplicate elements from the vector
+
+	cout << "number of Freeslip DOF picked : " << freeslipDOFs.size() << endl;
+	cout << "number of Freeslip nx       : " << freeslipNormal_n1.size() << endl;
+	cout << "number of Freeslip ny     : " << freeslipNormal_n2.size() << endl;
+	
+	std::for_each(freeslipDOFs.begin(),freeslipDOFs.end(),[&](int i){ cout << i << " - " << xx[i] << " " << yy[i] <<endl;  } );
+	cout<<endl;
+}
+
+void TSystemTNSE2D::modifyMatrixFreeSlip()
+{
+	TSquareMatrix2D *diagSquare, *antiDiagSquare;
+	TMatrix2D *BMatrix;
+
+	int len = FeSpaces[0]->GetN_DegreesOfFreedom();
+	int Active = FeSpaces[0]->GetActiveBound();
+
+	for (int i = 0; i < freeslipDOFs.size(); i++)
+	{
+		
+		int DOF = freeslipDOFs[i];
+		double nx = freeslipNormal_n1[i];
+		double ny = freeslipNormal_n2[i];
+
+
+		// Ignore Dirichlet boundaries
+		if (DOF > Active)
+			continue;
+
+
+		double n1, n2;
+		int disp;
+		int comp;
+
+		if (fabs(nx) < 1e-8)
+			comp = 1;
+		else if (fabs(ny) < 1e-8)
+			comp = 0;
+		else
+			comp = 1; // Default assign the values to 2nd component
+
+
+
+		if (comp == 0)
+		{
+			diagSquare = SqmatrixM11;
+			antiDiagSquare = SqmatrixM12;
+			BMatrix = MatrixB1T;
+			n1 = nx;
+			n2 = ny;
+			disp = 0;
+		}
+		else
+		{
+			antiDiagSquare = SqmatrixM21;
+			diagSquare = SqmatrixM22;
+			BMatrix = MatrixB2T;
+			n1 = ny;
+			n2 = nx;
+			disp = len;
+		}
+
+		// Now make the diagonal matrix with diagonal entry as 1 and the antidiagonal matrix and the b matrix as zero
+
+		int *RowPtr_diag = diagSquare->GetRowPtr();
+		int *ColPtr_diag = diagSquare->GetKCol();
+		double *entries_diag = diagSquare->GetEntries();
+
+		int *RowPtr_Antidiag = antiDiagSquare->GetRowPtr();
+		int *ColPtr_Antidiag = antiDiagSquare->GetKCol();
+		double *entries_Antidiag = antiDiagSquare->GetEntries();
+
+		int *RowPtr_B = BMatrix->GetRowPtr();
+		int *ColPtr_B = BMatrix->GetKCol();
+		double *entries_B = BMatrix->GetEntries();
+
+		int begin = RowPtr_diag[DOF];
+		int end = RowPtr_diag[DOF + 1];
+
+		for (int row = begin; row < end; row++)
+		{
+			if (ColPtr_diag[row] == DOF)
+				entries_diag[row] = n1;
+			else
+				entries_diag[row] = 0;
+		}
+
+		begin = RowPtr_Antidiag[DOF];
+		end = RowPtr_Antidiag[DOF + 1];
+
+		for (int row = begin; row < end; row++)
+		{
+			if (ColPtr_diag[row] == DOF)
+				entries_Antidiag[row] = n2;
+			else
+				entries_Antidiag[row] = 0;
+		}
+
+		begin = RowPtr_B[DOF];
+		end = RowPtr_B[DOF + 1];
+		for (int row = begin; row < end; row++)
+			entries_B[row] = 0;
+
+		B[DOF + disp] = 0.0;
+	}
+}
+
+
 
 #endif // #ifdef __2D__

@@ -131,11 +131,21 @@
         "ANNParamReader.C": "cpp",
         "filesystem": "cpp",
         "Assemble2D.C": "cpp",
+<<<<<<< Updated upstream
         "FTLE.C": "cpp",
         "Output2D.C": "cpp",
         "BdNonUniformSpline.C": "cpp",
         "BdSpline.C": "cpp",
         "BdPolygon.C": "cpp",
         "QuadAffin.C": "cpp"
+=======
+        "SystemTCD2D.C": "cpp",
+        "ConvDiff2D.C": "cpp",
+        "TNSE2D_FixPo.C": "cpp",
+        "NSE3D_FixPo.C": "cpp",
+        "TNSE3D_FixPo.C": "cpp",
+        "FreeSurface3D.C": "cpp",
+        "FreeSurface2D.C": "cpp"
+>>>>>>> Stashed changes
     }
 }

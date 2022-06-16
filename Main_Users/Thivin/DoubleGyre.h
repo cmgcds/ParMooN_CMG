@@ -3,6 +3,8 @@
 // u(x,y) = ?
 // p(x,y) = ?
 
+#include<cmath>
+
 void ExampleFile()
 {
   OutPut("Example: Driven.h" << endl) ;
@@ -12,12 +14,32 @@ void ExampleFile()
 // ========================================================================
 void InitialU1(double x, double y, double *values)
 {
-  values[0] = 0;
+  double time   =  TDatabase::TimeDB->CURRENTTIME;
+  double eps    = 0.25;
+  double omega  = (2*M_PI)/10;
+  double a      = eps*sin(omega*time);
+  double b      = 1.0 - 2*eps*sin(omega*time);
+  double A      = 0.1;
+  double f      = a*x*x + b*x;
+  double f_x    = 2*a*x + b;
+  double val    = -M_PI*A*sin(M_PI*f)*cos(M_PI*y);
+  values[0] = val;
 }
+
 
 void InitialU2(double x, double y, double *values)
 {
-  values[0] = 0;
+  double time   =  TDatabase::TimeDB->CURRENTTIME;
+  double eps    = 0.25;
+  double omega  = (2*M_PI)/10;
+  double a      = eps*sin(omega*time);
+  double b      = 1.0 - 2*eps*sin(omega*time);
+  double A      = 0.1;
+  double f      = a*x*x + b*x;
+  double f_x    = 2*a*x + b;
+  double val    = M_PI*A*cos(M_PI*f)*sin(M_PI*y)*f_x;
+
+  values[0] = val;
 }
 
 void InitialP(double x, double y, double *values)
@@ -78,7 +100,7 @@ void U1BoundValue(int BdComp, double Param, double &value)
           if( (abs(Param) - 0.0 )<eps || (abs(1.0-Param) - 0.0 )<eps  )
             value=0; // top moving side velocity
           else
-            value =1;
+            value =0;
             break;
     case 3: 
             value=0;

@@ -7,6 +7,7 @@
  ************************************************************************  */
 
 #include<FE3D_ALE.h>
+#include<AllClasses.h>
 #include <Domain.h>
 #include <Database.h>
 #include <FEDatabase3D.h>

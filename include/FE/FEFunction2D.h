@@ -115,6 +115,11 @@ class TFEFunction2D
         the given point */
     void FindValueLocal(TBaseCell *cell, int cell_no, double x, double y, double *values);
 
+    /** determine the value of function at a given point . This will use seperate classes rather than the 
+     * static class setup so that it can be run parallely */
+    void FindValueLocal_Parallel(TBaseCell *cell, int cell_no, double x, double y, double *values);
+    
+
     /** calculate the interpolation of an exact function */
     void Interpolate(DoubleFunct2D *Exact);
     /** interpolate the old mesh fe function values to the new fe function

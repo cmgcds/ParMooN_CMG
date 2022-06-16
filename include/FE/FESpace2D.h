@@ -41,6 +41,7 @@ class TFESpace2D : public TFESpace
     /** array containing the used elements */
     FE2D *UsedElements; 
 
+
     /** array with an element for each shape */
     FE2D *ElementForShape;
 
@@ -52,6 +53,9 @@ class TFESpace2D : public TFESpace
     
     /** boundary condition used to create this space */
    BoundCondFunct2D *BoundCondition;
+
+   /** Store Reference Transformation of all the cells **/
+
 
 #ifdef __MORTAR__
     /** 1D collection of mortar cells */
@@ -71,6 +75,20 @@ class TFESpace2D : public TFESpace
       in operator-splitting methods ---  Sashikumaar Ganesan */
    int *IntlPtIndexOfPts;
 
+  // Implemented by Thivin - June 2022
+  // THis was started to make sure that all the TReftrans pointers to all class are saved seperately for each cell 
+  // This enables the parallel FE computation of all the threads without having to rely on the static datastructure used for reftrans. 
+  // Warning, If you are tying to use the below pointers to compute the FE calculations , make sure to 
+  //      -- Check whether the function is virtual in the Base class(TReftrans2D)
+  //      -- Chech the implementation of that function in the derived class.
+  
+  /** Store all the reference transformation Objects of the cells using the baseclass pointer TReftrans2D **/
+  RefTrans2D*  RefTrans2DArray;
+
+  /** Store all the reference transformation Objects of the cells using the baseclass pointer, which is TReftrans2D **/
+  TRefTrans2D** TRefTrans2DArray;
+
+  // Implementation by Thivin -- End 
 
   public:
     /** constructor */
@@ -91,6 +109,23 @@ class TFESpace2D : public TFESpace
                BoundCondFunct2D *BoundaryCondition,
                FE2D *fes, TCollection *mortarcoll);
 
+    // Implemented by Thivin - Jun 2022
+    // THis function will Store the corresponding Reftrans pointers to all the cells in the TRefTrans2DArray 
+    // This function should be called during the constructor of FESpace2D 
+    void StoreRefTrans();
+
+    //THIVIN 
+    // This function is a getter function to obtain the reftrans of the given aray 
+    
+    /** Returns the stored TReftrans2D for the given Cell number */
+    TRefTrans2D* getTRefTrans2DforCell(int cellNumber) {
+      return TRefTrans2DArray[cellNumber];
+    }
+
+    /** Returns the stored Reftrans2D for the given Cell number */
+    RefTrans2D getRefTrans2DforCell(int cellNumber) {
+      return RefTrans2DArray[cellNumber];
+    }
     /** destructor */
     ~TFESpace2D();
 

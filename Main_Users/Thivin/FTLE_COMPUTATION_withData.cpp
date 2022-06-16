@@ -20,6 +20,7 @@
 #include <MainUtilities.h> // #include <TimeUtilities.h>
 #include <TNSE2D_ParamRout.h>
 #include <TimeDiscRout.h>
+#include<omp.h>
 
 #include <string.h>
 #include <sstream>
@@ -34,7 +35,7 @@
 // =======================================================================
 // include current example
 // =======================================================================
-#include "../Examples/TNSE_2D/DrivenCavity.h" //   in unit square
+#include "../Main_Users/Thivin/DoubleGyre.h" //   in unit square
 // #include "../Examples/TNSE_2D/Bsp3.h" // smooth sol in unit square
 // #include "../Examples_All/TNSE_2D/Benchmark2.h"
 // #include "../Examples/TNSE_2D/SinCos.h" // smooth sol in unit square
@@ -80,6 +81,8 @@ int main(int argc, char *argv[])
 	os << " ";
 
 	mkdir(vtkdir, 0777);
+
+	omp_set_num_threads(24);
 
 	// ======================================================================
 	// set the database values and generate mesh
@@ -183,82 +186,18 @@ int main(int argc, char *argv[])
 	double *solVector_U = new double[numFiles*N_U]();
 	double *solVector_V = new double[numFiles*N_U]();
 	
-		
-
+	
 	//======================================================================
 	// SystemMatrix construction and solution
 	//======================================================================
 	// Disc type: GALERKIN
 	// Solver: AMG_SOLVE (or) GMG  (or) DIRECT
-	SystemMatrix = new TSystemTNSE2D(Velocity_FeSpace, Pressure_FeSpace, Velocity, Pressure, sol, rhs, Disctype, NSEType, DIRECT
-#ifdef __PRIVATE__
-									 ,
-									 Projection_space, NULL, NULL
-#endif
-	);
-
-	// define the aux
-	fesp[0] = Velocity_FeSpace;
-
-	fefct[0] = u1;
-	fefct[1] = u2;
-
-	switch (Disctype)
-	{
-	// turbulent viscosity must be computed
-	case SMAGORINSKY:
-	case VMS_PROJECTION:
-	case CLASSICAL_LES:
-	case GL00_CONVOLUTION:
-	case GL00_AUX_PROBLEM:
-
-		aux = new TAuxParam2D(TimeNSN_FESpacesVelo_GradVelo, TimeNSN_FctVelo_GradVelo,
-							  TimeNSN_ParamFctVelo_GradVelo,
-							  TimeNSN_FEValuesVelo_GradVelo,
-							  fesp, fefct,
-							  TimeNSFctVelo_GradVelo,
-							  TimeNSFEFctIndexVelo_GradVelo,
-							  TimeNSFEMultiIndexVelo_GradVelo,
-							  TimeNSN_ParamsVelo_GradVelo,
-							  TimeNSBeginParamVelo_GradVelo);
-
-		break;
-
-	default:
-		// 2 parameters are needed for assembling (u1_old, u2_old)
-		aux = new TAuxParam2D(TimeNSN_FESpaces2, TimeNSN_Fct2, TimeNSN_ParamFct2,
-							  TimeNSN_FEValues2,
-							  fesp, fefct,
-							  TimeNSFct2,
-							  TimeNSFEFctIndex2, TimeNSFEMultiIndex2,
-							  TimeNSN_Params2, TimeNSBeginParam2);
-	}
-
-	// aux for calculating the error
-	if (TDatabase::ParamDB->MEASURE_ERRORS)
-	{
-		NSEaux_error = new TAuxParam2D(TimeNSN_FESpaces2, TimeNSN_Fct2,
-									   TimeNSN_ParamFct2,
-									   TimeNSN_FEValues2,
-									   fesp, fefct,
-									   TimeNSFct2,
-									   TimeNSFEFctIndex2, TimeNSFEMultiIndex2,
-									   TimeNSN_Params2, TimeNSBeginParam2);
-	}
+	
 	double hmin, hmax;
 	coll->GetHminHmax(&hmin, &hmax);
 	OutPut("h_min : " << hmin << " h_max : " << hmax << endl);
 	//      TDatabase::TimeDB->TIMESTEPLENGTH = hmin;
 	//       cout<<TDatabase::TimeDB->TIMESTEPLENGTH<<"\n";
-
-	//======================================================================
-
-	// initilize the system matrix with the functions defined in Example file
-	// last argument is aux that is used to pass additional fe functions (eg. mesh velocity)
-	SystemMatrix->Init(LinCoeffs, BoundCondition, U1BoundValue, U2BoundValue, aux, NSEaux_error);
-
-	// assemble M, A matrices and rhs
-	SystemMatrix->Assemble(sol, rhs);
 
 	//======================================================================
 	// produce outout
@@ -302,131 +241,15 @@ int main(int argc, char *argv[])
 	while (TDatabase::TimeDB->CURRENTTIME < end_time)
 	{ // time cycle
 		m++;
-		TDatabase::TimeDB->INTERNAL_STARTTIME = TDatabase::TimeDB->CURRENTTIME;
-		for (l = 0; l < N_SubSteps; l++) // sub steps of fractional step theta
-		{
-			SetTimeDiscParameters(1);
+        SetTimeDiscParameters(1);
+        tau = TDatabase::TimeDB->CURRENTTIMESTEPLENGTH;
+        TDatabase::TimeDB->CURRENTTIME += tau;
 
-			if (m == 1)
-			{
-				OutPut("Theta1: " << TDatabase::TimeDB->THETA1 << endl);
-				OutPut("Theta2: " << TDatabase::TimeDB->THETA2 << endl);
-				OutPut("Theta3: " << TDatabase::TimeDB->THETA3 << endl);
-				OutPut("Theta4: " << TDatabase::TimeDB->THETA4 << endl);
-			}
-
-			tau = TDatabase::TimeDB->CURRENTTIMESTEPLENGTH;
-			TDatabase::TimeDB->CURRENTTIME += tau;
-
-			OutPut(endl
-				   << "CURRENT TIME: ");
-			OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
-
-			// copy sol, rhs to olssol, oldrhs
-			memcpy(oldrhs, rhs, N_TotalDOF * SizeOfDouble);
-
-			// assemble only rhs, nonlinear matrix for NSE will be assemble in fixed point iteration
-			// not needed if rhs is not time-dependent
-			if (m != 1)
-			{
-				SystemMatrix->AssembleRhs(sol, rhs);
-			}
-			else
-			{
-				SystemMatrix->Assemble(sol, rhs);
-			}
-
-			// scale B matices and assemble NSE-rhs based on the \theta time stepping scheme
-			SystemMatrix->AssembleSystMat(tau / oldtau, oldrhs, rhs, sol);
-			oldtau = tau;
-
-			// calculate the residual
-			defect = new double[N_TotalDOF];
-			memset(defect, 0, N_TotalDOF * SizeOfDouble);
-
-			SystemMatrix->GetTNSEResidual(sol, defect);
-
-			// correction due to L^2_O Pressure space
-			if (TDatabase::ParamDB->INTERNAL_PROJECT_PRESSURE)
-				IntoL20Vector2D(defect + 2 * N_U, N_P, pressure_space_code);
-
-			residual = Ddot(N_TotalDOF, defect, defect);
-			impuls_residual = Ddot(2 * N_U, defect, defect);
-			OutPut("Nonlinear iteration step   0");
-			OutPut(setw(14) << impuls_residual);
-			OutPut(setw(14) << residual - impuls_residual);
-			OutPut(setw(14) << sqrt(residual) << endl);
-
-			//======================================================================
-			// Solve the system
-			// Nonlinear iteration of fixed point type
-			//======================================================================
-			for (j = 1; j <= Max_It; j++)
-			{
-				// Solve the NSE system
-				SystemMatrix->Solve(sol);
-
-				if (TDatabase::ParamDB->INTERNAL_PROJECT_PRESSURE)
-					IntoL20FEFunction(sol + 2 * N_U, N_P, Pressure_FeSpace, velocity_space_code, pressure_space_code);
-
-				// no nonlinear iteration for Stokes problem
-				if (TDatabase::ParamDB->FLOW_PROBLEM_TYPE == STOKES)
-					break;
-
-				// restore the mass matrix for the next nonlinear iteration
-				SystemMatrix->RestoreMassMat();
-
-				// assemble the system matrix with given aux, sol and rhs
-				SystemMatrix->AssembleANonLinear(sol, rhs);
-
-				// assemble system mat, S = M + dt\theta_1*A
-				SystemMatrix->AssembleSystMatNonLinear();
-
-				// get the residual
-				memset(defect, 0, N_TotalDOF * SizeOfDouble);
-				SystemMatrix->GetTNSEResidual(sol, defect);
-
-				// correction due to L^2_O Pressure space
-				if (TDatabase::ParamDB->INTERNAL_PROJECT_PRESSURE)
-					IntoL20Vector2D(defect + 2 * N_U, N_P, pressure_space_code);
-
-				residual = Ddot(N_TotalDOF, defect, defect);
-				impuls_residual = Ddot(2 * N_U, defect, defect);
-				OutPut("nonlinear iteration step " << setw(3) << j);
-				OutPut(setw(14) << impuls_residual);
-				OutPut(setw(14) << residual - impuls_residual);
-				OutPut(setw(14) << sqrt(residual) << endl);
-
-				if (sqrt(residual) <= limit)
-					break;
-
-			} // for(j=1;j<=Max_It;j++)
-			  /*           cout << " test VHM main " << endl;
-			  exit(0);      */
-			// restore the mass matrix for the next time step
-			SystemMatrix->RestoreMassMat();
-
-		} // for(l=0;l<N_SubSteps;
-		  //======================================================================
-		  // measure errors to known solution
-		  //======================================================================
-		if (TDatabase::ParamDB->MEASURE_ERRORS)
-		{
-			//        u1->Interpolate(ExactU1);
-			//        u2->Interpolate(ExactU2);
-			//        Pressure->Interpolate(ExactP);
-
-			SystemMatrix->MeasureTNSEErrors(ExactU1, ExactU2, ExactP, AllErrors);
-
-			OutPut("L2(u): " << AllErrors[0] << endl);
-			OutPut("H1-semi(u): " << AllErrors[1] << endl);
-			OutPut("L2(p): " << AllErrors[2] << endl);
-			OutPut("H1-semi(p): " << AllErrors[3] << endl);
-			OutPut(AllErrors[4] << " l_infty(L2(u)) " << AllErrors[5] << endl);
-			OutPut(TDatabase::TimeDB->CURRENTTIME << " L2(0,t,L2)(u) : " << sqrt(AllErrors[6]) << endl);
-
-		} // if(TDatabase::ParamDB->MEASURE_ERRORS)
-
+        //Update the solution at everytimestep using the interpolation Initial conditoin
+        u1->Interpolate(InitialU1);
+        u2->Interpolate(InitialU2);
+        Pressure->Interpolate(InitialP);
+		
 		//======================================================================
 		// produce outout
 		//======================================================================
@@ -448,7 +271,6 @@ int main(int argc, char *argv[])
 				img++;
 			}	
 		
-		
 		//Copy the current Solution to the Solution Array 
 		cout << " M Val : " << m << endl;
 		for ( int i = 0 ; i < N_U ; i++)
@@ -457,14 +279,13 @@ int main(int argc, char *argv[])
 			solVector_V[(m-1)*N_U + i] = sol[N_U + i];
 		}
 		
-		cout << " SolActual_u : " << Ddot(N_U, sol, sol) <<endl;
-		cout << " SolActual_v : " << Ddot(N_U, sol+N_U, sol+N_U) <<endl;
-		cout << " SolActual_u : " << Ddot(N_U, solVector_U + (m-1)*N_U, solVector_U + (m-1)*N_U) <<endl;
-		cout << " SolActual_u : " << Ddot(N_U, solVector_V + (m-1)*N_U, solVector_V + (m-1)*N_U) <<endl;
+		// cout << " SolActual_u : " << Ddot(N_U, sol, sol) <<endl;
+		// cout << " SolActual_v : " << Ddot(N_U, sol+N_U, sol+N_U) <<endl;
+		// cout << " SolActual_u : " << Ddot(N_U, solVector_U + (m-1)*N_U, solVector_U + (m-1)*N_U) <<endl;
+		// cout << " SolActual_u : " << Ddot(N_U, solVector_V + (m-1)*N_U, solVector_V + (m-1)*N_U) <<endl;
 
-		
 
-	} // while(TDatabase::TimeDB->CURRENTTIME< e
+	} // while(TDatabase::TimeDB->CURRENTTIME< endl
 	
 	//======================================================================
 	// produce final outout
@@ -523,22 +344,51 @@ int main(int argc, char *argv[])
 	// 	cout << " NOrm U : " << Ddot(N_U,a,a)  << " Norm V : " << Ddot(N_U,b,b)<<endl;
 	// }
 	// exit(0);
+
 	// Create more particles, using higher order FEspace
-	TFESpace2D* ftleFespace = new TFESpace2D(coll,"ftle","ftle",BoundCondition,3,NULL);
+	TFESpace2D* ftleFespace = new TFESpace2D(coll,"ftle","ftle",BoundCondition,4,NULL);
 	
-	FTLE *ftle = new FTLE(ftleFespace,Velocity, 55,VelocityAll_U,VelocityAll_V);
+	FTLE *ftle = new FTLE(ftleFespace,Velocity, 5,VelocityAll_U,VelocityAll_V);
 
 	cout << " NUMFILES : " << numFiles<<endl;
 
-	double T = 4;
-	for ( int i = 0 ; i < numFiles-T; i++)
+    //VTK PARAMETERS
+    TOutput2D* OutputFTLE;
+    double* FTLEValues = ftle->FTLEValues.data();
+    int N_Particles = ftle->N_Particles;
+    TFEFunction2D* FTLE_FeFunction = new TFEFunction2D(ftleFespace, (char *)"FTLE", (char *)"FTLE", FTLEValues, N_Particles);
+    OutputFTLE = new TOutput2D(2, 2, 1, 1, Domain);
+    
+    OutputFTLE->AddFEFunction(FTLE_FeFunction);
+
+	double T = int(1 / (TDatabase::TimeDB->CURRENTTIMESTEPLENGTH))*15;
+    img = 0;
+    mkdir("FTLE", 0777);
+
+	for ( int i = 0 ; i < 1; i++)
 	{
+		cout << " Started for " << i <<endl;
+		double time = omp_get_wtime();
 		ftle->computeFTLE(TDatabase::TimeDB->CURRENTTIMESTEPLENGTH,T,i);
-		cout << " Completed for " << i <<endl;
-	}
+		cout << " Time taken : " << omp_get_wtime() - time << " sec"<<endl;
 		
+        os.seekp(std::ios::beg);
+		if (img < 10)
+			os << "FTLE/" << "FTLE" << ".0000" << img << ".vtk" << ends;
+		else if (img < 100)
+			os << "FTLE/" << "FTLE" << ".000" << img << ".vtk" << ends;
+		else if (img < 1000)
+			os << "FTLE/" << "FTLE" << ".00" << img << ".vtk" << ends;
+		else if (img < 10000)
+			os << "FTLE/" << "FTLE" << ".0" << img << ".vtk" << ends;
+		else
+			os << "FTLE/" << "FTLE" << "." << img << ".vtk" << ends;
+		OutputFTLE->WriteVtk(os.str().c_str());
+		img++;
 
-
+        cout << " Completed for " << i <<endl;
+	}
+    // Output for VTK 
 	CloseFiles();
 
 	return 0;

@@ -543,19 +543,18 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
             xpos_final[i] += timeStep * 0.5 * (uValCurrent + uValNext);
             ypos_final[i] += timeStep * 0.5 * (vValCurrent + vValNext);
 
-            if(isnan(xpos_final[i]) || isnan(ypos_final[i]) )
-            {
-                cout << " NAN VALUE ENCOUNTERED " <<endl;
-                cout << "uC : " << uValCurrent << " vC : " << vValCurrent << " uNext : " << uValNext << " vNxt : " << vValNext <<endl;
-                cout << " Time Step : " << timeStep << " xpos : " << xpos_final[i] << " ypos: " << ypos_final[i]<<endl;
-                cout << " Thread : " << omp_get_thread_num()  << " Id : " << i << endl;
-            }
+            // if(isnan(xpos_final[i]) || isnan(ypos_final[i]) )
+            // {
+            //     cout << " NAN VALUE ENCOUNTERED " <<endl;
+            //     cout << "uC : " << uValCurrent << " vC : " << vValCurrent << " uNext : " << uValNext << " vNxt : " << vValNext <<endl;
+            //     cout << " Time Step : " << timeStep << " xpos : " << xpos_final[i] << " ypos: " << ypos_final[i]<<endl;
+            //     cout << " Thread : " << omp_get_thread_num()  << " Id : " << i << endl;
+            // }
         }
 
-        cout << " NOrm 1 : " << Ddot(N_Particles, xpos_final, xpos_final) << endl;
-        cout << " NOrm 2 : " << Ddot(N_Particles, ypos_final, ypos_final) << endl;
+   
 
-        exit(0);
+        
     }
 
     cout << endl;
@@ -563,6 +562,8 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
     int counttt = 0;
     int outside = 0;
 
+    #pragma omp parallel for shared(particleInsideDomain, neibhourLeft, neibhourRight, neibhourTop, neibhourBottom, \
+                                xpos_final, ypos_final, FTLEValues)
     // After computing Displacement, Compute the FTLE Coefficients
     for (int i = 0; i < N_Particles; i++)
     {

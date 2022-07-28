@@ -24,6 +24,7 @@ void InitialU1(double x, double y, double *values)
   double f_x    = 2*a*x + b;
   double val    = -M_PI*A*sin(M_PI*f)*cos(M_PI*y);
   values[0] = val;
+  values[0] = 0.01;
 }
 
 
@@ -40,6 +41,7 @@ void InitialU2(double x, double y, double *values)
   double val    = M_PI*A*cos(M_PI*f)*sin(M_PI*y)*f_x;
 
   values[0] = val;
+  values[0] = 0.01;
 }
 
 void InitialP(double x, double y, double *values)

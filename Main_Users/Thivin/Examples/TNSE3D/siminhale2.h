@@ -17,7 +17,7 @@ void ExampleFile()
 	if (rank == TDatabase::ParamDB->Par_P0)
 #endif
 	{
-		OutPut("Example: Channel3D.h " << endl);
+		OutPut("Example: Siminhale.h " << endl);
 	}
 }
 
@@ -104,8 +104,21 @@ void BoundCondition(int CompID, double x, double y, double z, BoundCond &cond)
 // value of boundary condition
 void U1BoundValue(int CompID, double x, double y, double z, double &value)
 {
+		double radius = 0.485;
+	double U_Mean = 1.0;
 	if (CompID == 0)
-		value = 0.00;
+	{
+		if (sqrt(pow((x), 2) + pow((z), 2)) < radius) // inside Circle
+		{
+			float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+			value = (r- 0.5)*0.04;
+			// cout << " Value : " << value <<endl;
+			// value =4.405;
+		}
+		else
+			value = 0.0;
+	}
+	
 	else
 		value = 0;
 }
@@ -113,16 +126,20 @@ void U1BoundValue(int CompID, double x, double y, double z, double &value)
 // value of boundary condition
 void U2BoundValue(int CompID, double x, double y, double z, double &value)
 {
-	double radius = 4.92; // radius = 10mm/0.02
-	double x_c = 53.3948;
-	double z_c = 153.27;
-	double U_Mean = 1.0;
+	// double radius = 4.92; // radius = 10mm/0.02
+	// double x_c = 53.3948;
+	// double z_c = 153.27;
+	// double U_Mean = 1.0;
 
+	double radius = 0.485;
+	double U_Mean = 1.0;
+	
 	if (CompID == 0)
 	{
-		if (sqrt(pow((x - x_c), 2) + pow((z - z_c), 2)) < radius) // inside Circle
+		if (sqrt(pow((x), 2) + pow((z), 2)) < radius) // inside Circle
 		{
-			value = ((z_c+radius) - z) * (z - (z_c - radius)) * ( (x_c + radius) - x ) * (x - (x_c - radius)) * U_Mean * (1.0 / (radius*radius*radius*radius))  ;
+			float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+			value = U_Mean + (r- 0.5)*0.04;
 			// cout << " Value : " << value <<endl;
 			// value =4.405;
 		}
@@ -141,8 +158,21 @@ void U2BoundValue(int CompID, double x, double y, double z, double &value)
 // value of boundary condition
 void U3BoundValue(int CompID, double x, double y, double z, double &value)
 {
+		double radius = 0.485;
+	double U_Mean = 1.0;
 	if (CompID == 0)
-		value = 0.0;
+	{
+		if (sqrt(pow((x), 2) + pow((z), 2)) < radius) // inside Circle
+		{
+			float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+			value = (r- 0.5)*0.04;
+			// cout << " Value : " << value <<endl;
+			// value =4.405;
+		}
+		else
+			value = 0.0;
+	}
+		
 	else
 		value = 0;
 }
@@ -163,7 +193,7 @@ void LinCoeffs(int n_points, double *X, double *Y, double *Z,
 		coeff[0] = eps;
 		coeff[1] = 0;						 // f1
 		coeff[2] = 0;						 // -49050000; // ;  // f2:
-		coeff[3] = 1.0 / 0.399592252803262; // f3
+		coeff[3] = 1.0 / 51.6414; // f3
 	}
 }
 

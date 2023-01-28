@@ -1,11 +1,6 @@
 // =======================================================================
 //
-// Purpose:     main program for solving a stationary TNSE equation in ParMooN
-//
-// Author:      Sashikumaar Ganesan
-//
-// History:     Implementation started on 17.12.2015
-
+// Purpose:    Run the siminhale particle deposition using the loaded data file. 
 // =======================================================================
 #include <Domain.h>
 #include <Database.h>
@@ -65,8 +60,8 @@ double timeC = 0;
 //   #include "../Examples/TNSE_3D/Hole3D.h"
 //  #include "../Examples/TNSE_3D/AnsatzLinConst.h"
 //  #include "../Examples/TNSE_3D/Bsp3.h"
-//  #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
-#include "../Main_Users/Thivin/Examples/TNSE3D/Channel.h"
+ #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
+// #include "../Main_Users/Thivin/Examples/TNSE3D/Channel.h"
 //  #include "../Examples/TNSE_3D/Channel3D_volker.h"
 // #include "../Examples/TNSE_3D/Channel3D_slip.h"
 // #include "../Examples/TNSE_3D/test_slip.h"
@@ -193,6 +188,7 @@ int main(int argc, char *argv[])
 		Domain = new TDomain(argv[1]);
 
 		profiling = TDatabase::ParamDB->timeprofiling;
+        profiling = 0;
 
 		omp_set_num_threads(42);
 
@@ -254,9 +250,10 @@ int main(int argc, char *argv[])
 			TDatabase::ParamDB->UNIFORM_STEPS += (LEVELS - 1);
 			LEVELS = 1;
 		}
-		// refine grid up to the coarsest level
-		for (i = 0; i < TDatabase::ParamDB->UNIFORM_STEPS; i++)
-			Domain->RegRefineAll();
+		// refine grid up to the coarsest level  for Normal Mesh
+		if(TDatabase::ParamDB->MESH_TYPE == 0)
+			for (i = 0; i < TDatabase::ParamDB->UNIFORM_STEPS; i++)
+				Domain->RegRefineAll();
 
 			// #ifdef __Cylinder__
 			//    TetrameshGen(Domain);
@@ -591,7 +588,7 @@ int main(int argc, char *argv[])
 		//     cout<<"end printing"<<endl;
 		//     exit(0);
 
-		SystemMatrix->Assemble();
+		// SystemMatrix->Assemble();
 
 		//     SystemMatrix->CheckAllMat();
 		//     SystemMatrix->RHS_stats();
@@ -683,9 +680,12 @@ int main(int argc, char *argv[])
 #endif
 
 	// INTIALISE THE PARTICLES 
-	TParticles* particleObject =  new TParticles(1000,0.0,0.0,0.5,Velocity_FeSpace[0]);
+	TParticles* particleObject =  new TParticles(1000,0.0,0.0,0.01,Velocity_FeSpace[0]);
 	cout << " Particles Initialised " <<endl;
-	particleObject->OutputFile("positionBend_0000.csv");
+
+	particleObject->OutputFile("siminhale_0000.csv");
+    int StartNo = 4;
+
 
 	// time loop starts
 	while (TDatabase::TimeDB->CURRENTTIME < end_time) // time cycle
@@ -697,7 +697,7 @@ int main(int argc, char *argv[])
 			m++;
 			TDatabase::TimeDB->INTERNAL_STARTTIME = TDatabase::TimeDB->CURRENTTIME;
 		}
-
+        
 		for (l = 0; l < N_SubSteps; l++) // sub steps of fractional step theta
 		{
 
@@ -730,184 +730,141 @@ int main(int argc, char *argv[])
 						   << "CURRENT TIME: ");
 					OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
 				}
-				// copy rhs to oldrhs
-				memcpy(oldrhs, rhs, N_TotalDOF * SizeOfDouble);
 
-				// assemble only rhs, nonlinear matrix for NSE will be assemble in fixed point iteration
-				// not needed if rhs is not time-dependent
-				if (m != 1)
-				{
-					SystemMatrix->AssembleRhs();
-				}
-				else
-				{
-					SystemMatrix->Assemble();
-				}
 
-				//        cout<<"start printing"<<endl;
-				//     printall_array(sol,rhs,N_TotalDOF);
-				//     cout<<"end printing"<<endl;
-				//     exit(0);
 
-				// scale B matices and assemble NSE-rhs based on the \theta time stepping scheme
-				SystemMatrix->AssembleSystMat(tau / oldtau, oldrhs, rhs, sol);
-				oldtau = tau;
-
-				// calculate the residual
-				SystemMatrix->GetResidual(sol, impuls_residual, residual);
-
-#ifdef _MPI
-				if (rank == 0)
-#endif
-				{
-					OutPut(" nonlinear iteration step   0");
-					OutPut(setw(14) << impuls_residual);
-					OutPut(setw(14) << residual - impuls_residual);
-					OutPut(setw(14) << sqrt(residual) << endl);
-				}
 			}
 
-#ifdef _SMPI
-
-			if (rank == 0)
-			{
-				stime = TDatabase::TimeDB->CURRENTTIME;
-			}
-
-			MPI_Bcast(&stime, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-			TDatabase::TimeDB->CURRENTTIME = stime;
-
-#endif
-
-			//======================================================================
-			// Solve the system
-			// Nonlinear iteration of fixed point type
-			//======================================================================
-			for (j = 1; j <= Max_It; j++)
-			{
-				checker = 0;
-#ifdef _SMPI
-				if (rank == 0)
-#endif
-				{
-					SystemMatrix->Solve(sol);
-				}
-
-#ifdef _SMPI
-				else
-				{
-					solmumps->FactorizeAndSolve(NULL, NULL);
-				}
-#endif
-
-#ifdef _SMPI
-				if (rank == 0)
-#endif
-				{
-
-					if (TDatabase::ParamDB->INTERNAL_PROJECT_PRESSURE)
-						IntoL20FEFunction3D(sol + 3 * N_U, N_P, Pressure_FeSpace[mg_level - 1]);
-
-					// no nonlinear iteration for Stokes problem
-					if (TDatabase::ParamDB->FLOW_PROBLEM_TYPE == STOKES)
-						break;
-
-					// restore the mass matrix for the next nonlinear iteration
-					SystemMatrix->RestoreMassMatNonLinear();
-					//  cout << " crossesd mass matrix restore " <<endl;
-
-					// assemble the system matrix with given aux, sol and rhs
-					SystemMatrix->AssembleNonLinear();
-					//  cout << " crossed asseble non linear " <<endl;
-					// 	if(j==1){
-					//       SystemMatrix->CheckAllMat();
-					//        SystemMatrix->RHS_stats();
-					//
-					//       exit(0);
-					// 	}
-
-					// assemble system mat, S = M + dt\theta_1*A
-					SystemMatrix->AssembleSystMatNonLinear();
-					// cout << " crossed asseble sys mat non linear " <<endl;
-
-					// get the residual
-					SystemMatrix->GetResidual(sol, impuls_residual, residual);
-					// cout << "crossed  get residual " <<endl;
-#ifdef _MPI
-					if (rank == 0)
-#endif
-					{
-						OutPut(" nonlinear iteration step " << setw(3) << j);
-						OutPut(setw(14) << impuls_residual);
-						OutPut(setw(14) << residual - impuls_residual);
-						OutPut(setw(14) << sqrt(residual) << endl);
-					}
-					if (sqrt(residual) <= limit)
-					{
-#ifdef _SMPI
-						checker = -1;
-#else
-						break;
-#endif
-					}
-				}
-
-#ifdef _SMPI
-				MPI_Bcast(&checker, 1, MPI_INT, 0, MPI_COMM_WORLD);
-				if (checker == -1)
-					break;
-#endif
-
-			} // for(j=1;j<=Max_It;j++)
-
-#ifdef _SMPI
-			if (rank == 0)
-#endif
-			{
-				// restore the mass matrix for the next time step
-				SystemMatrix->RestoreMassMat();
-			}
-
-		} // for(l=0;l<N_SubSteps;
-
-		//======================================================================
-		// measure errors to known solution
-		//======================================================================
-
+        }
 #ifdef _SMPI
 		if (rank == 0)
 #endif
-		{
-			if (TDatabase::ParamDB->MEASURE_ERRORS)
-			{
-				SystemMatrix->MeasureTNSEErrors(ExactU1, ExactU2, ExactU3, ExactP, AllErrors);
+            {
 
-#ifdef _MPI
-				if (rank == 0)
-#endif
+                int lineNo=0;
+                cout << "Start No : " << StartNo <<endl;
+                // Read from the CSV value into solution array 
+                std::string filename_CSV = "csv/Solution_u_" + std::to_string(StartNo) +".csv";
+                std::ifstream file(filename_CSV.c_str());
+
+				if(!file) 
 				{
-					OutPut("L2(u): " << AllErrors[0] << endl);
-					OutPut("H1-semi(u): " << AllErrors[1] << endl);
-					OutPut("L2(p): " << AllErrors[2] << endl);
-					OutPut("H1-semi(p): " << AllErrors[3] << endl);
-					OutPut(AllErrors[4] << " l_infty(L2(u)) " << AllErrors[5] << endl);
-					OutPut(TDatabase::TimeDB->CURRENTTIME << " L2(0,t,L2)(u) : " << sqrt(AllErrors[6]) << endl);
+					cerr << " Unable to open file " << filename_CSV <<endl;
+					exit(0);
 				}
-			} // if(TDatabase::ParamDB->MEASURE_ERRORS)
+                double sum2 = 0;
+                std::string line;
+                while(std::getline(file,line))
+                {
+					sol[lineNo] = std::stod(line);
+					lineNo++;
+					sum2 += std::stod(line);
+                }
+                file.close();
 
-			//          GetCdCl(u1,u2,u3,p,Cd,Cl);
-			//      cout<<"drag::"<<Cd<<" lift::"<<Cl<<endl;
+				// double summm = 0;
+				// for (int i = 0; i < N_U; i++)
+				// 	summm += sol[i];
 
-			//======================================================================
-			// produce outout
-			//======================================================================
-			if (m == 1 || m % TDatabase::TimeDB->STEPS_PER_IMAGE == 0)
+				// cout << " summm  " << summm << endl;
+				// cout << " line Sum : " << sum2 <<endl;
 
-#ifdef _MPI
-				if (TDatabase::ParamDB->WRITE_VTK)
-					Output->Write_ParVTK(MPI_COMM_WORLD, img, SubID);
-			img++;
-#else
+				
+
+                filename_CSV = "csv/Solution_v_" + std::to_string(StartNo) +".csv";
+                file.open(filename_CSV.c_str());
+
+				sum2 =0;
+				
+                if(!file) 
+				{
+					cerr << " Unable to open file " << filename_CSV <<endl;
+					exit(0);
+				}
+                while(std::getline(file,line))
+                {
+					sol[lineNo ] = std::stod(line);
+					lineNo++;
+					sum2+= std::stod(line);
+                }
+                file.close();
+
+				// summm = 0;
+				// for (int i = N_U; i < 2*N_U; i++)
+				// 	summm += sol[i];
+
+				// cout << " summm  " <<summm <<  endl;
+				// cout << " line Sum : " << sum2 <<endl;
+
+
+
+
+                filename_CSV = "csv/Solution_w_" + std::to_string(StartNo) +".csv";
+                file.open(filename_CSV.c_str());
+				sum2 =0;
+				if(!file) 
+				{
+					cerr << " Unable to open file " << filename_CSV <<endl;
+					exit(0);
+				}
+                
+                while(std::getline(file,line))
+                {
+					sol[lineNo ] = std::stod(line);
+					lineNo++;
+					sum2 += std::stod(line);
+                }
+                file.close();
+
+				// summm = 0;
+				// for (int i = 2*N_U; i < 3*N_U; i++)
+				// 	summm += sol[i];
+
+				// cout << " summm  " << summm << endl;
+				// cout << " line Sum : " << sum2 <<endl;
+
+				
+				filename_CSV = "csv/Solution_p_" + std::to_string(StartNo) +".csv";
+                file.open(filename_CSV.c_str());
+				sum2 = 0;
+				if(!file) 
+				{
+					cerr << " Unable to open file " << filename_CSV <<endl;
+					exit(0);
+				}
+                
+                while(std::getline(file,line))
+                {
+					sol[lineNo ]= std::stod(line);
+					lineNo++;
+					sum2 += std::stod(line);
+                }
+                file.close();
+
+				// summm = 0;
+				// for (int i = 3*N_U; i < N_TotalDOF; i++)
+				// 	summm += sol[i];
+
+
+				
+                // INcresment the file number 
+                StartNo++;
+
+				
+				// summm = 0;
+				// for (int i = 0; i < N_TotalDOF; i++)
+				// 	summm += sol[i];
+				
+				
+
+				cout << " Total lines read : " << lineNo <<endl;
+				// cout << " Sum : " << summm <<endl;
+				// cout << " Dot Product : " << Ddot(N_TotalDOF,sol,sol) <<endl;
+
+                for (int i=0 ; i < 3*N_U; i++)
+                    sol[i] *= 3.18;
+				
+
 				if (TDatabase::ParamDB->WRITE_VTK)
 				{
 					os.seekp(std::ios::beg);
@@ -924,19 +881,23 @@ int main(int argc, char *argv[])
 					Output->WriteVtk(os.str().c_str());
 					img++;
 				}
-				cout << " Interpolation Started" <<endl;
-				//Compute the Particle Displacement for the FTLE values 
-				particleObject->interpolateNewVelocity(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0]);
-				std::string old_str = std::to_string(img-2);
-				size_t n_zero = 4;
-				auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
-				std::string name =  "positionBend_" + new_str + ".csv";
-				particleObject->OutputFile(name.c_str());
-				
-#endif		
-		}
 
-		
+                if (m == 1 || m % TDatabase::TimeDB->STEPS_PER_IMAGE == 0)
+                {
+                    cout << " Interpolation Started" <<endl;
+                    //Compute the Particle Displacement for the FTLE values 
+                    particleObject->interpolateNewVelocity(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0]);
+                    std::string old_str = std::to_string(img-2);
+                    size_t n_zero = 4;
+                    auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
+                    std::string name =  "siminhale_" + new_str + ".csv";
+                    particleObject->OutputFile(name.c_str());
+                }
+
+                
+				
+            }
+
 
 		
 

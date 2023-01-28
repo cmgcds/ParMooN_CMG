@@ -68,11 +68,14 @@ message("==================Searching BLAS in the System - begin=================
 if(AParMooN_USE_SYSTEM_MKLBLAS)
     message("Searching MKL BLAS ...")
     find_package(MKLBLAS REQUIRED)
+    ## Thivin -- Added Preprocessor Definitions if MKL blas is found. 
+    ## Else, the INtel routines such as Pardiso and mkl based routines will not be used in the code.
+    set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -DINTELMKLBLAS")
     include_directories(${BLAS_INCLUDE_DIRS})
     if(CMAKE_VERBOSE_MAKEFILE)
       if(BLAS_FOUND)
         message("Available system BLAS_LIB =${BLAS_LIBRARIES}")
-        message()
+        ## Set the definition that the INTEL MKL BLAS has been found
       elseif(NOT BLAS_FOUND)
         message("MKL BLAS_NOT_FOUND in your system, searching ...")
       endif(BLAS_FOUND)
@@ -275,7 +278,7 @@ elseif("${AParMooN_ARCH}" STREQUAL "INTEL64")
     set(CMAKE_CXX_COMPILER ${MPI_CXXPATH}/mpiicpc)      
   elseif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SEQUENTIAL"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "OMPONLY" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
   
-    include_directories("/opt/intel/include")
+    include_directories("/opt/intel/oneapi/include")
   
     find_path(CPATH  icc)
     set(CMAKE_C_COMPILER ${CPATH}/icc)

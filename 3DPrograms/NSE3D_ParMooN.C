@@ -34,6 +34,10 @@
 #include <MeshPartition.h>
 #endif
 
+// Added for Particle Tracking
+#include<Particle.h>
+#include<algorithm>
+#include<cstring>
 
 double bound = 0;
 double timeC = 0;
@@ -47,6 +51,7 @@ double timeC = 0;
 //  #include "../Examples/NSE_3D/BSExample.h" // smooth sol in unit square
 // #include "../Examples/NSE_3D/AnsatzLinConst.h"
   #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
+  // #include "../Main_Users/Thivin/Examples/TNSE3D/Channel.h"
 // #include "../Examples/NSE_3D/StaticBubble.h"
 // #include "../Examples/NSE_3D/DrivenCavity3D.h"
 // =======================================================================
@@ -566,7 +571,11 @@ int main(int argc, char* argv[])
       img++;
      }   
  
-
+  // INTIALISE THE PARTICLES 
+  cout << " Begin Particle Initialisation " <<endl;
+	TParticles* particleObject =  new TParticles(1000,0.0,0.0,0.485,Velocity_FeSpace[0]);
+	cout << " Particles Initialised " <<endl;
+	particleObject->OutputFile("positionSimInhale_0000.csv");
     
 //====================================================================== 
 // Solve the system
@@ -645,7 +654,18 @@ int main(int argc, char* argv[])
       Output->WriteVtk(os.str().c_str());
       img++;
      }   
- 
+
+    for ( int time = 0 ; time < 400 ; time++ )
+    {
+      cout << " Interpolation Started" <<endl;
+				//Compute the Particle Displacement for the FTLE values 
+				particleObject->interpolateNewVelocity(0.002,Velocity[0]);
+				std::string old_str = std::to_string(time+1);
+				size_t n_zero = 4;
+				auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
+				std::string name =  "positionSimInhale_" + new_str + ".csv";
+				particleObject->OutputFile(name.c_str());
+    }
 
 
 //====================================================================== 

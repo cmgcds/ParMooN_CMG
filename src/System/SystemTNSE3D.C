@@ -827,7 +827,7 @@ void TSystemTNSE3D::Assemble()
    
       /** assemble */
       AMatRhsAssemble[i]->Assemble3D();
-    cout<< "rhs: " << Ddot(3*N_U_Current, RhsArray[i], RhsArray[i])<<endl;
+    // cout<< "rhs: " << Ddot(3*N_U_Current, RhsArray[i], RhsArray[i])<<endl;
       fefct[0] = Velocity[i]->GetComponent(0);
       fefct[1] = Velocity[i]->GetComponent(1);
       fefct[2] = Velocity[i]->GetComponent(2);
@@ -891,7 +891,7 @@ void TSystemTNSE3D::Assemble()
           RHSs[0] = RhsArray[i];
           RHSs[1] = RhsArray[i] + N_U_Current;
           RHSs[2] = RhsArray[i] + 2*N_U_Current;
-      
+
           Assemble3DSlipBC(N_FESpaces, fesp,
                            N_SquareMatrices, SQMATRICES,
                            N_RectMatrices, NULL,
@@ -904,12 +904,12 @@ void TSystemTNSE3D::Assemble()
         } //  if (TDatabase::ParamDB->INTERNAL_SLIP_WITH_FRIC
 
 // //       delete NSEaux;   
-    cout<< "rhs: " << Ddot(3*N_U_Current, RhsArray[i], RhsArray[i])<<endl;
+    // cout<< "rhs: " << Ddot(3*N_U_Current, RhsArray[i], RhsArray[i])<<endl;
       // set rhs for Dirichlet nodes
       memcpy(SolArray[i]+N_Active_Current, RhsArray[i]+N_Active_Current, N_DirichletDof*SizeOfDouble);
       memcpy(SolArray[i]+N_U_Current+N_Active_Current, RhsArray[i]+N_U_Current+N_Active_Current, N_DirichletDof*SizeOfDouble); 
       memcpy(SolArray[i]+2*N_U_Current+N_Active_Current, RhsArray[i]+2*N_U_Current+N_Active_Current, N_DirichletDof*SizeOfDouble);     
-    cout<< "Sol arr: " << Ddot(3*N_U_Current, SolArray[i], SolArray[i])<<endl;
+    // cout<< "Sol arr: " << Ddot(3*N_U_Current, SolArray[i], SolArray[i])<<endl;
 #ifdef __PRIVATE__   
     if (Disctype == VMS_PROJECTION)
     {     
@@ -1452,7 +1452,7 @@ void TSystemTNSE3D::Solve(double *sol)
                           MatrixB1[N_Levels-1], MatrixB2[N_Levels-1], MatrixB3[N_Levels-1], B, sol,0);
           #endif
 
-          if(!INTELMKLBLAS_flag)
+          // if(!INTELMKLBLAS_flag)
 
 #endif
 #endif
@@ -1514,7 +1514,7 @@ void TSystemTNSE3D::RestoreMassMat()
 void TSystemTNSE3D::RestoreMassMatNonLinear()
 {
   int i;
-  cout << "Restore mass matrix entered" << endl;
+  // cout << "Restore mass matrix entered" << endl;
    if(SystMatAssembled)
    {
     // restore the mass matrix
@@ -1532,7 +1532,7 @@ void TSystemTNSE3D::RestoreMassMatNonLinear()
          MatAdd(SqmatrixM11[i], SqmatrixA11[i], -gamma);
          MatAdd(SqmatrixM22[i], SqmatrixA22[i], -gamma); 
          MatAdd(SqmatrixM33[i], SqmatrixA33[i], -gamma);      
-         cout<< "restore mass matrix - case 4 " << endl;
+        //  cout<< "restore mass matrix - case 4 " << endl;
         break;
        } // switch(NSETyp     
       } //for(i=Start_Level;i<N_Levels-1;i++)  

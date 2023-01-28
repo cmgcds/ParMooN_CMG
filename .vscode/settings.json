@@ -131,21 +131,36 @@
         "ANNParamReader.C": "cpp",
         "filesystem": "cpp",
         "Assemble2D.C": "cpp",
-<<<<<<< Updated upstream
         "FTLE.C": "cpp",
         "Output2D.C": "cpp",
         "BdNonUniformSpline.C": "cpp",
         "BdSpline.C": "cpp",
         "BdPolygon.C": "cpp",
-        "QuadAffin.C": "cpp"
-=======
+        "QuadAffin.C": "cpp",
         "SystemTCD2D.C": "cpp",
         "ConvDiff2D.C": "cpp",
         "TNSE2D_FixPo.C": "cpp",
         "NSE3D_FixPo.C": "cpp",
         "TNSE3D_FixPo.C": "cpp",
         "FreeSurface3D.C": "cpp",
-        "FreeSurface2D.C": "cpp"
->>>>>>> Stashed changes
+        "FreeSurface2D.C": "cpp",
+        "TimeDiscRout.C": "cpp",
+        "FEVectFunct2D.C": "cpp",
+        "Rigidbody6DOF.C": "cpp",
+        "QuadIsoparametric.C": "cpp",
+        "BoundEdge.C": "cpp",
+        "TriaAffin.C": "cpp",
+        "LineAffin.C": "cpp",
+        "BaseFunct2D.C": "cpp",
+        "TriaIsoparametric.C": "cpp",
+        "QuadBilinear.C": "cpp",
+        "AssembleMat2D.C": "cpp",
+        "Particle.C": "cpp",
+        "FESpace3D.C": "cpp",
+        "FEFunction3D.C": "cpp",
+        "Collection.C": "cpp",
+        "FESpace.C": "cpp",
+        "ALE_3D.C": "cpp",
+        "SiminhaleParticleTracking.C": "cpp"
     }
 }

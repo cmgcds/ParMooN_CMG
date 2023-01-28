@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
 	mkdir(vtkdir, 0777);
 
-	omp_set_num_threads(24);
+	omp_set_num_threads(48);
 
 	// ======================================================================
 	// set the database values and generate mesh
@@ -335,20 +335,19 @@ int main(int argc, char *argv[])
 	TFEVectFunct2D* VelocityAll_U = new TFEVectFunct2D(Velocity_FeSpace,NameString,NameString,solVector_U,N_U,numFiles);
 	TFEVectFunct2D* VelocityAll_V = new TFEVectFunct2D(Velocity_FeSpace,NameString,NameString,solVector_V,N_U,numFiles);
 
-	// for ( int i = 0 ; i < numFiles;i++)
-	// {
-	// 	double* a = VelocityAll_U->GetComponent(i)->GetValues();
-	// 	double* b = VelocityAll_V->GetComponent(i)->GetValues();
-	// 	int len = N_U;
+	for ( int i = 0 ; i < numFiles;i++)
+	{
+		double* a = VelocityAll_U->GetComponent(i)->GetValues();
+		double* b = VelocityAll_V->GetComponent(i)->GetValues();
+		int len = N_U;
 
-	// 	cout << " NOrm U : " << Ddot(N_U,a,a)  << " Norm V : " << Ddot(N_U,b,b)<<endl;
-	// }
-	// exit(0);
-
-	// Create more particles, using higher order FEspace
-	TFESpace2D* ftleFespace = new TFESpace2D(coll,"ftle","ftle",BoundCondition,4,NULL);
+		// cout << " NOrm U : " << Ddot(N_U,a,a)  << " Norm V : " << Ddot(N_U,b,b)<<endl;
+	}
 	
-	FTLE *ftle = new FTLE(ftleFespace,Velocity, 5,VelocityAll_U,VelocityAll_V);
+	// Create more particles, using higher order FEspace
+	TFESpace2D* ftleFespace = new TFESpace2D(coll,"ftle","ftle",BoundCondition,5,NULL);
+	
+	FTLE *ftle = new FTLE(ftleFespace,Velocity, 11,VelocityAll_U,VelocityAll_V);
 
 	cout << " NUMFILES : " << numFiles<<endl;
 
@@ -365,9 +364,9 @@ int main(int argc, char *argv[])
     img = 0;
     mkdir("FTLE", 0777);
 
-	for ( int i = 0 ; i < 1; i++)
+	for ( int i = 0 ; i < 300; i+=2)
 	{
-		cout << " Started for " << i <<endl;
+		cout << " Started for Time " << i*TDatabase::TimeDB->CURRENTTIMESTEPLENGTH  << "s"<<endl;
 		double time = omp_get_wtime();
 		ftle->computeFTLE(TDatabase::TimeDB->CURRENTTIMESTEPLENGTH,T,i);
 		cout << " Time taken : " << omp_get_wtime() - time << " sec"<<endl;
@@ -387,6 +386,7 @@ int main(int argc, char *argv[])
 		img++;
 
         cout << " Completed for " << i <<endl;
+		// exit(0);
 	}
     // Output for VTK 
 	CloseFiles();

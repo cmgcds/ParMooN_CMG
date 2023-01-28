@@ -434,9 +434,6 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
         ypos_final[i] = y_pos_initial[i];
         cellTracker[i] = cellIds[i];
     }
-    // std::copy(x_pos_initial,x_pos_initial + N_Particles ,  xpos_final);
-    // std::copy(y_pos_initial,y_pos_initial + N_Particles ,  ypos_final);
-    // std::copy(cellIds,cellIds + N_Particles ,  cellTracker);
 
     for (int i = 0; i < N_Particles; i++)
     {
@@ -444,9 +441,8 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
     }
 
     //   for ( int i=0 ; i < N_Particles; i++)
-    // {
     //     cout << " DOF : "<< i << " x : " << xpos_final[i] << " y: "<< ypos_final[i] << " Cell : " << cellTracker[i]<<endl;
-    // }
+
 
     //  Set all FTLE values to be zero
     std::fill(FTLEValues.begin(), FTLEValues.end(), 0.0);
@@ -462,34 +458,41 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
     // myfile.close();
 
     cout << " Start TIme : " << startT << " End : " << startT + T - 1 << endl;
-
+    double t1 = omp_get_wtime();
     for (int time = startT; time < startT + T - 1; time++)
     {
         int outside = 0;
         int otherCountTemp = 0;
+        
+        TFEFunction2D* uVelocity = u_Vectfunc_Combined->GetComponent(time);
+        TFEFunction2D* vVelocity = v_Vectfunc_Combined->GetComponent(time);
+        TFEFunction2D* uVelocity_new = u_Vectfunc_Combined->GetComponent(time+1);
+        TFEFunction2D* vVelocity_new = v_Vectfunc_Combined->GetComponent(time+1);
 
-// omp_set_num_threads(2);
-#pragma omp parallel for shared(particleInsideDomain, fespace, u_Vectfunc_Combined, v_Vectfunc_Combined, \
-                                xpos_final, ypos_final, cellTracker, N_cells, timeStep)
+        
+
+        
+        omp_set_num_threads(24);
+        #pragma omp parallel for schedule(static,8) shared(particleInsideDomain, fespace, u_Vectfunc_Combined, v_Vectfunc_Combined, \
+                                        xpos_final, ypos_final, cellTracker, N_cells, timeStep,DOF_Neibhours_depth,uVelocity,vVelocity,uVelocity_new,vVelocity_new)
         for (int i = 0; i < N_Particles; i++)
         {
             if (!particleInsideDomain[i])
             {
                 continue; // If particle is not inside the domain , then proceed to next particle
-                // otherCountTemp++;
+                otherCountTemp++;
             }
 
             int currentCellNo = cellTracker[i];
 
-            std::vector<int> neibhours;
-
+            std::vector<int> neibhours ;
+            // neibhours.push_back(currentCellNo);
             for (int k = 0; k < N_cells; k++)
                 neibhours.push_back(k);
 
             // neibhours.push_back(currentCellNo);
             bool insideDomain = false;
             TBaseCell *cell;
-
             for (int cellId = 0; cellId < neibhours.size(); cellId++)
             {
                 cell = fespace->GetCollection()->GetCell(neibhours[cellId]);
@@ -498,7 +501,6 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
                 {
                     insideDomain = true;
                     cellTracker[i] = cellId;
-                    otherCountTemp++;
                     break;
                 }
             }
@@ -506,8 +508,6 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
             if (!insideDomain)
             {
                 particleInsideDomain[i] = false;
-                // if( (xpos_final[i] > 0 && xpos_final[i] < 1.0 ) || (ypos_final[i] > 0 && ypos_final[i] < 1.0 )  )
-                //     cout << "PUTERS  x: "<< xpos_final[i] << " y : "<< ypos_final[i] <<endl;
                 outside++;
                 continue;
             }
@@ -523,51 +523,50 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
             double uValCurrent, vValCurrent;
             double uValNext = 0, vValNext = 0;
 
-            u_Vectfunc_Combined->GetComponent(time)->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], uVal);
-            v_Vectfunc_Combined->GetComponent(time)->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], vVal);
+            // u_Vectfunc_Combined->GetComponent(time)->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], uVal);
+            // v_Vectfunc_Combined->GetComponent(time)->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], vVal);
+            uVelocity->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], uVal);
+            vVelocity->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], vVal);
+            // uVal[0] = 0;
+            // vVal[0] = 0;
             uValCurrent = uVal[0];
             vValCurrent = vVal[0];
-
-            // cout << "-- uValCurrent " <<uValCurrent << " , " << " uValCurrent " << vValCurrent <<endl;
-
-            u_Vectfunc_Combined->GetComponent(time + 1)->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], uValNew);
-            v_Vectfunc_Combined->GetComponent(time + 1)->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], vValNew);
+            
+            // u_Vectfunc_Combined->GetComponent(time+1)->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], uValNew);
+            // v_Vectfunc_Combined->GetComponent(time+1)->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], vValNew);
+            uVelocity_new->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], uValNew);
+            vVelocity_new->FindValueLocal_Parallel(cell, currentCellNo, xpos_final[i], ypos_final[i], vValNew);
+            // uValNew[0] = 0;
+            // vValNew[0] = 0;
             uValNext = uValNew[0];
             vValNext = vValNew[0];
 
-            // cout << "** uValNext " <<uValNext << " , " << " uValNext " << vValNext <<endl;
-            
 
-            double x = xpos_final[i];
-            double y = ypos_final[i];
+            // cout << 0.5 * (uValCurrent + uValNext) << ", " << uValCurrent << ", "<< vValCurrent << " , " << uValNext << ", " << vValNext <<endl;
             xpos_final[i] += timeStep * 0.5 * (uValCurrent + uValNext);
             ypos_final[i] += timeStep * 0.5 * (vValCurrent + vValNext);
 
-            if(isnan(xpos_final[i]) || isnan(ypos_final[i]) )
-            {
-                cout << " NAN VALUE ENCOUNTERED " <<endl;
-                cout << "uC : " << uValCurrent << " vC : " << vValCurrent << " uNext : " << uValNext << " vNxt : " << vValNext <<endl;
-                cout << " Time Step : " << timeStep << " xpos : " << xpos_final[i] << " ypos: " << ypos_final[i]<<endl;
-                cout << " Thread : " << omp_get_thread_num()  << " Id : " << i << endl;
-            }
+            neibhours.clear();
+ 
         }
 
-        cout << " NOrm 1 : " << Ddot(N_Particles, xpos_final, xpos_final) << endl;
-        cout << " NOrm 2 : " << Ddot(N_Particles, ypos_final, ypos_final) << endl;
-
-        exit(0);
     }
 
-    cout << endl;
+    cout << " time elapsed ; " << omp_get_wtime() - t1 <<endl;
+
+    t1 = omp_get_wtime();
 
     int counttt = 0;
     int outside = 0;
 
+    // #pragma omp parallel for schedule(static,8) shared(particleInsideDomain, neibhourLeft, neibhourRight, neibhourTop, neibhourBottom, \
+    //                             xpos_final, ypos_final, FTLEValues,outside)
     // After computing Displacement, Compute the FTLE Coefficients
     for (int i = 0; i < N_Particles; i++)
     {
-        if (!particleInsideDomain[i])
+        if (!particleInsideDomain[i] )
         {
+            // #pragma omp critical
             outside++;
             continue; // If particle is not inside the domain , then proceed to next particle
         }
@@ -579,17 +578,20 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
         double a11 = 0, a12 = 0, a21 = 0, a22 = 0;
         // Do not compute the FTLE for Border nodes.
         if (n_left != -9999 && n_right != -9999)
+        // if (!isParticleOnBoundary[i] )
         {
-            a11 = xpos_final[n_right] - xpos_final[n_left] / (x_pos_initial[n_right] - x_pos_initial[n_left]);
-            a21 = ypos_final[n_right] - ypos_final[n_left] / (x_pos_initial[n_right] - x_pos_initial[n_left]);
+            a11 = (xpos_final[n_right] - xpos_final[n_left]) / (x_pos_initial[n_right] - x_pos_initial[n_left]);
+            a21 = (ypos_final[n_right] - ypos_final[n_left]) / (x_pos_initial[n_right] - x_pos_initial[n_left]);
 
             counttt++;
+            
         }
 
         if (n_top != -9999 && n_bottom != -9999)
+        // if (!isParticleOnBoundary[i])
         {
-            a12 = xpos_final[n_top] - xpos_final[n_bottom] / (y_pos_initial[n_top] - y_pos_initial[n_bottom]);
-            a22 = ypos_final[n_top] - ypos_final[n_bottom] / (y_pos_initial[n_top] - y_pos_initial[n_bottom]);
+            a12 = (xpos_final[n_top] - xpos_final[n_bottom]) / (y_pos_initial[n_top] - y_pos_initial[n_bottom]);
+            a22 = (ypos_final[n_top] - ypos_final[n_bottom]) / (y_pos_initial[n_top] - y_pos_initial[n_bottom]);
         }
 
         double *C = new double[2 * 2]();
@@ -627,6 +629,7 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
             exit(1);
         }
 
+        delete[] C;
         // printf("Pos vALUES : %f, %f , %f, %f\n",x_pos_initial[i],y_pos_initial[i],xpos_final[i],ypos_final[i]);
         // printf("mAT vALUES : %f, %f , %f, %f\n",a11,a12,a21,a22);
         // printf("mAT vALUES : %f, %f , %f, %f\n",C[0],C[1],C[2],C[3]);
@@ -637,32 +640,42 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
         else
             maxSvd = s[1];
 
-        if (abs(maxSvd - 0.0) > 1e-7)
-            FTLEValues[i] = (1.0 / abs(T * timeStep)) * log(sqrt(maxSvd));
+        if (abs(maxSvd - 0.0) > 1e-9)
+            // FTLEValues[i] = (1.0 / abs(T * timeStep)) * log(sqrt(maxSvd));
+            FTLEValues[i] =  log((maxSvd));
         // FTLEValues[i] = sqrt(maxSvd);
         else
             FTLEValues[i] = 0.0;
 
-        // printf(" Max : %f\n",maxSvd);
-        // printf(" FTKLE : %f\n",FTLEValues[i]);
         // exit(0);
     }
 
-    std::string filename = "position_1.csv";
+    cout << " time elapsed ; " << omp_get_wtime() - t1 <<endl;
+
+    std::string filename = "position_" + std::to_string(startT)+ ".csv";
 
     std::ofstream myfile(filename);
     for (int i = 0; i < FTLEValues.size(); i++)
     {
-        myfile << xpos_final[i] << "," << ypos_final[i] << "," << x_pos_initial[i] << "," << y_pos_initial[i] << "," << FTLEValues[i] << endl;
+        myfile << xpos_final[i] << "," << ypos_final[i] << "," << x_pos_initial[i] << "," << y_pos_initial[i] << "," << FTLEValues[i]  << ","
+           << xpos_final[neibhourRight[i]] <<"," << ypos_final[neibhourRight[i]] << " , " << xpos_final[neibhourLeft[i]] <<"," << ypos_final[neibhourLeft[i]] << "," 
+           << xpos_final[neibhourTop[i]] <<"," << ypos_final[neibhourTop[i]] << "," << xpos_final[neibhourBottom[i]] << "," << ypos_final[neibhourBottom[i]] << ","
+            << x_pos_initial[neibhourRight[i]] <<"," << y_pos_initial[neibhourRight[i]] << " , " << x_pos_initial[neibhourLeft[i]] <<"," << y_pos_initial[neibhourLeft[i]] << "," 
+           << x_pos_initial[neibhourTop[i]] <<"," << y_pos_initial[neibhourTop[i]] << "," << x_pos_initial[neibhourBottom[i]] << "," << y_pos_initial[neibhourBottom[i]] << endl;
+           
     }
 
     myfile.close();
 
-    cout << " Total : " << N_Particles << " Counted : " << counttt << " Outside : " << outside << " Percentage : " << (double)double(counttt) / double(N_Particles) << endl;
+    cout << " Total : " << N_Particles << " Counted : " << N_Particles - outside << " Outside : " << outside << " Percentage : " << (double)double(counttt) / double(N_Particles) << endl;
     cout << " FTLE Norm : " << sqrt(Ddot(N_Particles, &FTLEValues[0], &FTLEValues[0])) << endl;
     mkdir("FTLE", 0777);
-    std::string name = "FTLE/data_" + std::to_string(int(startT)) + ".csv";
-    write_vtk(name);
+    // std::string name = "FTLE/data_" + std::to_string(int(startT)) + ".csv";
+    // write_vtk(name);
+
+    delete [] xpos_final;
+    delete [] ypos_final;
+    delete [] cellTracker;
 }
 
 // Write the FTLE valyes to a VTK, So that they can be visualised using paraview

@@ -1432,13 +1432,14 @@ void TFEFunction2D::FindValueLocal_Parallel(TBaseCell *cell, int cell_no,
 	// get properties of the fe space
 	BeginIndex = FESpace2D->GetBeginIndex();
 	GlobalNumbers = FESpace2D->GetGlobalNumbers();
-
+	return;
 	Coll = FESpace2D->GetCollection();
 
 	FE_ID = FESpace2D->GetFE2D(cell_no, cell);
 	FE_Obj = TFEDatabase2D::GetFE2D(FE_ID);
 	RefTrans = FE_Obj->GetRefTransID();
 
+	
 	// Get the reference type of the given elemment.
 	TRefTrans2D *rt_common;
 

@@ -8,7 +8,8 @@
             "defines": [],
             "compilerPath": "/opt/intel/oneapi/compiler/2022.0.2/linux/bin/intel64/icc",
             "cStandard": "c11",
-            "cppStandard": "c++14"
+            "cppStandard": "c++14",
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4

@@ -168,6 +168,8 @@ list(APPEND FE_SOURCES "${PROJECT_SOURCE_DIR}/src/FE/TetraIsoparametric.C")
 list(APPEND FE_SOURCES "${PROJECT_SOURCE_DIR}/src/FE/Upwind3D.C") 
 list(APPEND FE_SOURCES "${PROJECT_SOURCE_DIR}/src/FE/Urea_3d4d.C") 
 list(APPEND FE_SOURCES "${PROJECT_SOURCE_DIR}/src/FE/FE3D_ALE.C") 
+## Added by thivin for Particle Deposition Model 
+list(APPEND FE_SOURCES "${PROJECT_SOURCE_DIR}/src/FE/Particle.C")
 endif("${AParMooN_GEO}" STREQUAL "2D")
 
 

@@ -73,6 +73,7 @@ void SetTimeDiscParameters(int increase_count)
 
       TDatabase::TimeDB->CURRENTTIMESTEPLENGTH = 
         TDatabase::TimeDB->TIMESTEPLENGTH;
+     
 
       if(count==1) count=0;
     break;

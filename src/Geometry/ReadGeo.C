@@ -3546,12 +3546,15 @@ int TDomain::GmshGen(char *GeoFile)
      dat.getline (line, 99);
      dat >> X >> Y >> Z;      
      
+     // Coordinates for the Siminhale Mesh
     X *= scale_x;
-    X += 53.10985 + 0.1064357;
+    // X += 0.1064326;
+    // X += 53.10985 + 0.1064357;
     Y *= scale_y;
-    Y += 0.002429178;
+    // Y += 0.004829178;
     Z *= scale_z;
-    Z += 153.0149 + 0.3066288;
+    // Z += 0.3066431;
+    // Z += 153.0149 + 0.3066288;
 
     if(fabs(X) < 1e-5 ) X = 0.;
     if(fabs(Y) < 1e-5 ) Y = 0.;

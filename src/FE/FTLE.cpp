@@ -548,8 +548,20 @@ double *FTLE::computeFTLE(double timeStep, int T, int startT)
 
             neibhours.clear();
  
+        // }
+
+            // if(isnan(xpos_final[i]) || isnan(ypos_final[i]) )
+            // {
+            //     cout << " NAN VALUE ENCOUNTERED " <<endl;
+            //     cout << "uC : " << uValCurrent << " vC : " << vValCurrent << " uNext : " << uValNext << " vNxt : " << vValNext <<endl;
+            //     cout << " Time Step : " << timeStep << " xpos : " << xpos_final[i] << " ypos: " << ypos_final[i]<<endl;
+            //     cout << " Thread : " << omp_get_thread_num()  << " Id : " << i << endl;
+            // }
         }
 
+   
+
+        
     }
 
     cout << " time elapsed ; " << omp_get_wtime() - t1 <<endl;

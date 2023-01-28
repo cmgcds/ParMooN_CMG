@@ -1457,10 +1457,52 @@ void TFEFunction2D::FindValueLocal_Parallel(TBaseCell *cell, int cell_no,
 	uxiref = new double[N_BaseFunct * BaseVectDim];
 	uetaref = new double[N_BaseFunct * BaseVectDim];
 
-	TRefTrans2D* refTransObject = FESpace2D->getTRefTrans2DforCell(cell_no);
-	
-	// Get the Reference values for the given co-ordinates
-	refTransObject->GetRefFromOrig(x, y, xi, eta);
+	void* refTransCommonPointer;
+	// Get the proper reference transformation Object and then use it for other operations
+	switch (RefTrans)
+	{
+		case TriaAffin:
+			TTriaAffin* ta_rt = new TTriaAffin();
+			ta_rt->SetCell(cell);
+			ta_rt->GetRefFromOrig(x, y, xi, eta);
+			refTransCommonPointer = ta_rt;
+			break;
+		case QuadAffin:
+			TQuadAffin* qa_rt = new TQuadAffin();
+			qa_rt->SetCell(cell);
+			qa_rt->GetRefFromOrig(x, y, xi, eta);
+			refTransCommonPointer = qa_rt;
+			break;
+		case QuadBilinear:
+			TQuadBilinear* qb_rt = new TQuadBilinear();
+			qb_rt->SetCell(cell);
+			qb_rt->GetRefFromOrig(x, y, xi, eta);
+			refTransCommonPointer = qb_rt;
+			break;
+		case TriaIsoparametric:
+			TTriaIsoparametric* tip_rt = new TTriaIsoparametric();
+			tip_rt->SetCell(cell);
+			tip_rt->GetRefFromOrig(x, y, xi, eta);
+			refTransCommonPointer = tip_rt;
+			break;
+		case QuadIsoparametric:
+			TQuadIsoparametric* qip_rt = new TQuadIsoparametric();
+			qip_rt->SetCell(cell);
+			qip_rt->GetRefFromOrig(x, y, xi, eta);
+			refTransCommonPointer = qip_rt;
+			break;
+
+		default:
+			break;
+	}
+
+	// // // set cell for reference transformation
+	// TFEDatabase2D::SetCellForRefTrans(cell, RefTrans);
+
+	// // // find local coordinates of the given point
+	// TFEDatabase2D::GetRefFromOrig(RefTrans, x, y, xi, eta);
+	// // cout << " xi: " << xi << endl;
+	// // cout << "eta: " << eta << endl;
 
 
 	// get values and derivatives of basis functions on the
@@ -1474,16 +1516,24 @@ void TFEFunction2D::FindValueLocal_Parallel(TBaseCell *cell, int cell_no,
 
 	switch (RefTrans)
 	{
-		case TriaAffin: case QuadAffin: case QuadBilinear:
-			refTransObject->GetOrigValues(xi, eta, N_BaseFunct,
+		case TriaAffin:
+			((TTriaAffin *)refTransCommonPointer)->GetOrigValues(xi, eta, N_BaseFunct,
+						uref, uxiref, uetaref, uorig, uxorig, uyorig, BaseVectDim);
+			break;
+		case QuadAffin:
+			((TQuadAffin *)refTransCommonPointer)->GetOrigValues(xi, eta, N_BaseFunct,
+						uref, uxiref, uetaref, uorig, uxorig, uyorig, BaseVectDim);
+			break;
+		case QuadBilinear:
+			((TQuadBilinear *)refTransCommonPointer)->GetOrigValues(xi, eta, N_BaseFunct,
 						uref, uxiref, uetaref, uorig, uxorig, uyorig, BaseVectDim);
 			break;
 		case TriaIsoparametric:
-			((TTriaIsoparametric *)refTransObject)->GetOrigValues(xi, eta, N_BaseFunct,
+			((TTriaIsoparametric *)refTransCommonPointer)->GetOrigValues(xi, eta, N_BaseFunct,
 						uref, uxiref, uetaref, uorig, uxorig, uyorig);
 			break;
 		case QuadIsoparametric:
-			((TQuadIsoparametric *)refTransObject)->GetOrigValues(xi, eta, N_BaseFunct,
+			((TQuadIsoparametric *)refTransCommonPointer)->GetOrigValues(xi, eta, N_BaseFunct,
 						uref, uxiref, uetaref, uorig, uxorig, uyorig);
 			break;
 		default:
@@ -1491,6 +1541,8 @@ void TFEFunction2D::FindValueLocal_Parallel(TBaseCell *cell, int cell_no,
 	}
 	
 	
+	
+
 	Numbers = GlobalNumbers + BeginIndex[cell_no];
 	for (i = 0; i < BaseVectDim; i++)
 	{
@@ -3014,46 +3066,3 @@ void TFEFunction2D::GetMassAndMean(double *OutVal)
 
 	OutVal[2] = mass / volume;
 } // GetMassAndMean
-
-
-
-
-
-// ARCHIVED CODES SECTION
-// Get the proper reference transformation Object and then use it for other operations
-	// switch (RefTrans)
-	// {
-	// 	case TriaAffin:
-	// 		TRefTrans2D* ta_rt = new TTriaAffin();
-	// 		ta_rt->SetCell(cell);
-	// 		ta_rt->GetRefFromOrig(x, y, xi, eta);
-	// 		refTransCommonPointer = ta_rt;
-	// 		break;
-	// 	case QuadAffin:
-	// 		TRefTrans2D* qa_rt = new TQuadAffin();
-	// 		qa_rt->SetCell(cell);
-	// 		qa_rt->GetRefFromOrig(x, y, xi, eta);
-	// 		refTransCommonPointer = qa_rt;
-	// 		break;
-	// 	case QuadBilinear:
-	// 		TRefTrans2D* qb_rt = new TQuadBilinear();
-	// 		qb_rt->SetCell(cell);
-	// 		qb_rt->GetRefFromOrig(x, y, xi, eta);
-	// 		refTransCommonPointer = qb_rt;
-	// 		break;
-	// 	case TriaIsoparametric:
-	// 		TRefTrans2D* tip_rt = new TTriaIsoparametric();
-	// 		tip_rt->SetCell(cell);
-	// 		tip_rt->GetRefFromOrig(x, y, xi, eta);
-	// 		refTransCommonPointer = tip_rt;
-	// 		break;
-	// 	case QuadIsoparametric:
-	// 		TRefTrans2D* qip_rt = new TQuadIsoparametric();
-	// 		qip_rt->SetCell(cell);
-	// 		qip_rt->GetRefFromOrig(x, y, xi, eta);
-	// 		refTransCommonPointer = qip_rt;
-	// 		break;
-
-	// 	default:
-	// 		break;
-	// }

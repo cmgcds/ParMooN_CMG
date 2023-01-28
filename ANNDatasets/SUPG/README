@@ -1,4 +1,0 @@
-This contains a basic ANN model for SUPG data
-The dataFile contains three columns, where the last column is the required value of Tau
-
-Read README_ANN in the main project directory to know more about the data ranges.

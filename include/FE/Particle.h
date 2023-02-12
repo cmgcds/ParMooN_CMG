@@ -24,7 +24,10 @@ class TParticles
         std::vector<int> cellsOnBoundary;
         std::vector<int> cellsOnBoundaryFaces;
 
+        // Track the Neibhour DOF's with a vector
         
+
+
         // Particle Co-ordinates 
         std::vector<double> position_X;
         std::vector<double> position_Y;

@@ -2159,6 +2159,44 @@ RefTrans2D TFEDatabase2D::GetOrig(int N_LocalUsedElements,
 }
 
 
+/** Addded by thivin **/
+// * Function to Obtain the orig Values 
+void TFEDatabase2D::GetOrigValues(RefTrans2D RefTrans,int N_Sets, BaseFunct2D *BaseFuncts,
+                            int N_Points, double *xi, double *eta,
+                            QuadFormula2D QuadFormula,
+                            bool *Needs2ndDer)
+{
+      TRefTrans2D *rt;
+
+      rt = ReferenceTrans2D[RefTrans];
+      switch(RefTrans)
+      {
+
+        case TriaAffin: 
+          ((TTriaAffin *)rt)->GetOrigValues(N_Sets, BaseFuncts,
+                                    N_Points, xi, eta,
+                                  QuadFormula,
+                                  Needs2ndDer);
+        break;
+        case QuadAffin:
+            ((TQuadAffin *)rt)->GetOrigValues(N_Sets, BaseFuncts,
+                                    N_Points, xi, eta,
+                                  QuadFormula,
+                                  Needs2ndDer);
+       break;
+        case QuadBilinear:
+          ((TQuadBilinear *)rt)->GetOrigValues(N_Sets, BaseFuncts,
+                                    N_Points, xi, eta,
+                                  QuadFormula,
+                                  Needs2ndDer);
+          break;
+
+        default:
+          cout << "wrong reference transformation identifier" << endl;
+          break;
+      } // endswitch
+}
+
 /** calculate the values of base functions or their derivatives
     on the original element */
 void TFEDatabase2D::GetOrigValues(RefTrans2D RefTrans,

@@ -146,7 +146,7 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
             }
 
         }
-         
+        
         // double random = radius * sqrt(rand());
         // double theta = rand() * 2 * Pi;
 
@@ -325,9 +325,9 @@ void TParticles::interpolateNewVelocity(double timeStep,TFEVectFunct3D* Velocity
         double cdcc_z = CD_CC(velocityZ[i],fluidVelocityZ);
 
         // The RHS will be 
-        double rhs_x  = intertialConstant *cdcc_x* fabs(fluidVelocityX - velocityX[i])*(fluidVelocityX - velocityX[i]) + gForceConst_x*(densityFluid - densityParticle)/densityParticle;
-        double rhs_y  = intertialConstant *cdcc_y* fabs(fluidVelocityY - velocityY[i])*(fluidVelocityY - velocityY[i]) + gForceConst_y*(densityFluid - densityParticle)/densityParticle;
-        double rhs_z  = intertialConstant *cdcc_z* fabs(fluidVelocityZ - velocityZ[i])*(fluidVelocityZ - velocityZ[i]) + gForceConst_z*(densityFluid - densityParticle)/densityParticle;
+        double rhs_x  = intertialConstant * cdcc_x * fabs(fluidVelocityX - velocityX[i])*(fluidVelocityX - velocityX[i]) + gForceConst_x*(densityFluid - densityParticle)/densityParticle;
+        double rhs_y  = intertialConstant * cdcc_y * fabs(fluidVelocityY - velocityY[i])*(fluidVelocityY - velocityY[i]) + gForceConst_y*(densityFluid - densityParticle)/densityParticle;
+        double rhs_z  = intertialConstant * cdcc_z * fabs(fluidVelocityZ - velocityZ[i])*(fluidVelocityZ - velocityZ[i]) + gForceConst_z*(densityFluid - densityParticle)/densityParticle;
 
         // cout << "-- intertialConstant : " << intertialConstant   << "  CDCC : " << (CD_CC(velocityX[i],fluidVelocityX)) << " fluidVelocityX: " << fluidVelocityX << "    velocityX : " <<velocityX[i] << "\n";
         // cout << "-- intertialConstant     : " << intertialConstant <<"  CDCC : " << (CD_CC(velocityY[i],fluidVelocityY)) <<"     fluidVelocityY: " << fluidVelocityY << "    velocityY : " <<velocityY[i] << "\n";
@@ -362,7 +362,7 @@ void TParticles::interpolateNewVelocity(double timeStep,TFEVectFunct3D* Velocity
         position_Y_old[i] = position_Y[i];
         position_Z_old[i] = position_Z[i];
 
-       
+
 
         position_X[i] += timeStep * 0.5 * (velocityX_old[i] + velocityX[i]);
         position_Y[i] += timeStep * 0.5 * (velocityY_old[i] + velocityY[i]);

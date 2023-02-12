@@ -1,10 +1,10 @@
 // =======================================================================
 //
-// Purpose:     main program for scalar equations with new kernels of ParMooN
+// Purpose:     main program for scalar equations for computing Error Norms
 //
-// Author:      Sashikumaar Ganesan
+// Author:      Thivin Anandh	
 //
-// History:     Implementation started on 08.08.2014
+// History:     Implementation started on Jan 2023
 
 // =======================================================================
 
@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
 	TFEVectFunct2D *CoOrdinates_Fevect = new TFEVectFunct2D(Scalar_FeSpace, "c", "c", CoOrdinates, N_DOF, 2);
 
 	CoOrdinates_Fevect->GridToData();
-	std::vector<int> mapping = GenerateMapping("/home/thivin/PARMOON_CODES/ParMooN_CMG/ParMooN_Output/TCD2D/UnitSquare_Coord.txt", CoOrdinates_Fevect);
+	std::vector<int> mapping = GenerateMapping("UnitSquare_Coord.txt", CoOrdinates_Fevect);
 
 	// Store PINNS Solution
 	double *PinnsSolution = new double[N_DOF]();
@@ -298,10 +298,17 @@ int main(int argc, char *argv[])
 	// Generate File pointers for all the NModes
 	std::ofstream ErrorNormFiles[6];
 	std::ofstream Er;
+
+	mkdir("ErrorNorms", 0777);
+	
 	std::string s = "ErrorNorms/Percentage_" + std::to_string(PercentageOfDMD) + ".err";
 	Er.open(s.c_str());
 
-	
+	if(!Er)
+	{
+		cout << "[ERROR] - Cannot open the file/folder : ErrorNorms/Percentage" <<endl;
+		exit(0);
+	}
 	
 	// time loop starts
 	while (TDatabase::TimeDB->CURRENTTIME < end_time - TDatabase::TimeDB->CURRENTTIMESTEPLENGTH )
@@ -364,12 +371,20 @@ int main(int argc, char *argv[])
 			unsigned int number_of_zeros = 6 - s.length(); // add 2 zeros
 			s.insert(0, number_of_zeros, '0');
 
-			std::string filename = "/home/thivin/PARMOON_CODES/ParMooN_CMG/ParMooN_Output/TCD2D/dat_logs/PinnsData_" + s + ".dat";
+			std::string filename = "/home/thivin/Shell/cmg_PINNs/Output/TempDistPaper/5/dat_logs/PinnsData_" + s + ".dat";
 
 			// ---------- OBTAIN PINNS NORM WITH FEM ----------------- //
 
 			// Read Pinns Data
 			readPinnsData(Pinns_FEFunc, mapping, filename.c_str());
+
+			//Make sure that the dirichlet values are equal to the galerkin FEM values So that they 
+			// are not included in error comptuationa
+			double* pinSol = Pinns_FEFunc->GetValues();
+			for(int i=N_Active; i < N_DOF  ; i++)
+			{
+				pinSol[i] = sol[i];
+			} 
 
 			// Get the  PINNS Norm
 			double l2Norm_Pinns = ComputeL2ErrorDifference(Scalar_FeSpace, Scalar_FeFunction, Pinns_FEFunc);
@@ -383,9 +398,16 @@ int main(int argc, char *argv[])
 				if(N_Modes[k] == 64 && (PercentageOfDMD == 40 || PercentageOfDMD == 50) )
 					continue;
 
-				std::string a = "/home/thivin/PARMOON_CODES/ParMooN_CMG/ParMooN_Output/TCD2D/dmd_" + std::to_string(PercentageOfDMD) + "/DMD_Recon_Scalar_" + std::to_string(N_Modes[k]);
+				std::string a = "/home/thivin/Shell/cmg_PINNs/Output/TempDistPaper/5/dmd_" + std::to_string(PercentageOfDMD) + "/DMD_Recon_Scalar_" + std::to_string(N_Modes[k]);
 				filename = a + "_c_" + s + ".dat";
 				readPinnsData(DMD_FEFunc, mapping, filename.c_str());
+
+				double* dmdSol = DMD_FEFunc->GetValues();
+				for(int i=N_Active; i < N_DOF  ; i++)
+				{
+					dmdSol[i] = sol[i];
+				} 
+
 
 				double l2Norm_DMD = ComputeL2ErrorDifference(Scalar_FeSpace, Scalar_FeFunction, DMD_FEFunc);
 				cout <<N_Modes[k] <<" - DMD       : " << l2Norm_DMD << endl;

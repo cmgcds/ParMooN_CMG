@@ -588,6 +588,13 @@ class TFEDatabase2D
                                     QuadFormula2D QuadFormula);
     */
 
+   /** calculate the values of base functions and their derivatives
+        on the original element -- Added by thivin*/
+   static void GetOrigValues(RefTrans2D RefTrans,int N_Sets, BaseFunct2D *BaseFuncts,
+                            int N_Points, double *xi, double *eta,
+                            QuadFormula2D QuadFormula,
+                            bool *Needs2ndDer);
+
     /** calculate functions and derivatives from reference element
         to original element */
     static void GetOrigValues(RefTrans2D RefTrans,

@@ -162,6 +162,10 @@
         "FESpace.C": "cpp",
         "ALE_3D.C": "cpp",
         "SiminhaleParticleTracking.C": "cpp",
-        "TCD2D_Shell_ParMooN.C": "cpp"
-}
+        "TCD2D_Shell_ParMooN.C": "cpp",
+        "TetraAffin.C": "cpp",
+        "LinAlg.C": "cpp",
+        "FEDatabase3D.C": "cpp",
+        "HexaIsoparametric.C": "cpp"
+    }
 }

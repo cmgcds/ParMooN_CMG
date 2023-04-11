@@ -51,8 +51,13 @@ class TParticles
         std::vector<double> velocityY;
         std::vector<double> velocityZ;
 
+
         //Error Particles Count
         int m_ErrorParticlesCount = 0;
+        std::vector<int> isErrorParticle;
+
+        // Number of particles released
+        int m_ParticlesReleased = 0;
 
         // Position 
 
@@ -62,7 +67,9 @@ class TParticles
         // -- Methods to Initialise Particles -- //
         void  Initialiseparticles(int N_Particles,double circle_x, double circle_y, double radius,TFESpace3D* fespace);
 
-        void interpolateNewVelocity(double timeStep,TFEVectFunct3D* VelocityFEVectFunction);
+        void interpolateNewVelocity(double timeStep,TFEVectFunct3D* VelocityFEVectFunction, TFESpace3D* fespace);
+
+        void interpolateNewVelocity_Parallel(double timeStep,TFEVectFunct3D* VelocityFEVectFunction, TFESpace3D* fespace);
 
         void OutputFile(const char* filename);
 };

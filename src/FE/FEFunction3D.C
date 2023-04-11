@@ -1442,6 +1442,140 @@ void TFEFunction3D::FindValueLocal(TBaseCell *cell, int cell_no,
   
 }
 
+
+// THIVIN -- Thread safe version of FindValueLocal
+// Each call will create its own copy of Reference Transformation
+
+void TFEFunction3D::FindValueLocal_Parallel(TBaseCell *cell, int cell_no,
+                                            double x, double y, double z,
+                                            double *values)
+{
+  int j, k, N_Cells;
+  double xv, yv, zv, xi, eta, zeta;
+  FE3D FE_ID;
+  TFE3D *FE_Obj;
+  RefTrans3D RefTrans;
+  TBaseFunct3D *bf;
+  int N_BaseFunct;
+  double *uorig, *uxorig, *uyorig, *uzorig, *uref, *uxiref, *uetaref, *uzetaref;
+
+  int N_Found;
+  double u;
+  double val;
+
+  TCollection *Coll;
+
+  Coll = FESpace3D->GetCollection();
+
+  FE_ID = FESpace3D->GetFE3D(cell_no, cell);
+  FE_Obj = TFEDatabase3D::GetFE3D(FE_ID);
+  RefTrans = FE_Obj->GetRefTransID();
+
+  // set cell for reference transformation
+  // TFEDatabase3D::SetCellForRefTrans(cell, RefTrans);
+
+  switch (RefTrans)
+  {
+  case TetraAffin:
+    TTetraAffin *ta_rt = new TTetraAffin();
+
+    ((TTetraAffin *)ta_rt)->SetCell(cell);
+    ((TTetraAffin *)ta_rt)->GetRefFromOrig(x, y, z, xi, eta, zeta);
+    delete ta_rt;
+    break;
+  case TetraIsoparametric:
+    TTetraIsoparametric *tai_rt = new TTetraIsoparametric();
+
+    ((TTetraIsoparametric *)tai_rt)->SetCell(cell);
+    ((TTetraIsoparametric *)tai_rt)->GetRefFromOrig(x, y, z, xi, eta, zeta);
+    delete tai_rt;
+    break;
+  case HexaAffin:
+    THexaAffin *tha_rt = new THexaAffin();
+
+    ((THexaAffin *)tha_rt)->SetCell(cell);
+    ((THexaAffin *)tha_rt)->GetRefFromOrig(x, y, z, xi, eta, zeta);
+    delete tha_rt;
+    break;
+  case HexaTrilinear:
+    THexaTrilinear *tht_rt = new THexaTrilinear();
+
+    ((THexaTrilinear *)tht_rt)->SetCell(cell);
+    ((THexaTrilinear *)tht_rt)->GetRefFromOrig(x, y, z, xi, eta, zeta);
+    delete tht_rt;
+    break;
+  case HexaIsoparametric:
+    THexaIsoparametric *thi_rt = new THexaIsoparametric();
+
+    ((THexaIsoparametric *)thi_rt)->SetCell(cell);
+    ((THexaIsoparametric *)thi_rt)->GetRefFromOrig(x, y, z, xi, eta, zeta);
+    delete thi_rt;
+    break;
+  default:
+    cout << "wrong reference transformation identifier" << endl;
+    break;
+  } // endswitch
+
+  // find local coordinates of the given point
+  // TFEDatabase3D::GetRefFromOrig(RefTrans, x, y, z, xi, eta, zeta);
+
+
+  // get base function object
+  bf = FE_Obj->GetBaseFunct3D();
+  N_BaseFunct = bf->GetDimension();
+  int BaseVectDim = bf->GetBaseVectDim(); // either 1 or 3
+
+  uorig = new double[N_BaseFunct * BaseVectDim];
+  // uxorig = new double[N_BaseFunct*BaseVectDim];
+  // uyorig = new double[N_BaseFunct*BaseVectDim];
+  // uzorig = new double[N_BaseFunct*BaseVectDim];
+
+  uref = new double[N_BaseFunct * BaseVectDim];
+  // uxiref = new double[N_BaseFunct*BaseVectDim];
+  // uetaref = new double[N_BaseFunct*BaseVectDim];
+  // uzetaref = new double[N_BaseFunct*BaseVectDim];
+
+  bf->GetDerivatives(D000, xi, eta, zeta, uref);
+  // bf->GetDerivatives(D100, xi, eta, zeta, uxiref);
+  // bf->GetDerivatives(D010, xi, eta, zeta, uetaref);
+  // bf->GetDerivatives(D001, xi, eta, zeta, uzetaref);
+
+  if (BaseVectDim > 1)
+  {
+    cout << "[ERROR] : Not implemented for Basis function dimension higher than 1 " << endl;
+    cout << "[ERROR] : Please use the normal FindValueLocal function instead " << endl;
+    cout << "[ERROR] : File : FEFunction3D.C, Function: FindValueLocal_Parallel() " << endl;
+    exit(0);
+  }
+
+  for (int i = 0; i < N_BaseFunct; i++)
+    uorig[i] = uref[i];
+
+  // Commented out by THIVIN - since the orig values is same as the ref values for the non derived basis functions
+  
+  // TFEDatabase3D::GetOrigValues(RefTrans, xi, eta, zeta,
+  //                bf, Coll, cell,
+  //                uref, uxiref, uetaref, uzetaref,
+  //                uorig, uxorig, uyorig, uzorig);
+  u = 0;
+
+  int *Numbers = FESpace3D->GetGlobalDOF(cell_no);
+  for (int i = 0; i < BaseVectDim; i++)
+  {
+    double u = 0;
+    for (int j = 0; j < N_BaseFunct; j++)
+    {
+      double val = Values[Numbers[j]];
+      u += uorig[j + i * N_BaseFunct] * val;
+    }
+    values[i] = u;
+  }
+
+  delete[] uorig;
+
+  delete[] uref;
+}
+
 /** calculate the interpolation of an exact function */
 void TFEFunction3D::Interpolate(DoubleFunct3D *Exact)
 {

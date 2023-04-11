@@ -2335,3 +2335,167 @@ void TFESpace3D::GetDOFPosition(int dof, double &x, double &y, double &z)
   } // endfor i
 } // end GetDOFPosition
 
+// THIVIN -- Added by thivin 
+// Routines for computing the DOF position with Thread safe
+// This ensures that all reference transformation objects are created individually for each query.
+// Does not work for the isoparameteric Elements
+
+void TFESpace3D::GetDOFPosition_Parallel(int dof, double &x, double &y, double &z)
+{
+  int i,j,k;
+  TBaseCell *cell;
+  int N_Joints;
+  TJoint *joint;
+  JointType jointtype;
+  FE3D FEid;
+  int *DOF;
+  TNodalFunctional3D *nf;
+  double *xi, *eta, *zeta;
+  int N_Points;
+  RefTrans3D RefTrans, *RefTransArray;
+  int IsIsoparametric;
+  BoundTypes bdtype;
+  BF3DRefElements RefElement;
+  TRefTrans3D *rt;
+  double absdetjk[1];
+  int DOFFound;
+
+  if(dof > N_DegreesOfFreedom)
+  {
+    Error(dof << " dof number is larger than total number of degrees of freedom" << endl);
+    x = -1; y = -1; z = -1;
+  }
+  
+  // RefTransArray = TFEDatabase3D::GetRefTrans3D_IDFromFE3D();
+
+  for(i=0;i<N_Cells;i++)
+  {
+    DOF = GlobalNumbers + BeginIndex[i];
+    k = BeginIndex[i+1] - BeginIndex[i];
+
+    DOFFound = -1;
+    for(j=0;j<k;j++)
+    {
+      if(DOF[j] == dof) 
+      {
+        DOFFound = j;
+        break;
+      } // endif
+    } // endfor
+
+
+    if(DOFFound>-1) // i.e. dof was found
+    {
+      //cout << "dof " << dof << " found in cell: " << i << endl;
+      cell  = Collection->GetCell(i);
+      FEid = GetFE3D(i, cell); 
+      // RefTrans = RefTransArray[FEid];
+  
+      RefElement = TFEDatabase3D::GetRefElementFromFE3D(FEid);
+  
+      nf = TFEDatabase3D::GetNodalFunctional3DFromFE3D(FEid);
+      nf->GetPointsForAll(N_Points, xi, eta, zeta);
+  
+      N_Joints = cell->GetN_Joints();
+  
+      IsIsoparametric = FALSE;
+      if (TDatabase::ParamDB->USE_ISOPARAMETRIC)
+      {
+        cout << "[ERROR] : ISOPARAMETRIC not implemented as a thread safe routine, please use normal GetDOFPosition() funciton instead " <<endl;
+        cout << "[ERROR] : File : FESPace3D.C Function: GetDOFPosition_Parallel()" <<endl;
+        exit(0);
+        for(j=0;j<N_Joints;j++)
+        {
+          joint = cell->GetJoint(j);
+          jointtype = joint->GetType();
+          if(jointtype == BoundaryFace)
+          {
+            bdtype = ((TBoundFace *)(joint))->GetBoundComp()->GetType();
+            if(bdtype != Plane)
+              IsIsoparametric = TRUE;
+          }
+          if(jointtype == InterfaceJoint3D)
+          {
+            bdtype = ((TInterfaceJoint3D *)(joint))->GetBoundComp()->GetType();
+            if(bdtype != Plane)
+              IsIsoparametric = TRUE;
+          }
+          if(jointtype == IsoInterfaceJoint3D)
+            IsIsoparametric = TRUE;
+    
+          if(jointtype == IsoJointEqN)
+            IsIsoparametric = TRUE;
+    
+          if(jointtype == IsoBoundFace)
+            IsIsoparametric = TRUE;
+        }
+      }// endif
+  
+      if(IsIsoparametric)
+      {
+        cout << "[ERROR] : ISOPARAMETRIC not implemented as a thread safe routine, please use normal GetDOFPosition() funciton instead " <<endl;
+        cout << "[ERROR] : File : FESPace3D.C Function: GetDOFPosition_Parallel()" <<endl;
+        exit(0);
+        switch(RefElement)
+        {
+          case BFUnitHexahedron:
+            RefTrans = HexaIsoparametric;
+          break;
+    
+          case BFUnitTetrahedron:
+            RefTrans = TetraIsoparametric;
+          break;
+        }
+      } // endif IsIsoparametric
+
+      void* refTransCommonPointer;  // Commmon pointer to store the reftrans object
+      // rt = TFEDatabase3D::GetRefTrans3D(RefTrans);// Line is using a single reftrans object for all calls, so removing it since its not thread safe. 
+
+      switch(RefTrans)
+      {
+        case TetraAffin:
+        TTetraAffin* ta_rt = new TTetraAffin();
+         ((TTetraAffin *)ta_rt)->SetCell(cell);
+         ((TTetraAffin *)ta_rt)->GetOrigFromRef(1, xi+DOFFound, eta+DOFFound, zeta+DOFFound,
+                                                &x, &y, &z, absdetjk);
+          delete ta_rt;
+        break;
+  
+        case TetraIsoparametric:
+        TTetraIsoparametric* tai_rt = new TTetraIsoparametric();
+         ((TTetraIsoparametric *)tai_rt)->SetCell(cell);
+         ((TTetraIsoparametric *)tai_rt)->GetOrigFromRef(1, xi+DOFFound, eta+DOFFound, zeta+DOFFound,
+                                                  &x, &y, &z, absdetjk);
+          delete tai_rt;
+        break;
+  
+        case HexaAffin:
+        THexaAffin* tha_rt = new THexaAffin();
+
+         ((THexaAffin *)tha_rt)->SetCell(cell);
+         ((THexaAffin *)tha_rt)->GetOrigFromRef(1, xi+DOFFound, eta+DOFFound, zeta+DOFFound,
+                                                  &x, &y, &z, absdetjk);
+        delete tha_rt;
+        break;
+  
+        case HexaTrilinear:
+        THexaTrilinear* tht_rt = new THexaTrilinear();
+         ((THexaTrilinear *)tht_rt)->SetCell(cell);
+         ((THexaTrilinear *)tht_rt)->GetOrigFromRef(1, xi+DOFFound, eta+DOFFound, zeta+DOFFound,
+                                                  &x, &y, &z, absdetjk);
+        delete tht_rt;
+        break;
+  
+        case HexaIsoparametric:
+        THexaIsoparametric* thi_rt = new THexaIsoparametric();
+         ((THexaIsoparametric *)thi_rt)->SetCell(cell);
+         ((THexaIsoparametric *)thi_rt)->GetOrigFromRef(1, xi+DOFFound, eta+DOFFound, zeta+DOFFound,
+                                                  &x, &y, &z, absdetjk);
+        delete thi_rt;
+        break;
+      } // endswitch RefTrans
+  
+      break;
+    } // endif DOFFound > -1
+  } // endfor i
+}

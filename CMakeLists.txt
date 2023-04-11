@@ -34,7 +34,7 @@ set (ParMooN_VERSION_MAJOR 1)
 set (ParMooN_VERSION_MINOR 0)
 
 SET(BUILD_SHARED_LIBS ON)
- 
+
 # set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/local/lib)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/lib)
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/intel/oneapi/mkl/latest/lib/intel64)

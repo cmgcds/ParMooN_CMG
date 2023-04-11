@@ -1,6 +1,6 @@
 // =======================================================================
 //
-// Purpose:    Run the siminhale particle deposition using the loaded data file.
+// Purpose:    Run the siminhale particle deposition using the loaded data file. 
 // =======================================================================
 #include <Domain.h>
 #include <Database.h>
@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/stat.h>
+#include <cstdlib>
 #include <sys/types.h>
 
 #ifdef _SMPI
@@ -43,9 +44,9 @@ double timeC = 0;
 #include <omp.h>
 
 // Added for Particle Tracking
-#include <Particle.h>
-#include <algorithm>
-#include <cstring>
+#include<Particle.h>
+#include<algorithm>
+#include<cstring>
 
 #define AMG 0
 #define GMG 1
@@ -60,14 +61,15 @@ double timeC = 0;
 //   #include "../Examples/TNSE_3D/Hole3D.h"
 //  #include "../Examples/TNSE_3D/AnsatzLinConst.h"
 //  #include "../Examples/TNSE_3D/Bsp3.h"
-#include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
-// #include "../Main_Users/Thivin/Examples/TNSE3D/Channel.h"
+ #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
+// #include "/home/sashi/ParMooN_Thivin/ParMooN_CMG/MainUsers/Thivin/SIMINHALE/siminhale.h"
+
 //  #include "../Examples/TNSE_3D/Channel3D_volker.h"
 // #include "../Examples/TNSE_3D/Channel3D_slip.h"
 // #include "../Examples/TNSE_3D/test_slip.h"
 // #include "../Examples/TNSE_3D/ChannelObstacle3D.h"
 // #include "../Examples/TNSE_3D/ChannelObstacle3D_slip.h"
-// #include "../Examples/TNSE_3D/ChannelObstacle3D_slip_volker.h"
+//#include "../Examples/TNSE_3D/ChannelObstacle3D_slip_volker.h"
 // #include "../Examples/TNSE_3D/ChannelObstacle3D_freeslip.h"
 
 void printall_array(double *Arr1, double *Arr2, int SizeOfArr)
@@ -188,9 +190,9 @@ int main(int argc, char *argv[])
 		Domain = new TDomain(argv[1]);
 
 		profiling = TDatabase::ParamDB->timeprofiling;
-		profiling = 0;
+        profiling = 0;
 
-		omp_set_num_threads(42);
+		// omp_set_num_threads(42);
 
 		if (profiling)
 		{
@@ -234,10 +236,10 @@ int main(int argc, char *argv[])
 			Domain->GmshGen(TDatabase::ParamDB->GEOFILE);
 		} // gmsh mesh
 
-		else if (TDatabase::ParamDB->MESH_TYPE == 2)
-		{
-			Domain->TetrameshGen(TDatabase::ParamDB->GEOFILE);
-		} // tetgen mesh
+		// else if (TDatabase::ParamDB->MESH_TYPE == 2)
+		// {
+		// 	Domain->TetrameshGen(TDatabase::ParamDB->GEOFILE);
+		// } // tetgen mesh
 		else
 		{
 			OutPut("Mesh Type not known, set MESH_TYPE correctly!!!" << endl);
@@ -251,15 +253,15 @@ int main(int argc, char *argv[])
 			LEVELS = 1;
 		}
 		// refine grid up to the coarsest level  for Normal Mesh
-		if (TDatabase::ParamDB->MESH_TYPE == 0)
+		if(TDatabase::ParamDB->MESH_TYPE == 0)
 			for (i = 0; i < TDatabase::ParamDB->UNIFORM_STEPS; i++)
 				Domain->RegRefineAll();
 
-				// #ifdef __Cylinder__
-				//    TetrameshGen(Domain);
-				// #endif
+			// #ifdef __Cylinder__
+			//    TetrameshGen(Domain);
+			// #endif
 
-				//    exit(0);
+			//    exit(0);
 
 #ifdef _MPI
 		Domain->GenerateEdgeInfo();
@@ -508,6 +510,8 @@ int main(int argc, char *argv[])
 
 		oldrhs = new double[N_TotalDOF];
 
+		
+
 #ifndef _MPI
 		N_Cells = coll->GetN_Cells();
 		OutPut("N_Cells      : " << setw(10) << N_Cells << endl);
@@ -574,6 +578,11 @@ int main(int argc, char *argv[])
 		u1->Interpolate(InitialU1);
 		u2->Interpolate(InitialU2);
 		u3->Interpolate(InitialU3);
+
+		
+
+
+
 
 		// assemble M, A, rhs matrices at time t=0 with initia sol and rhs
 		//     cout<<"start printing"<<endl;
@@ -672,12 +681,16 @@ int main(int argc, char *argv[])
 	MPI_Bcast(&Max_It, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
 
-	// INTIALISE THE PARTICLES
-	TParticles *particleObject = new TParticles(1000, 0.0, 0.0, 0.01, Velocity_FeSpace[0]);
-	cout << " Particles Initialised " << endl;
+	// INTIALISE THE PARTICLES 
+    int numPart = std::atoi(argv[2]);
+	TParticles* particleObject =  new TParticles(numPart,0.0,0.0,0.01,Velocity_FeSpace[0]);
+	cout << " Particles Initialised " <<endl;
+
+
 
 	particleObject->OutputFile("siminhale_0000.csv");
-	int StartNo = 4;
+    int StartNo = 4;
+
 
 	// time loop starts
 	while (TDatabase::TimeDB->CURRENTTIME < end_time) // time cycle
@@ -689,7 +702,7 @@ int main(int argc, char *argv[])
 			m++;
 			TDatabase::TimeDB->INTERNAL_STARTTIME = TDatabase::TimeDB->CURRENTTIME;
 		}
-
+        
 		for (l = 0; l < N_SubSteps; l++) // sub steps of fractional step theta
 		{
 
@@ -722,154 +735,177 @@ int main(int argc, char *argv[])
 						   << "CURRENT TIME: ");
 					OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
 				}
+
+
+
 			}
-		}
+
+        }
 #ifdef _SMPI
 		if (rank == 0)
 #endif
-		{
+            {
 
-			int lineNo = 0;
-			cout << "Start No : " << StartNo << endl;
-			// Read from the CSV value into solution array
-			std::string filename_CSV = "csv/Solution_u_" + std::to_string(StartNo) + ".csv";
-			std::ifstream file(filename_CSV.c_str());
+				// Considering the simulation has saturated upto 1000 time  steps, If the particle moves more than 
 
-			if (!file)
-			{
-				cerr << " Unable to open file " << filename_CSV << endl;
-				exit(0);
-			}
-			double sum2 = 0;
-			std::string line;
-			while (std::getline(file, line))
-			{
-				sol[lineNo] = std::stod(line);
-				lineNo++;
-				sum2 += std::stod(line);
-			}
-			file.close();
+                int lineNo=0;
+				if(StartNo >  995)
+					StartNo = 995;
+                cout << "Start No : " << StartNo <<endl;
+				
+                // Read from the CSV value into solution array 
+                std::string prefix(argv[3]);
+                std::string filename_CSV = prefix + "/Solution_u_" + std::to_string(StartNo) +".csv";
+                std::ifstream file(filename_CSV.c_str());
 
-			// double summm = 0;
-			// for (int i = 0; i < N_U; i++)
-			// 	summm += sol[i];
+				if(!file) 
+				{
+					cerr << " Unable to open file " << filename_CSV <<endl;
+					exit(0);
+				}
+                double sum2 = 0;
+                std::string line;
+                while(std::getline(file,line))
+                {
+					sol[lineNo] = std::stod(line);
+					lineNo++;
+					sum2 += std::stod(line);
+                }
+                file.close();
 
-			// cout << " summm  " << summm << endl;
-			// cout << " line Sum : " << sum2 <<endl;
+				// double summm = 0;
+				// for (int i = 0; i < N_U; i++)
+				// 	summm += sol[i];
 
-			filename_CSV = "csv/Solution_v_" + std::to_string(StartNo) + ".csv";
-			file.open(filename_CSV.c_str());
+				// cout << " summm  " << summm << endl;
+				// cout << " line Sum : " << sum2 <<endl;
 
-			sum2 = 0;
+                filename_CSV = prefix + "/Solution_v_" + std::to_string(StartNo) +".csv";
+                file.open(filename_CSV.c_str());
 
-			if (!file)
-			{
-				cerr << " Unable to open file " << filename_CSV << endl;
-				exit(0);
-			}
-			while (std::getline(file, line))
-			{
-				sol[lineNo] = std::stod(line);
-				lineNo++;
-				sum2 += std::stod(line);
-			}
-			file.close();
+				sum2 =0;
+				
+                if(!file) 
+				{
+					cerr << " Unable to open file " << filename_CSV <<endl;
+					exit(0);
+				}
+                while(std::getline(file,line))
+                {
+					sol[lineNo ] = std::stod(line);
+					lineNo++;
+					sum2+= std::stod(line);
+                }
+                file.close();
 
-			// summm = 0;
-			// for (int i = N_U; i < 2*N_U; i++)
-			// 	summm += sol[i];
+				// summm = 0;
+				// for (int i = N_U; i < 2*N_U; i++)
+				// 	summm += sol[i];
 
-			// cout << " summm  " <<summm <<  endl;
-			// cout << " line Sum : " << sum2 <<endl;
+				// cout << " summm  " <<summm <<  endl;
+				// cout << " line Sum : " << sum2 <<endl;
 
-			filename_CSV = "csv/Solution_w_" + std::to_string(StartNo) + ".csv";
-			file.open(filename_CSV.c_str());
-			sum2 = 0;
-			if (!file)
-			{
-				cerr << " Unable to open file " << filename_CSV << endl;
-				exit(0);
-			}
 
-			while (std::getline(file, line))
-			{
-				sol[lineNo] = std::stod(line);
-				lineNo++;
-				sum2 += std::stod(line);
-			}
-			file.close();
 
-			// summm = 0;
-			// for (int i = 2*N_U; i < 3*N_U; i++)
-			// 	summm += sol[i];
 
-			// cout << " summm  " << summm << endl;
-			// cout << " line Sum : " << sum2 <<endl;
+                filename_CSV = prefix + "/Solution_w_" + std::to_string(StartNo) +".csv";
+                file.open(filename_CSV.c_str());
+				sum2 =0;
+				if(!file) 
+				{
+					cerr << " Unable to open file " << filename_CSV <<endl;
+					exit(0);
+				}
+                
+                while(std::getline(file,line))
+                {
+					sol[lineNo ] = std::stod(line);
+					lineNo++;
+					sum2 += std::stod(line);
+                }
+                file.close();
 
-			filename_CSV = "csv/Solution_p_" + std::to_string(StartNo) + ".csv";
-			file.open(filename_CSV.c_str());
-			sum2 = 0;
-			if (!file)
-			{
-				cerr << " Unable to open file " << filename_CSV << endl;
-				exit(0);
-			}
+				// summm = 0;
+				// for (int i = 2*N_U; i < 3*N_U; i++)
+				// 	summm += sol[i];
 
-			while (std::getline(file, line))
-			{
-				sol[lineNo] = std::stod(line);
-				lineNo++;
-				sum2 += std::stod(line);
-			}
-			file.close();
+				// cout << " summm  " << summm << endl;
+				// cout << " line Sum : " << sum2 <<endl;
 
-			// summm = 0;
-			// for (int i = 3*N_U; i < N_TotalDOF; i++)
-			// 	summm += sol[i];
+				
+				filename_CSV = prefix + "/Solution_p_" + std::to_string(StartNo) +".csv";
+                file.open(filename_CSV.c_str());
+				sum2 = 0;
+				if(!file) 
+				{
+					cerr << " Unable to open file " << filename_CSV <<endl;
+					exit(0);
+				}
+                
+                while(std::getline(file,line))
+                {
+					sol[lineNo ]= std::stod(line);
+					lineNo++;
+					sum2 += std::stod(line);
+                }
+                file.close();
 
-			// INcresment the file number
-			StartNo++;
+				// summm = 0;
+				// for (int i = 3*N_U; i < N_TotalDOF; i++)
+				// 	summm += sol[i];
 
-			// summm = 0;
-			// for (int i = 0; i < N_TotalDOF; i++)
-			// 	summm += sol[i];
 
-			cout << " Total lines read : " << lineNo << endl;
-			// cout << " Sum : " << summm <<endl;
-			// cout << " Dot Product : " << Ddot(N_TotalDOF,sol,sol) <<endl;
+				
+                // INcresment the file number 
+                StartNo++;
 
-			for (int i = 0; i < 3 * N_U; i++)
-				sol[i] *= 3.18;
+				
+				// summm = 0;
+				// for (int i = 0; i < N_TotalDOF; i++)
+				// 	summm += sol[i];
+				
+				
 
-			if (TDatabase::ParamDB->WRITE_VTK)
-			{
-				os.seekp(std::ios::beg);
-				if (img < 10)
-					os << "VTK/" << VtkBaseName << ".0000" << img << ".vtk" << ends;
-				else if (img < 100)
-					os << "VTK/" << VtkBaseName << ".000" << img << ".vtk" << ends;
-				else if (img < 1000)
-					os << "VTK/" << VtkBaseName << ".00" << img << ".vtk" << ends;
-				else if (img < 10000)
-					os << "VTK/" << VtkBaseName << ".0" << img << ".vtk" << ends;
-				else
-					os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
-				Output->WriteVtk(os.str().c_str());
-				img++;
-			}
+				cout << " Total lines read : " << lineNo <<endl;
+				// cout << " Sum : " << summm <<endl;
+				// cout << " Dot Product : " << Ddot(N_TotalDOF,sol,sol) <<endl;
 
-			if (m == 1 || m % TDatabase::TimeDB->STEPS_PER_IMAGE == 0)
-			{
-				cout << " Interpolation Started" << endl;
-				// Compute the Particle Displacement for the FTLE values
-				particleObject->interpolateNewVelocity(TDatabase::TimeDB->TIMESTEPLENGTH, Velocity[0]);
-				std::string old_str = std::to_string(img - 2);
-				size_t n_zero = 4;
-				auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
-				std::string name = "siminhale_" + new_str + ".csv";
-				particleObject->OutputFile(name.c_str());
-			}
-		}
+                for (int i=0 ; i < 3*N_U; i++)
+                    sol[i] *= 3.18;
+				
+
+				if (TDatabase::ParamDB->WRITE_VTK)
+				{
+					os.seekp(std::ios::beg);
+					if (img < 10)
+						os << "VTK/" << VtkBaseName << ".0000" << img << ".vtk" << ends;
+					else if (img < 100)
+						os << "VTK/" << VtkBaseName << ".000" << img << ".vtk" << ends;
+					else if (img < 1000)
+						os << "VTK/" << VtkBaseName << ".00" << img << ".vtk" << ends;
+					else if (img < 10000)
+						os << "VTK/" << VtkBaseName << ".0" << img << ".vtk" << ends;
+					else
+						os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
+					Output->WriteVtk(os.str().c_str());
+					img++;
+				}
+				
+                if (m >= 1 )
+                {
+                    cout << " Interpolation Started" <<endl;
+                    //Compute the Particle Displacement for the FTLE values 
+                    particleObject->interpolateNewVelocity_Parallel(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0],Velocity_FeSpace[0]);
+                    std::string old_str = std::to_string(img-2);
+                    size_t n_zero = 4;
+                    auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
+                    std::string name =  "siminhale_" + new_str + ".csv";
+                    particleObject->OutputFile(name.c_str());
+                }
+            }
+
+
+		
 
 	} // while(TDatabase::TimeDB->CURRENTTIME< e
 

@@ -142,8 +142,8 @@ FTLE::FTLE(TFESpace2D *ftleFespace, TFEVectFunct2D *FEVectFunction, int searchDe
     //     cout << " DOF : "<<setw(3) << i <<setw(3) << " x : " <<setw(8)<< x_pos_initial[i] << " y: "<<setw(8)<< y_pos_initial[i] << " Cell : " <<setw(5)<< cellIds[i] << " Boundary : " <<setw(8)<< isParticleOnBoundary[i]<<endl;
     // }
 
-    int *GlobalDOFArray = fespace->GetGlobalNumbers();
-    int *BeginIndexArray = fespace->GetBeginIndex();
+        int *GlobalDOFArray = fespace->GetGlobalNumbers();
+        int *BeginIndexArray = fespace->GetBeginIndex();
 
     // Get Reftrans Array
     RefTransArray = TFEDatabase2D::GetRefTrans2D_IDFromFE2D();

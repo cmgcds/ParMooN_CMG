@@ -100,8 +100,13 @@ class TFESpace3D : public TFESpace
     /** return position of one given DOF */
     void GetDOFPosition(int dof, double &x, double &y, double &z);
 
+    /** thread safe method to get DOF position */
+    void GetDOFPosition_Parallel(int dof, double &x, double &y, double &z);
+
     /** return position of all dofs */
     void GetDOFPosition(double *x, double *y, double *z);
+
+    
 
 };
 

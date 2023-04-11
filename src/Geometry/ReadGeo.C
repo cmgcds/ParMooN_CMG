@@ -45,6 +45,7 @@
 
 int TDomain::ReadGeo(char *GeoFile)
 {
+	
   char line[100];
   int i, j, N_Vertices, NVpF, NVE, NBCT;
   double *DCORVG;
@@ -307,6 +308,10 @@ int TDomain::MakeGrid(double *DCORVG, int *KVERT, int *KNPR, int *ELEMSREF,
   BoundY = Ymax - Ymin;
   //StartZ = 0; // this is 2D
   //BoundZ = 0; // this is 2D
+
+  cout << " --------------------- 2D Mesh Details ------------------------------ " <<endl;
+  cout << " X - StartX : " << setw(8) << StartX << setw(8) << " EndX : " << setw(8) << " BoundX: " << setw(8) << BoundX <<endl;
+  cout << " Y - StartY : " << setw(8) << StartY << setw(8) << " EndY : " << setw(8) << " BoundY: " << setw(8) << BoundY <<endl;
   
   // create the CellTree and set references
   CellTree = new TBaseCell*[N_RootCells];
@@ -1136,6 +1141,12 @@ int TDomain::GmshGen(char *GeoFile)
     BoundX = Xmax - Xmin;
     BoundY = Ymax - Ymin;
 
+
+    cout <<std::setprecision(7) <<endl;
+    cout << " ------------------------------------ MESH DETAILS ---------------------------------------- "<<endl;
+    cout << " X - CO -ORDINATES ( Start , End , Length ):  " <<setw(12) << Xmin << setw(12) << Xmax <<setw(12) << BoundX <<setw(12)  << endl;
+    cout << " Y - CO -ORDINATES ( Start , End , Length ):  " <<setw(12) << Ymin << setw(12) << Ymax <<setw(12) << BoundY <<setw(12) << endl;
+
    this->SetBoundBox(BoundX, BoundY);
    this->SetBoundBoxstart(StartX, StartY); 
    
@@ -1699,6 +1710,11 @@ int TDomain::MakeGrid(double *DCORVG, int *KVERT, int *KNPR, int *ELEMSREF,
   TInterfaceJoint3D *IFJoint;
   TIsoInterfaceJoint3D *IIJoint;
   double scale_x, scale_y,scale_z;
+
+//   scale_x = TDatabase::ParamDB->MESH_SCALE_X;
+//   scale_y = TDatabase::ParamDB->MESH_SCALE_Y;
+//   scale_z = TDatabase::ParamDB->MESH_SCALE_Z;
+
   // generate vertices, faces and cells
   // search neighbours
   KVEL = new int[N_Vertices];
@@ -1746,13 +1762,17 @@ int TDomain::MakeGrid(double *DCORVG, int *KVERT, int *KNPR, int *ELEMSREF,
       if ( counterrr == 0)
       {
         counterrr ++;
-        cout << " ================================= MESH HAS BEEN SCALLED - read =================================== " <<endl;
-        cout << " ==================== File Name ; Read Geo  , FunctionName : MakeGrid ======================= " <<endl;
-        cout << " ========= " << " Scale X = " <<scale_x << " Scale X = " <<scale_y << " Scale X = " <<scale_z << "==============="<<endl;
+        
+        if(fabs(scale_x - 1.0) > 1e-8 || fabs(scale_y - 1.0) > 1e-8 || fabs(scale_z - 1.0) > 1e-8)
+        {
+          cout << " ================================= MESH HAS BEEN SCALLED - read =================================== " <<endl;
+          cout << " ==================== File Name ; Read Geo  , FunctionName : MakeGrid ======================= " <<endl;
+          cout << " ========= " << " Scale X = " <<scale_x << " Scale X = " <<scale_y << " Scale X = " <<scale_z << "==============="<<endl;
+        }
       }       
-      X *= 1;
-      Y *= 0.346;
-      Z *= 0.346;
+      // X *= scale_x;
+      // Y *= scale_y;
+      // Z *= scale_z;
 	}
 	else
 	{
@@ -3470,6 +3490,9 @@ int TDomain::GmshGen(char *GeoFile)
   char  line[100];
  
   bool mark;
+
+  //Counter variable for Printing Scalling
+  int counterrr = 0;
   
   TVertex **NewVertices;
   TBaseCell **CellTree, *cell, *neib0, *neib1;  
@@ -3523,13 +3546,14 @@ int TDomain::GmshGen(char *GeoFile)
 //    cout <<"N_Vertices "<<N_Vertices<<endl;
    NewVertices = new TVertex*[N_Vertices];  
   
-  // THIVIN - Added mesh scalling based on the parameter values
+   // THIVIN - Added mesh scalling based on the parameter values
    // Scalling Parameters : 
    double scale_x = TDatabase::ParamDB->MESH_SCALE_X;
    double scale_y = TDatabase::ParamDB->MESH_SCALE_Y;
    double scale_z = TDatabase::ParamDB->MESH_SCALE_Z; 
-   cout << " SCALE VAL : " << scale_x << " " << scale_y << " " << scale_z <<endl;
-   int counterrr;
+  
+
+
     if ( counterrr == 0 )
     {
         counterrr ++;
@@ -3546,15 +3570,12 @@ int TDomain::GmshGen(char *GeoFile)
      dat.getline (line, 99);
      dat >> X >> Y >> Z;      
      
-     // Coordinates for the Siminhale Mesh
     X *= scale_x;
     // X += 0.1064326;
-    // X += 53.10985 + 0.1064357;
     Y *= scale_y;
-    // Y += 0.004829178;
+    Y += 0.0;
     Z *= scale_z;
     // Z += 0.3066431;
-    // Z += 153.0149 + 0.3066288;
 
     if(fabs(X) < 1e-5 ) X = 0.;
     if(fabs(Y) < 1e-5 ) Y = 0.;
@@ -3568,14 +3589,8 @@ int TDomain::GmshGen(char *GeoFile)
       if (Y < Ymin) Ymin = Y;
       if (Z > Zmax) Zmax = Z;
       if (Z < Zmin) Zmin = Z;  
-     
-     NewVertices[i] = new TVertex(X, Y, Z);
-      if (X > Xmax) Xmax = X;
-      if (X < Xmin) Xmin = X;
-      if (Y > Ymax) Ymax = Y;
-      if (Y < Ymin) Ymin = Y;
-      if (Z > Zmax) Zmax = Z;
-      if (Z < Zmin) Zmin = Z;  
+      
+
     } 
    // set bounding box
     StartX = Xmin;
@@ -3585,12 +3600,13 @@ int TDomain::GmshGen(char *GeoFile)
     BoundY = Ymax - Ymin;
     BoundZ = Zmax - Zmin;
 
-
     cout <<std::setprecision(7) <<endl;
     cout << " ------------------------------------ MESH DETAILS ---------------------------------------- "<<endl;
     cout << " X - CO -ORDINATES ( Start , End , Length ):  " <<setw(12) << Xmin << setw(12) << Xmax <<setw(12) << BoundX <<setw(12)  << endl;
     cout << " Y - CO -ORDINATES ( Start , End , Length ):  " <<setw(12) << Ymin << setw(12) << Ymax <<setw(12) << BoundY <<setw(12) << endl;
     cout << " Z - CO -ORDINATES ( Start , End , Length ):  " <<setw(12) << Zmin << setw(12) << Zmax <<setw(12) << BoundZ <<setw(12) << endl;
+
+
 
    this->SetBoundBox(StartX, StartY, StartZ, BoundX, BoundY, BoundZ);
    
@@ -4036,13 +4052,13 @@ int TDomain::GmshGen(char *GeoFile)
   return 0;
 }
 
-int TDomain::TetrameshGen(char *GeoFile)
-{
+// int TDomain::TetrameshGen(char *GeoFile,char * prm)
+// {
   
   
   
-  return 0;
-}
+//   return 0;
+// }
 
 
 #endif // __2D__

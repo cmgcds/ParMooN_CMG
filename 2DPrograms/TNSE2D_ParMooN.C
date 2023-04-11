@@ -20,7 +20,6 @@
 #include <MainUtilities.h> // #include <TimeUtilities.h>
 #include <TNSE2D_ParamRout.h>
 #include <TimeDiscRout.h>
-
 #include <string.h>
 #include <sstream>
 #include <MooNMD_Io.h>
@@ -29,13 +28,13 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <FTLE.h>
-#include<algorithm>
+#include <algorithm>
 
 // =======================================================================
 // include current example
 // =======================================================================
-// #include "../Examples/TNSE_2D/DrivenCavity.h" //   in unit square
-#include  "../Examples/TNSE_2D/FlowPastCylinder.h"
+#include "../Examples/TNSE_2D/DrivenCavity.h" //   in unit square
+// #include  "../Examples/TNSE_2D/FlowPastCylinder.h"
 // #include "../Examples/TNSE_2D/Bsp3.h" // smooth sol in unit square
 // #include "../Examples_All/TNSE_2D/Benchmark2.h"
 // #include "../Examples/TNSE_2D/SinCos.h" // smooth sol in unit square
@@ -98,12 +97,11 @@ int main(int argc, char *argv[])
 
 	/* include the mesh from a meshgenerator, for a standard mesh use the build-in function */
 	// standard mesh
-	GEO = TDatabase::ParamDB->GEOFILE;
-	Domain->Init(NULL, GEO);
+	Domain->GmshGen(TDatabase::ParamDB->GEOFILE);
+	OutPut("GMSH used for meshing !!!" << endl);
 
 	// refine grid up to the coarsest level
-	for (i = 0; i < TDatabase::ParamDB->UNIFORM_STEPS; i++)
-		Domain->RegRefineAll();
+
 
 	if (TDatabase::ParamDB->WRITE_PS)
 	{
@@ -487,33 +485,33 @@ int main(int argc, char *argv[])
 		img++;
 	}
 
-	// Save all Solutions into a file for Reuse
-	std::ofstream file_uSol("U_Solution.txt");
-	std::ofstream file_vSol("V_Solution.txt");
+	// // Save all Solutions into a file for Reuse
+	// std::ofstream file_uSol("U_Solution.txt");
+	// std::ofstream file_vSol("V_Solution.txt");
 
-	for ( int i = 0 ; i < numFiles ; i++)
-	{
-		for( int dof =0 ; dof < N_U; dof++)
-		{
-			file_uSol << solVector_U[i*N_U + dof]<<",";
-		}
-		file_uSol<<endl;
-	}
+	// for ( int i = 0 ; i < numFiles ; i++)
+	// {
+	// 	for( int dof =0 ; dof < N_U; dof++)
+	// 	{
+	// 		file_uSol << solVector_U[i*N_U + dof]<<",";
+	// 	}
+	// 	file_uSol<<endl;
+	// }
 	
-	for ( int i = 0 ; i < numFiles ; i++)
-	{
-		for( int dof =0 ; dof < N_U; dof++)
-		{
-			file_vSol << solVector_V[i*N_U + dof]<<",";
-		}
-		file_vSol<<endl;
-	}
+	// for ( int i = 0 ; i < numFiles ; i++)
+	// {
+	// 	for( int dof =0 ; dof < N_U; dof++)
+	// 	{
+	// 		file_vSol << solVector_V[i*N_U + dof]<<",";
+	// 	}
+	// 	file_vSol<<endl;
+	// }
 	
 
-	//FEVectfunction for all components. 
+	// //FEVectfunction for all components. 
 	
-	TFEVectFunct2D* VelocityAll_U = new TFEVectFunct2D(Velocity_FeSpace,NameString,NameString,solVector_U,N_U,numFiles);
-	TFEVectFunct2D* VelocityAll_V = new TFEVectFunct2D(Velocity_FeSpace,NameString,NameString,solVector_V,N_U,numFiles);
+	// TFEVectFunct2D* VelocityAll_U = new TFEVectFunct2D(Velocity_FeSpace,NameString,NameString,solVector_U,N_U,numFiles);
+	// TFEVectFunct2D* VelocityAll_V = new TFEVectFunct2D(Velocity_FeSpace,NameString,NameString,solVector_V,N_U,numFiles);
 
 	// for ( int i = 0 ; i < numFiles;i++)
 	// {
@@ -525,18 +523,18 @@ int main(int argc, char *argv[])
 	// }
 	// exit(0);
 	// Create more particles, using higher order FEspace
-	TFESpace2D* ftleFespace = new TFESpace2D(coll,"ftle","ftle",BoundCondition,3,NULL);
+	// TFESpace2D* ftleFespace = new TFESpace2D(coll,"ftle","ftle",BoundCondition,3,NULL);
 	
-	FTLE *ftle = new FTLE(ftleFespace,Velocity, 55,VelocityAll_U,VelocityAll_V);
+	// FTLE *ftle = new FTLE(ftleFespace,Velocity, 55,VelocityAll_U,VelocityAll_V);
 
-	cout << " NUMFILES : " << numFiles<<endl;
+	// cout << " NUMFILES : " << numFiles<<endl;
 
-	double T = 4;
-	for ( int i = 0 ; i < numFiles-T; i++)
-	{
-		ftle->computeFTLE(TDatabase::TimeDB->CURRENTTIMESTEPLENGTH,T,i);
-		cout << " Completed for " << i <<endl;
-	}
+	// double T = 4;
+	// for ( int i = 0 ; i < numFiles-T; i++)
+	// {
+	// 	ftle->computeFTLE(TDatabase::TimeDB->CURRENTTIMESTEPLENGTH,T,i);
+	// 	cout << " Completed for " << i <<endl;
+	// }
 		
 
 

@@ -1095,6 +1095,68 @@ bool TGridCell::PointInCell(double X, double Y, double Z)
   }
   return ret;
 }
+
+// Thivin -- Point in Cell (ONLY FOR TETRAHEDRON)
+// Thread safe routine - Parallel version
+
+bool TGridCell::PointInCell_Parallel(double X, double Y, double Z)
+{
+  double xmin = 1e+8,  ymin = 1e+8, zmin = 1e+8;
+  double xmax = -1e+8,  ymax = -1e+8, zmax = -1e+8;
+  double x, y, z;
+  int i;
+  bool ret = FALSE;
+  TTetraAffin *rt;
+  double xi, eta, zeta;
+
+  // rt = (TTetraAffin *)TFEDatabase3D::GetRefTrans3D(TetraAffin);
+
+  TTetraAffin *ta_rt = new TTetraAffin();
+
+ 
+  
+  // nur fuer kantenparallele Hexaeder !!!
+  if (GetType()==Hexahedron || GetType()==Brick) 
+  {
+    for (i=0; i<8; i++)
+    {
+      Vertices[i]->GetCoords(x,y,z);
+      if (x > xmax) xmax=x;
+      if (y > ymax) ymax=y;
+      if (z > zmax) zmax=z;
+      if (x < xmin) xmin=x;
+      if (y < ymin) ymin=y;
+      if (z < zmin) zmin=z;
+    } // endfor i
+    if (xmin <= X && X <= xmax && 
+        ymin <= Y && Y <= ymax &&
+        zmin <= Z && Z <= zmax)
+    { 
+      ret = TRUE;
+    }
+  }
+  else
+  {
+    // Error("PointInCell works only for hexahedrons !" << endl);
+    ((TTetraAffin *)ta_rt)->SetCell(this);
+    ta_rt->GetRefFromOrig(X, Y, Z, xi, eta, zeta);
+    if(-1e-4 < xi && xi < 1.0001 &&
+       -1e-4 < eta && eta < 1.0001 &&
+       -1e-4 < zeta && zeta < 1.0001 &&
+       xi + eta + zeta < 1.0001)
+    {
+      ret = TRUE;
+    }
+    // cout << "ref: " << xi << "  " << eta << "  " << zeta << endl;
+    ta_rt->GetRefFromOrig(xi, eta, zeta, X, Y, Z);
+    // cout << "orig: " << X << "  " << Y << "  " << Z << endl;
+  }
+
+  delete ta_rt;
+  return ret;
+}
+
+
 #endif // __2D__
 
 int TGridCell::GetGeoLevel()

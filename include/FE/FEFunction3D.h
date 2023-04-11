@@ -122,6 +122,11 @@ class TFEFunction3D
                            double x, double y, double z, 
                            double *values);
 
+    /** Thivin - Thread safe version of FindValueLocal*/
+    void FindValueLocal_Parallel(TBaseCell *cell, int cell_no,
+                                            double x, double y, double z,
+                                            double *values);
+
     /** calculate the interpolation of an exact function */
     void Interpolate(DoubleFunct3D *Exact);
 

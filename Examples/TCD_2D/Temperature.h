@@ -48,7 +48,7 @@ void BoundValue(int BdComp, double Param, double &value)
             if(fabs(Param - 0) < 1e-8 || fabs(Param-1.0) < 1e-8)
                 value = 0.0;
             else
-                value = 0.1;
+                value = 1;
 
             break;
     case 3: value = 0;

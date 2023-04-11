@@ -107,10 +107,15 @@ class TGridCell : public TBaseCell
 #else
     /**  @brief return whether a point is inside a cell */
     virtual bool PointInCell(double X, double Y, double Z);
+
+    /**  @brief Thivin - return whether a point is inside a cell-  Thread safe, only for tetraheadral */
+    virtual bool PointInCell_Parallel(double X, double Y, double Z);
 #endif
 
     /**  @brief return whether a point is inside a cell */
     virtual bool PointInCell(double X, double Y);
+
+
 
     /**  @brief get diameter of a cell */
     virtual double GetDiameter()

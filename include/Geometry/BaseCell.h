@@ -293,6 +293,9 @@ class TBaseCell
 #ifdef __3D__
     virtual bool PointInCell(double X, double Y, double Z) = 0;
 
+    /**  @brief Thivin - return whether a point is inside a cell-  Thread safe, only for tetraheadral */
+    virtual bool PointInCell_Parallel(double X, double Y, double Z) = 0;
+
      // added 25.04.2010 for fixing refinement problem
      void CorrectBoundaryVertices(TVertex **NewVertices, TJoint **NewJoints);
 #endif

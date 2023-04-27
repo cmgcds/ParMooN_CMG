@@ -182,6 +182,13 @@ int main(int argc, char *argv[])
 		os << " ";
 
 		mkdir(vtkdir, 0777);
+		
+		//exit based on the number of arguments
+		if (argc < 4)
+		{
+			cout << "Usage: " << argv[0] << " <parameter file>  <number of particles> <path to csv>" << endl;
+			exit(1);
+		}
 
 		// ======================================================================
 		// set the database values and generate mesh
@@ -689,7 +696,7 @@ int main(int argc, char *argv[])
 
 
 	particleObject->OutputFile("siminhale_0000.csv");
-    int StartNo = 4;
+    int StartNo = 2;
 
 
 	// time loop starts
@@ -754,116 +761,106 @@ int main(int argc, char *argv[])
                 cout << "Start No : " << StartNo <<endl;
 				
                 // Read from the CSV value into solution array 
-                std::string prefix(argv[3]);
-                std::string filename_CSV = prefix + "/Solution_u_" + std::to_string(StartNo) +".csv";
-                std::ifstream file(filename_CSV.c_str());
-
-				if(!file) 
-				{
-					cerr << " Unable to open file " << filename_CSV <<endl;
-					exit(0);
-				}
-                double sum2 = 0;
-                std::string line;
-                while(std::getline(file,line))
-                {
-					sol[lineNo] = std::stod(line);
-					lineNo++;
-					sum2 += std::stod(line);
-                }
-                file.close();
-
-				// double summm = 0;
-				// for (int i = 0; i < N_U; i++)
-				// 	summm += sol[i];
-
-				// cout << " summm  " << summm << endl;
-				// cout << " line Sum : " << sum2 <<endl;
-
-                filename_CSV = prefix + "/Solution_v_" + std::to_string(StartNo) +".csv";
-                file.open(filename_CSV.c_str());
-
-				sum2 =0;
-				
-                if(!file) 
-				{
-					cerr << " Unable to open file " << filename_CSV <<endl;
-					exit(0);
-				}
-                while(std::getline(file,line))
-                {
-					sol[lineNo ] = std::stod(line);
-					lineNo++;
-					sum2+= std::stod(line);
-                }
-                file.close();
-
-				// summm = 0;
-				// for (int i = N_U; i < 2*N_U; i++)
-				// 	summm += sol[i];
-
-				// cout << " summm  " <<summm <<  endl;
-				// cout << " line Sum : " << sum2 <<endl;
-
-
-
-
-                filename_CSV = prefix + "/Solution_w_" + std::to_string(StartNo) +".csv";
-                file.open(filename_CSV.c_str());
-				sum2 =0;
-				if(!file) 
-				{
-					cerr << " Unable to open file " << filename_CSV <<endl;
-					exit(0);
-				}
+                std::string prefix(argv[3]); 
                 
-                while(std::getline(file,line))
-                {
-					sol[lineNo ] = std::stod(line);
-					lineNo++;
-					sum2 += std::stod(line);
-                }
-                file.close();
+				std::string baseFileName = "Solution_";
 
-				// summm = 0;
-				// for (int i = 2*N_U; i < 3*N_U; i++)
-				// 	summm += sol[i];
+				// Save the u Solution, the number of char in the img should be 6, remaing space is padded by zeros
+				int padding = 6 - std::to_string(StartNo).length();
 
-				// cout << " summm  " << summm << endl;
-				// cout << " line Sum : " << sum2 <<endl;
+				// create the file name
+				std::string u1FileName = prefix + baseFileName + "u_" + std::string(padding, '0') + std::to_string(StartNo) + ".bin";
+				std::string u2FileName = prefix + baseFileName + "v_"+ std::string(padding, '0') + std::to_string(StartNo) + ".bin";
+				std::string u3FileName = prefix + baseFileName + "w_"+ std::string(padding, '0') + std::to_string(StartNo) + ".bin";
+				std::string pFileName = prefix + baseFileName + "p_"+ std::string(padding, '0') + std::to_string(StartNo) + ".bin";
 
+				std::string filename = prefix + std::to_string(StartNo) + ".bin";
 				
-				filename_CSV = prefix + "/Solution_p_" + std::to_string(StartNo) +".csv";
-                file.open(filename_CSV.c_str());
-				sum2 = 0;
-				if(!file) 
-				{
-					cerr << " Unable to open file " << filename_CSV <<endl;
-					exit(0);
-				}
-                
-                while(std::getline(file,line))
-                {
-					sol[lineNo ]= std::stod(line);
-					lineNo++;
-					sum2 += std::stod(line);
-                }
-                file.close();
 
-				// summm = 0;
-				// for (int i = 3*N_U; i < N_TotalDOF; i++)
-				// 	summm += sol[i];
+				// Read the file into the solution array
+				std::ifstream u1File(u1FileName, std::ios::in | std::ios::binary);
+				std::ifstream u2File(u2FileName, std::ios::in | std::ios::binary);
+				std::ifstream u3File(u3FileName, std::ios::in | std::ios::binary);
+				std::ifstream pFile(pFileName, std::ios::in | std::ios::binary);
 
-
+				// throw an error if the file is not found
+				if (!u1File.is_open())
+					throw std::runtime_error("Could not open file " + u1FileName);
+				if (!u2File.is_open())
+					throw std::runtime_error("Could not open file " + u2FileName);
+				if (!u3File.is_open())
+					throw std::runtime_error("Could not open file " + u3FileName);
+				if (!pFile.is_open())
+					throw std::runtime_error("Could not open file " + pFileName);
 				
-                // INcresment the file number 
-                StartNo++;
 
-				
-				// summm = 0;
-				// for (int i = 0; i < N_TotalDOF; i++)
-				// 	summm += sol[i];
-				
+				// Read the file into the solution array
+				u1File.read((char *)sol, sizeof(double) * N_U);
+				u2File.read((char *)sol + sizeof(double) * N_U, sizeof(double) * N_U);
+				u3File.read((char *)sol + sizeof(double) * 2 * N_U, sizeof(double) * N_U);
+				pFile.read((char *)sol + sizeof(double) * 3 * N_U, sizeof(double) * N_P);
+
+				// Close the file
+				u1File.close();
+				u2File.close();
+				u3File.close();
+				pFile.close();
+
+				// print the first three and last three values of the solution
+				cout << "u1FileName: " << u1FileName << endl;
+				cout << "sol[0]: " << sol[0] << endl;
+				cout << "sol[1]: " << sol[1] << endl;
+				cout << "sol[2]: " << sol[2] << endl;
+				cout << "sol[N_U-3]: " << sol[N_U-3] << endl;
+				cout << "sol[N_U-2]: " << sol[N_U-2] << endl;
+				cout << "sol[N_U-1]: " << sol[N_U-1] << endl;
+
+				// Print the norm of the solution
+				cout << "Norm of the solution: " << sqrt(Ddot(N_U,sol,sol)) << endl;
+
+
+				// print the first three and last three values of the solution u2
+				cout <<"u2FileName: "  << endl;
+				cout << "sol[N_U]: " << sol[N_U] << endl;
+				cout << "sol[N_U+1]: " << sol[N_U+1] << endl;
+				cout << "sol[N_U+2]: " << sol[N_U+2] << endl;
+				cout << "sol[2*N_U-3]: " << sol[2*N_U-3] << endl;
+				cout << "sol[2*N_U-2]: " << sol[2*N_U-2] << endl;
+				cout << "sol[2*N_U-1]: " << sol[2*N_U-1] << endl;
+
+				// Print the norm of the solution u2
+				cout << "Norm of the solution u2: " << sqrt(Ddot(N_U,sol+N_U,sol+N_U)) << endl;
+
+
+				// print the first three and last three values of the solution u3
+				cout <<"u3FileName: "  << endl;
+				cout << "sol[2*N_U]: " << sol[2*N_U] << endl;
+				cout << "sol[2*N_U+1]: " << sol[2*N_U+1] << endl;
+				cout << "sol[2*N_U+2]: " << sol[2*N_U+2] << endl;
+				cout << "sol[3*N_U-3]: " << sol[3*N_U-3] << endl;
+				cout << "sol[3*N_U-2]: " << sol[3*N_U-2] << endl;
+				cout << "sol[3*N_U-1]: " << sol[3*N_U-1] << endl;
+
+				// Print the norm of the solution u3
+				cout << "Norm of the solution u3: " << sqrt(Ddot(N_U,sol+2*N_U,sol+2*N_U)) << endl;
+
+
+				// print the first three and last three values of the solution p
+				cout <<"pFileName: " << pFileName << endl;
+				cout << "sol[3*N_U]: " << sol[3*N_U] << endl;
+				cout << "sol[3*N_U+1]: " << sol[3*N_U+1] << endl;
+				cout << "sol[3*N_U+2]: " << sol[3*N_U+2] << endl;
+				cout << "sol[3*N_U + N_P - 3]: " << sol[3*N_U + N_P - 3] << endl;
+				cout << "sol[3*N_U + N_P - 2]: " << sol[3*N_U + N_P - 2] << endl;
+				cout << "sol[3*N_U + N_P - 1]: " << sol[3*N_U + N_P - 1] << endl;
+
+				// Print the norm of the solution p
+				cout << "Norm of the solution p: " << sqrt(Ddot(N_P,sol+3*N_U,sol+3*N_U)) << endl;
+
+
+				// Increment the file number
+				StartNo++;
+
 				
 
 				cout << " Total lines read : " << lineNo <<endl;
@@ -891,7 +888,7 @@ int main(int argc, char *argv[])
 					img++;
 				}
 				
-                if (m >= 1 )
+                if (m >= 20 )  // To start the interpolation after 20 time steps ( to ensure that flow has propogated )
                 {
                     cout << " Interpolation Started" <<endl;
                     //Compute the Particle Displacement for the FTLE values 

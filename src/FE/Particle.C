@@ -342,8 +342,8 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
         double CD = (24 / Re_Particle) * (1 + 0.15 * pow(Re_Particle, 0.687));
         double CC = 1.0 + ((2 * lambda) / particleDiameter) * (1.257 + 0.4 * exp(-1.0 * ((1.1 * particleDiameter) / (2 * lambda))));
         CC = 1.0;
-        // return CD/CC;
-        return 1;
+        return CD/CC;
+        // return 1;
     };
 
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
@@ -754,7 +754,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     TFEFunction3D *FEFuncVelocityY = VelocityFEVectFunction->GetComponent(1);
     TFEFunction3D *FEFuncVelocityZ = VelocityFEVectFunction->GetComponent(2);
 
-    return ;
+
     #pragma omp parallel for num_threads(42)
     for (int i = 0; i < m_ParticlesReleased; i++)
     {
@@ -876,10 +876,10 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
             }
         }
         
-        #pragma omp critical
-        {
-            cout << "Particle " << i << " is in cell " << currentCell[i] << " and was in cell " << previousCell[i] << endl;
-        }
+        // #pragma omp critical
+        // {
+        //     cout << "Particle " << i << " is in cell " << currentCell[i] << " and was in cell " << previousCell[i] << endl;
+        // }
 
         // If Not, particle is deposited.
         if (!insideDomain)

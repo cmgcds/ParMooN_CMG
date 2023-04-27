@@ -65,8 +65,8 @@ double timeC = 0;
 //   #include "../Examples/TNSE_3D/Hole3D.h"
 //  #include "../Examples/TNSE_3D/AnsatzLinConst.h"
 //  #include "../Examples/TNSE_3D/Bsp3.h"
-//  #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
-#include "../Main_Users/Thivin/Examples/TNSE3D/Channel.h"
+ #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
+// #include "../Main_Users/Thivin/Examples/TNSE3D/Channel.h"
 //  #include "../Examples/TNSE_3D/Channel3D_volker.h"
 // #include "../Examples/TNSE_3D/Channel3D_slip.h"
 // #include "../Examples/TNSE_3D/test_slip.h"
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
 
 		else if (TDatabase::ParamDB->MESH_TYPE == 2)
 		{
-			Domain->TetrameshGen(TDatabase::ParamDB->GEOFILE);
+			// Domain->TetrameshGen(TDatabase::ParamDB->GEOFILE);
 		} // tetgen mesh
 		else
 		{
@@ -683,9 +683,9 @@ int main(int argc, char *argv[])
 #endif
 
 	// INTIALISE THE PARTICLES 
-	TParticles* particleObject =  new TParticles(1000,0.0,0.0,0.5,Velocity_FeSpace[0]);
-	cout << " Particles Initialised " <<endl;
-	particleObject->OutputFile("positionBend_0000.csv");
+	// TParticles* particleObject =  new TParticles(1000,0.0,0.0,0.5,Velocity_FeSpace[0]);
+	// cout << " Particles Initialised " <<endl;
+	// particleObject->OutputFile("positionBend_0000.csv");
 
 	// time loop starts
 	while (TDatabase::TimeDB->CURRENTTIME < end_time) // time cycle
@@ -925,20 +925,113 @@ int main(int argc, char *argv[])
 					img++;
 				}
 				cout << " Interpolation Started" <<endl;
-				//Compute the Particle Displacement for the FTLE values 
-				particleObject->interpolateNewVelocity(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0]);
-				std::string old_str = std::to_string(img-2);
-				size_t n_zero = 4;
-				auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
-				std::string name =  "positionBend_" + new_str + ".csv";
-				particleObject->OutputFile(name.c_str());
-				
+
+				// Write the output to a file in binary format
+				std::string baseFileName = "Solution_";
+
+				// Save the u Solution, the number of char in the img should be 6, remaing space is padded by zeros
+				int padding = 6 - std::to_string(img - 1).length();
+
+				// create the file name
+				std::string u1FileName = baseFileName + "u_" + std::string(padding, '0') + std::to_string(img - 1) + ".bin";
+				std::string u2FileName = baseFileName + "v_"+ std::string(padding, '0') + std::to_string(img - 1) + ".bin";
+				std::string u3FileName = baseFileName + "w_"+ std::string(padding, '0') + std::to_string(img - 1) + ".bin";
+				std::string pFileName = baseFileName + "p_"+ std::string(padding, '0') + std::to_string(img - 1) + ".bin";
+
+				// print the first three and last three values of the solution
+				// cout << "u1FileName: " << u1FileName << endl;
+				// cout << "sol[0]: " << sol[0] << endl;
+				// cout << "sol[1]: " << sol[1] << endl;
+				// cout << "sol[2]: " << sol[2] << endl;
+				// cout << "sol[N_U-3]: " << sol[N_U-3] << endl;
+				// cout << "sol[N_U-2]: " << sol[N_U-2] << endl;
+				// cout << "sol[N_U-1]: " << sol[N_U-1] << endl;
+
+				// Print the norm of the solution
+				// cout << "Norm of the solution: " << sqrt(Ddot(N_U,sol,sol)) << endl;
+
+
+				// // print the first three and last three values of the solution u2
+				// cout <<"u2FileName: "  << endl;
+				// cout << "sol[N_U]: " << sol[N_U] << endl;
+				// cout << "sol[N_U+1]: " << sol[N_U+1] << endl;
+				// cout << "sol[N_U+2]: " << sol[N_U+2] << endl;
+				// cout << "sol[2*N_U-3]: " << sol[2*N_U-3] << endl;
+				// cout << "sol[2*N_U-2]: " << sol[2*N_U-2] << endl;
+				// cout << "sol[2*N_U-1]: " << sol[2*N_U-1] << endl;
+
+				// // Print the norm of the solution u2
+				// cout << "Norm of the solution u2: " << sqrt(Ddot(N_U,sol+N_U,sol+N_U)) << endl;
+
+
+				// // print the first three and last three values of the solution u3
+				// cout <<"u3FileName: "  << endl;
+				// cout << "sol[2*N_U]: " << sol[2*N_U] << endl;
+				// cout << "sol[2*N_U+1]: " << sol[2*N_U+1] << endl;
+				// cout << "sol[2*N_U+2]: " << sol[2*N_U+2] << endl;
+				// cout << "sol[3*N_U-3]: " << sol[3*N_U-3] << endl;
+				// cout << "sol[3*N_U-2]: " << sol[3*N_U-2] << endl;
+				// cout << "sol[3*N_U-1]: " << sol[3*N_U-1] << endl;
+
+				// // Print the norm of the solution u3
+				// cout << "Norm of the solution u3: " << sqrt(Ddot(N_U,sol+2*N_U,sol+2*N_U)) << endl;
+
+
+				// // print the first three and last three values of the solution p
+				// cout <<"pFileName: " << pFileName << endl;
+				// cout << "sol[3*N_U]: " << sol[3*N_U] << endl;
+				// cout << "sol[3*N_U+1]: " << sol[3*N_U+1] << endl;
+				// cout << "sol[3*N_U+2]: " << sol[3*N_U+2] << endl;
+				// cout << "sol[3*N_U + N_P - 3]: " << sol[3*N_U + N_P - 3] << endl;
+				// cout << "sol[3*N_U + N_P - 2]: " << sol[3*N_U + N_P - 2] << endl;
+				// cout << "sol[3*N_U + N_P - 1]: " << sol[3*N_U + N_P - 1] << endl;
+
+				// // Print the norm of the solution p
+				// cout << "Norm of the solution p: " << sqrt(Ddot(N_P,sol+3*N_U,sol+3*N_U)) << endl;
+
+
+
+				// Save the u Solution into the u1FIlename using ofstream and set precision to 16
+				std::ofstream u1File(u1FileName, std::ios::out | std::ios::binary);
+				u1File.precision(16);
+
+				// Write the double pointer array sol[0] to sol[N_U] into the file u1File
+				u1File.write(reinterpret_cast<const char *>(sol), N_U * sizeof(double));
+
+				// Close the file u1File
+				u1File.close();
+
+				// Save the u Solution into the u2FIlename using ofstream and set precision to 16
+				std::ofstream u2File(u2FileName, std::ios::out | std::ios::binary);
+				u2File.precision(16);
+
+				// Write the double pointer array sol[N_U] to sol[2*N_U] into the file u2File
+				u2File.write(reinterpret_cast<const char *>(sol +N_U ), N_U * sizeof(double));
+
+				// Close the file u2File
+				u2File.close();
+
+				// Save the u Solution into the u3FIlename using ofstream and set precision to 16
+				std::ofstream u3File(u3FileName, std::ios::out | std::ios::binary);
+				u3File.precision(16);
+
+				// Write the double pointer array sol[2*N_U] to sol[3*N_U] into the file u3File
+				u3File.write(reinterpret_cast<const char *>(sol + (2 * N_U)), N_U * sizeof(double));
+
+				// Close the file u3File
+				u3File.close();
+
+				// Save the p Solution into the pFIlename using ofstream and set precision to 16
+				std::ofstream pFile(pFileName, std::ios::out | std::ios::binary);
+				pFile.precision(16);
+
+				// write the double pointer array sol[3*N_U] to sol[3*N_U + N_P] into the file pFile
+				pFile.write(reinterpret_cast<const char *>(sol+ (3 * N_U)), N_P * sizeof(double));
+
+				// close pfile
+				pFile.close();	
 #endif		
 		}
-
-		
-
-		
 
 	} // while(TDatabase::TimeDB->CURRENTTIME< e
 

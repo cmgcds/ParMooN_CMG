@@ -394,7 +394,7 @@ string(CONCAT runScriptString [=[#!/bin/bash
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 GREEN='\033[0;32m'
-if (( $# != 1 )); then
+if (( $# <= 1 )); then
     printf "${RED} Please pass the dat file as parameter${NC}\n"
     exit;
 fi

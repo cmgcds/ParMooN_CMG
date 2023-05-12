@@ -21,9 +21,11 @@ class TParticles
         std::vector<bool> isParticleDeposited;
 
         //  Track cells with Boundary Faces. 
-        std::vector<int> cellsOnBoundary;
-        std::vector<int> cellsOnBoundaryFaces;
-
+        // Generate a map of cells with boundary faces using map 
+        std::map<int,std::vector<int> > m_mapBoundaryFaceIds;
+        std::map<int,int > m_cornerTypeOfBoundCells;
+        
+        std::map<int,std::vector<double> > m_BoundaryDOFsOnCell; 
         // Track the Neibhour DOF's with a vector
         
 
@@ -56,9 +58,16 @@ class TParticles
         int m_ErrorParticlesCount = 0;
         std::vector<int> isErrorParticle;
 
+        // Escaped Particles Count
+        int m_EscapedParticlesCount = 0;
+        std::vector<int> isEscapedParticle;
+
+
         // Number of particles released
         int m_ParticlesReleased = 0;
 
+        // Number of Ghose Particles 
+        int m_ghostParticlesCount = 0;
         // Position 
 
         //-- constructor--//

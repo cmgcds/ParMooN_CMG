@@ -91,6 +91,7 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     position_Y_old.resize(N_Particles, 0.0);
     position_Z_old.resize(N_Particles, 0.0);
     isErrorParticle.resize(N_Particles, 0);
+    isEscapedParticle.resize(N_Particles, 0);
     Density.resize(N_Particles, 914); // earlier 1266
 
     currentCell.resize(N_Particles, 0);
@@ -181,20 +182,28 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
         //     position_Z[particleNo] = 0.0008369974;
         // }
 
+       
+
         // Identify, which cell the particle Belongs to.
         int N_Cells = fespace->GetCollection()->GetN_Cells();
+        #pragma omp parallel for num_threads(42) schedule(static,1)  shared(N_Cells, fespace, particleNo,currentCell) 
         for (int cellId = 0; cellId < N_Cells; cellId++)
         {
             TBaseCell *cell = fespace->GetCollection()->GetCell(cellId);
             bool insideDomain = false;
-            if (cell->PointInCell(position_X[particleNo], position_Y[particleNo], position_Z[particleNo]))
+            if (cell->PointInCell_Parallel(position_X[particleNo], position_Y[particleNo], position_Z[particleNo]))
             {
                 insideDomain = true;
                 currentCell[particleNo] = cellId;
-                break;
+                // cout <<" Particle : " << particleNo << " Inside Cell : " << cellId <<endl;
+                #pragma omp cancel for
+
             }
         }
     }
+     
+
+    cout << " All Particles Initialised " << endl;
 
 
     // print the particle positions and their cell Ids using setwidth
@@ -215,8 +224,20 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
     int N_Joints;
     const int *TmpLen;
     const int *TmpFV;
+    
+
+    // Variables For Storing the Corner Parameters
+    int N_corner_20 = 0;
+    int N_corner_21 = 0;
+    int N_corner_2 = 0;
+    int N_corner_1 = 0;
+    int N_corner_0 = 0;
+    int N_corner_m1 = 0;
+    // for (int cellNo = 0; cellNo < N_Cells; cellNo++)
+    #pragma omp parallel for num_threads(32) schedule(static,1)  shared(N_Cells, fespace,m_cornerTypeOfBoundCells, m_mapBoundaryFaceIds,m_BoundaryDOFsOnCell)
     for (int cellNo = 0; cellNo < N_Cells; cellNo++)
     {
+
         // Get the cell
         TBaseCell *cell = fespace->GetCollection()->GetCell(cellNo);
 
@@ -224,11 +245,12 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
         FE3D elementId = fespace->GetFE3D(cellNo, cell);
         TFE3D *element = TFEDatabase3D::GetFE3D(elementId);
         TFEDesc3D *fedesc = element->GetFEDesc3D();
-        cell->GetShapeDesc()->GetFaceVertex(TmpFV, TmpLen, MaxLen);
+        // cell->GetShapeDesc()->GetFaceVertex(TmpFV, TmpLen, MaxLen);
         TBoundFace *Bdface; // Pointer to Boundary Face in 3D Cell
         TBoundComp *BoundComp;
         N_Joints = cell->GetN_Joints();
         bool BoundaryJointFound = false;
+        std::vector<int> tmp_face_ids;
         for (int jointId = 0; jointId < N_Joints; jointId++)
         {
             TJoint *Joint = cell->GetJoint(jointId);
@@ -239,24 +261,120 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
                 Bdface = (TBoundFace *)Joint;
                 BoundComp = Bdface->GetBoundComp();
                 int bdid = BoundComp->GetID();
-                if (bdid != 0)
-                {
-                    cellsOnBoundary.push_back(cellNo);
-                    cellsOnBoundaryFaces.push_back(jointId);
-                    BoundaryJointFound = true;
-                }
+                // cellsOnBoundary.push_back(cellNo);
+                tmp_face_ids.push_back(bdid);
+                BoundaryJointFound = true;
             }
-            if (BoundaryJointFound)
-                break;
+        }
+        
+        int cornerType = 0;
+
+        
+        // Assign the Face ids to the the map with cellNo as key
+
+        // if tmp_face_ids has 0 and 2, its inlet corner and assign value of cornerType as 20
+        // if tmp_face_ids has 1 and 2, its inlet corner and assign value of cornerType as 21
+        // if tmp_face_ids have only 1, its inlet and assign value of cornerType as 1
+        // if tmp_face_ids have only 0, its inlet and assign value of cornerType as 0
+        // else its not inlet corner and assign value of cornerType as -1
+        // Write the code using std::find
+        if(BoundaryJointFound)
+        {
+            #pragma omp critical
+            m_mapBoundaryFaceIds[cellNo] = tmp_face_ids;
+
+            if(std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 0) != tmp_face_ids.end() && std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 2) != tmp_face_ids.end())
+            {
+                cornerType = 20;
+                N_corner_20++;
+            }
+            else if(std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 1) != tmp_face_ids.end() && std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 2) != tmp_face_ids.end())
+            {
+                cornerType = 21;
+                N_corner_21++;
+            }
+            else if(std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 2) != tmp_face_ids.end())
+            {
+                cornerType = 2;
+                N_corner_2++;
+            }
+            else if(std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 0) != tmp_face_ids.end())
+            {
+                cornerType = 0;
+                N_corner_0++;
+            }
+            else if(std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 1) != tmp_face_ids.end())
+            {
+                cornerType = 1;
+                N_corner_1++;
+            }
+            else
+            {
+                cornerType = -1;
+                N_corner_m1++;
+            }
+
+            
+            #pragma omp critical
+            m_cornerTypeOfBoundCells[cellNo] = cornerType;
+            
+
+        }
+
+        
+
+        // In A given cell, Identify all the Boundary DOF Co-ordinates that exists within the cell. 
+        // This is required to identify the deposition of the particle.
+        std::vector<double> co_ordinates;
+        int *globalDOFindex = fespace->GetGlobalNumbers();
+        int *BeginIndex = fespace->GetBeginIndex();
+        int start = BeginIndex[cellNo];
+        int end = BeginIndex[cellNo + 1];
+        int N_Active = fespace->GetActiveBound();
+        
+        for (int index = start; index < end; index++)
+        {
+            if (globalDOFindex[index] >= N_Active)
+            {
+                double xx = 0.;
+                double yy = 0.;
+                double zz = 0.;
+                
+                // mark the deposition as the vertex point.
+                fespace->GetDOFPosition_Parallel(globalDOFindex[index], xx, yy, zz);
+                co_ordinates.push_back(xx);
+                co_ordinates.push_back(yy);
+                co_ordinates.push_back(zz);
+
+                // Assign the DOF Co-ordinates to the map with cellNo as key
+                #pragma omp critical
+                m_BoundaryDOFsOnCell[cellNo] = co_ordinates;
+
+                 break;
+            }
         }
     }
 
     cout <<" Reached here 2" <<endl;
 
+
+
     /// Print the Statistics of the Particle INitialisation
     cout << " Number of particles Initialised : " << N_Particles << endl;
-    cout << " No ofBoundary cells Identified  : " << cellsOnBoundary.size() << endl;
-    cout << " No ofBoundary faces Identified : " << cellsOnBoundaryFaces.size() << endl;
+    cout << " No ofBoundary cells Identified  : " << m_mapBoundaryFaceIds.size() << endl;
+
+    // Print the N_count variables in a tablular form with fixed width with each parameter in a single line with all numbers right aligned
+    std::cout << std::setw(10) << std::left << "N_corner_20" << " : " << std::setw(10) << std::right << N_corner_20 << std::endl;
+    std::cout << std::setw(10) << std::left << "N_corner_21" << " : " << std::setw(10) << std::right << N_corner_21 << std::endl;
+    std::cout << std::setw(10) << std::left << "N_corner_2" << " : " << std::setw(10) << std::right << N_corner_2 << std::endl;
+    std::cout << std::setw(10) << std::left << "N_corner_1" << " : " << std::setw(10) << std::right << N_corner_1 << std::endl;
+    std::cout << std::setw(10) << std::left << "N_corner_0" << " : " << std::setw(10) << std::right << N_corner_0 << std::endl;
+    std::cout << std::setw(10) << std::left << "N_corner_m1" << " : " << std::setw(10) << std::right << N_corner_m1 << std::endl;
+ 
+
+    // cout << " No ofBoundary faces Identified : " << Face_id_cellsOnBoundary.size() << endl;
+
+
 }
 
 // Generates output file for Visualisation
@@ -284,6 +402,8 @@ void TParticles::OutputFile(const char *filename)
          << ","
          << "error"
          << ","
+         << "escaped"
+         << ","
          << "cell"
          << "\n";
     for (int i = 0; i < position_X.size(); i++)
@@ -292,7 +412,7 @@ void TParticles::OutputFile(const char *filename)
         if (isParticleDeposited[i])
             depostionStatus = 1;
 
-        file << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << depostionStatus << "," << isErrorParticle[i] << "," << currentCell[i] << "\n";
+        file << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << depostionStatus << "," << isErrorParticle[i] << "," << isEscapedParticle[i] << "," << currentCell[i] << "\n";
     }
 
     file.close();
@@ -480,7 +600,7 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
         {
             // Find the last Cell of the particle
             int cellNo = currentCell[i];
-            // int  jointID= cellsOnBoundaryFaces[i];
+            // int  jointID= Face_id_cellsOnBoundary[i];
 
             TBaseCell *cell = fespace->GetCollection()->GetCell(cellNo);
 
@@ -723,9 +843,9 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         double Re_Particle = densityFluid * particleDiameter * fabs(fluidVel - particleVel) / dynamicViscosityFluid;
         double CD = (24 / Re_Particle) * (1 + 0.15 * pow(Re_Particle, 0.687));
         double CC = 1.0 + ((2 * lambda) / particleDiameter) * (1.257 + 0.4 * exp(-1.0 * ((1.1 * particleDiameter) / (2 * lambda))));
-        CC = 1.0;
-        // return CD/CC;
-        return 1;
+        // CC = 1.0;
+        return CD/CC;
+        // return 1;
     };
 
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
@@ -753,6 +873,8 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     TFEFunction3D *FEFuncVelocityX = VelocityFEVectFunction->GetComponent(0);
     TFEFunction3D *FEFuncVelocityY = VelocityFEVectFunction->GetComponent(1);
     TFEFunction3D *FEFuncVelocityZ = VelocityFEVectFunction->GetComponent(2);
+
+
 
 
     #pragma omp parallel for num_threads(42)
@@ -795,6 +917,12 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         double cdcc_x = CD_CC(velocityX[i], fluidVelocityX);
         double cdcc_y = CD_CC(velocityY[i], fluidVelocityY);
         double cdcc_z = CD_CC(velocityZ[i], fluidVelocityZ);
+
+        // equivalent to setting Re_p as L_inf norm
+        cdcc_x = std::min({cdcc_x, cdcc_y, cdcc_z});
+        cdcc_y = cdcc_x;
+        cdcc_z = cdcc_x;
+
 
         // The RHS will be
         double rhs_x = intertialConstant * cdcc_x * fabs(fluidVelocityX - velocityX[i]) * (fluidVelocityX - velocityX[i]) + gForceConst_x * (densityFluid - densityParticle) / densityParticle;
@@ -886,75 +1014,51 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         {
             // Find the last Cell of the particle
             int cellNo = currentCell[i];
-            // int  jointID= cellsOnBoundaryFaces[i];
+            // int  jointID= Face_id_cellsOnBoundary[i];
 
-            TBaseCell *cell = fespace->GetCollection()->GetCell(cellNo);
-
-            FE3D elementId = fespace->GetFE3D(cellNo, cell);
-            TFE3D *element = TFEDatabase3D::GetFE3D(elementId);
-            TFEDesc3D *fedesc = element->GetFEDesc3D();
-            cell->GetShapeDesc()->GetFaceVertex(TmpFV, TmpLen, MaxLen);
-            int **JointDOFs = fedesc->GetJointDOF();
-
-            TBoundFace *Bdface; // Pointer to Boundary Face in 3D Cell
-            TBoundComp *BoundComp;
-            int N_Joints = cell->GetN_Joints();
-
-            // Identify the Boundary Facedd
-            int jointID = -999999999;
-            for (int jj = 0; jj < N_Joints; jj++)
+            // Boolean Boundary Cell
+            bool isBoundaryCell = false;
+            int cornerID;
+            int jointID;
+            // if the cellNo is present in map then make isBoundaryCell as true
+            if (m_mapBoundaryFaceIds.find(cellNo) != m_mapBoundaryFaceIds.end())
             {
-                TJoint *Joint = cell->GetJoint(jj);
+                isBoundaryCell = true;
 
-                // Pick the cells with Boundary Surfaces and Ignore Inlet Boundary faces.
-                if (Joint->GetType() == BoundaryFace)
+                // Check the corner id of the cell
+                cornerID = m_cornerTypeOfBoundCells[cellNo];
+
+                // check if the particle is from a corner shared by two faces 1 and 2
+                if (cornerID == 21)
                 {
-                    Bdface = (TBoundFace *)Joint;
-                    BoundComp = Bdface->GetBoundComp();
-                    int bdid = BoundComp->GetID();
-                    if (bdid != 0)
-                    {
-                        jointID = jj;
-                        break;
-                    }
+                    // Consider the particle as escaped the domain
+                    isParticleDeposited[i] = true;
+                    m_EscapedParticlesCount++;
+                    isEscapedParticle[i] = 1;   // Mark the particle as escaped
+                    continue;
                 }
+            
             }
 
-            if (jointID == -999999999) // Last cell was not a Boundary cell
+            bool isBoundaryDOFPresent = false;
+
+            // if cell no is present in the BoundaryDOF map, then make isBoundaryDOFPresent as true
+            if (m_BoundaryDOFsOnCell.find(cellNo) != m_BoundaryDOFsOnCell.end())
             {
-                cout <<"Uncertain Case "<<endl;
-                // Check if any DOF within the Cell is dirichlet and update that as deposition.
-                TBaseCell *cell = fespace->GetCollection()->GetCell(currentCell[i]);
+                isBoundaryDOFPresent = true;
+            }
 
-                int *globalDOFindex = fespace->GetGlobalNumbers();
-                int *BeginIndex = fespace->GetBeginIndex();
-                int start = BeginIndex[currentCell[i]];
-                int end = BeginIndex[currentCell[i] + 1];
-                int N_Active = fespace->GetActiveBound();
 
-                int boundaryDOFfound = 0;
-                int foundDOF = 0;
-                for (int index = start; index < end; index++)
+            // Last cell was not a boundary Cell
+            if (!isBoundaryCell) // Last cell was not a Boundary cell
+            {
+
+                if (isBoundaryDOFPresent)  // Boundary DOF is present
                 {
-                    if (globalDOFindex[index] >= N_Active)
-                    {
-                        boundaryDOFfound = 1;
-                        foundDOF = globalDOFindex[index];
-                        break;
-                    }
-                }
-
-                if (boundaryDOFfound == 1)
-                {
-                    cout <<"Boundary DOF "<<endl;
-                    double xx = 0.;
-                    double yy = 0.;
-                    double zz = 0.;
-                    // mark the deposition as the vertex point.
-                    fespace->GetDOFPosition_Parallel(foundDOF, xx, yy, zz);
-                    position_X[i] = xx;
-                    position_Y[i] = yy;
-                    position_Z[i] = zz;
+                    std::vector<double> boundaryDOF = m_BoundaryDOFsOnCell[cellNo];
+                    position_X[i] = boundaryDOF[0];
+                    position_Y[i] = boundaryDOF[1];
+                    position_Z[i] = boundaryDOF[2];
                     isParticleDeposited[i] = true;
                     continue;
                 }
@@ -969,6 +1073,16 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 }
             }
 
+             // Check if the particle is from a corner shared by two faces 0 and 1
+            if (cornerID == 20)
+            {
+                jointID  = 2;
+            }
+            else
+            {
+                jointID = cornerID;
+            }
+            
             TJoint *Joint = cell->GetJoint(jointID);
             double x1, x2, x3, y1, y2, y3, z1, z2, z3;
 
@@ -1051,9 +1165,20 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 // Mark the Particle as deposited
                 isParticleDeposited[i] = true;
 
+                
+
                 position_X[i] = temp2.x;
                 position_Y[i] = temp2.y;
                 position_Z[i] = temp2.z;
+
+                // if jointID is 1, then mark the particle as escaped
+                if(jointID == 1)
+                {
+                    isParticleDeposited[i] = true;
+                    m_EscapedParticlesCount++;
+                    isEscapedParticle[i] = 1;   // Mark the particle as escaped
+                    continue;
+                }
             }
             else
             {
@@ -1063,9 +1188,18 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 position_X[i] = x1;
                 position_Y[i] = y1;
                 position_Z[i] = z1;
+                m_ghostParticlesCount++;
+
+                // if jointID is 1, then mark the particle as escaped
+                if(jointID == 1)
+                {
+                    isParticleDeposited[i] = true;
+                    m_EscapedParticlesCount++;
+                    isEscapedParticle[i] = 1;   // Mark the particle as escaped
+                    continue;
+                }
             }
         }
-
         // check if the particle is in any border cell
     }
 
@@ -1078,7 +1212,15 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         if (isParticleDeposited[l] == true)
             depositedCount++;
     int NotDeposited = N_Particles - depositedCount;
-    cout << "No of particles Deposited : " << depositedCount << endl;
-    cout << "percentage of particles Not Deposited : " << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << endl;
-    cout << "Error particles Accumulaated : " << m_ErrorParticlesCount << endl;
+
+    // cout using right and left allignment and with fixed width
+    
+    std::cout << std::setw(50) << std::left << "Number of Particles deposited or Escaped" << " : " << std::setw(10) << std::right << depositedCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Percentage of Particles Not Deposited" << " : " << std::setw(10) << std::right << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << std::endl;
+    std::cout << std::setw(50) << std::left << "Error particles Accumulaated" << " : " << std::setw(10) << std::right << m_ErrorParticlesCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Ghost particles Accumulaated" << " : " << std::setw(10) << std::right << m_ghostParticlesCount << std::endl;
+
+    // cout << "No of particles Deposited or Escaped: " << depositedCount << endl;
+    // cout << "percentage of particles Not Deposited : " << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << endl;
+    // cout << "Error particles Accumulaated : " << m_ErrorParticlesCount << endl;
 }

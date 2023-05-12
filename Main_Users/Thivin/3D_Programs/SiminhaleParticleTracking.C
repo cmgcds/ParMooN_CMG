@@ -756,8 +756,8 @@ int main(int argc, char *argv[])
 				// Considering the simulation has saturated upto 1000 time  steps, If the particle moves more than 
 
                 int lineNo=0;
-				if(StartNo >  995)
-					StartNo = 995;
+				if(StartNo >  3995)
+					StartNo = 3995;
                 cout << "Start No : " << StartNo <<endl;
 				
                 // Read from the CSV value into solution array 
@@ -806,56 +806,56 @@ int main(int argc, char *argv[])
 				u3File.close();
 				pFile.close();
 
-				// print the first three and last three values of the solution
-				cout << "u1FileName: " << u1FileName << endl;
-				cout << "sol[0]: " << sol[0] << endl;
-				cout << "sol[1]: " << sol[1] << endl;
-				cout << "sol[2]: " << sol[2] << endl;
-				cout << "sol[N_U-3]: " << sol[N_U-3] << endl;
-				cout << "sol[N_U-2]: " << sol[N_U-2] << endl;
-				cout << "sol[N_U-1]: " << sol[N_U-1] << endl;
+				// // print the first three and last three values of the solution
+				// cout << "u1FileName: " << u1FileName << endl;
+				// cout << "sol[0]: " << sol[0] << endl;
+				// cout << "sol[1]: " << sol[1] << endl;
+				// cout << "sol[2]: " << sol[2] << endl;
+				// cout << "sol[N_U-3]: " << sol[N_U-3] << endl;
+				// cout << "sol[N_U-2]: " << sol[N_U-2] << endl;
+				// cout << "sol[N_U-1]: " << sol[N_U-1] << endl;
 
-				// Print the norm of the solution
-				cout << "Norm of the solution: " << sqrt(Ddot(N_U,sol,sol)) << endl;
-
-
-				// print the first three and last three values of the solution u2
-				cout <<"u2FileName: "  << endl;
-				cout << "sol[N_U]: " << sol[N_U] << endl;
-				cout << "sol[N_U+1]: " << sol[N_U+1] << endl;
-				cout << "sol[N_U+2]: " << sol[N_U+2] << endl;
-				cout << "sol[2*N_U-3]: " << sol[2*N_U-3] << endl;
-				cout << "sol[2*N_U-2]: " << sol[2*N_U-2] << endl;
-				cout << "sol[2*N_U-1]: " << sol[2*N_U-1] << endl;
-
-				// Print the norm of the solution u2
-				cout << "Norm of the solution u2: " << sqrt(Ddot(N_U,sol+N_U,sol+N_U)) << endl;
+				// // Print the norm of the solution
+				// cout << "Norm of the solution: " << sqrt(Ddot(N_U,sol,sol)) << endl;
 
 
-				// print the first three and last three values of the solution u3
-				cout <<"u3FileName: "  << endl;
-				cout << "sol[2*N_U]: " << sol[2*N_U] << endl;
-				cout << "sol[2*N_U+1]: " << sol[2*N_U+1] << endl;
-				cout << "sol[2*N_U+2]: " << sol[2*N_U+2] << endl;
-				cout << "sol[3*N_U-3]: " << sol[3*N_U-3] << endl;
-				cout << "sol[3*N_U-2]: " << sol[3*N_U-2] << endl;
-				cout << "sol[3*N_U-1]: " << sol[3*N_U-1] << endl;
+				// // print the first three and last three values of the solution u2
+				// cout <<"u2FileName: "  << endl;
+				// cout << "sol[N_U]: " << sol[N_U] << endl;
+				// cout << "sol[N_U+1]: " << sol[N_U+1] << endl;
+				// cout << "sol[N_U+2]: " << sol[N_U+2] << endl;
+				// cout << "sol[2*N_U-3]: " << sol[2*N_U-3] << endl;
+				// cout << "sol[2*N_U-2]: " << sol[2*N_U-2] << endl;
+				// cout << "sol[2*N_U-1]: " << sol[2*N_U-1] << endl;
 
-				// Print the norm of the solution u3
-				cout << "Norm of the solution u3: " << sqrt(Ddot(N_U,sol+2*N_U,sol+2*N_U)) << endl;
+				// // Print the norm of the solution u2
+				// cout << "Norm of the solution u2: " << sqrt(Ddot(N_U,sol+N_U,sol+N_U)) << endl;
 
 
-				// print the first three and last three values of the solution p
-				cout <<"pFileName: " << pFileName << endl;
-				cout << "sol[3*N_U]: " << sol[3*N_U] << endl;
-				cout << "sol[3*N_U+1]: " << sol[3*N_U+1] << endl;
-				cout << "sol[3*N_U+2]: " << sol[3*N_U+2] << endl;
-				cout << "sol[3*N_U + N_P - 3]: " << sol[3*N_U + N_P - 3] << endl;
-				cout << "sol[3*N_U + N_P - 2]: " << sol[3*N_U + N_P - 2] << endl;
-				cout << "sol[3*N_U + N_P - 1]: " << sol[3*N_U + N_P - 1] << endl;
+				// // print the first three and last three values of the solution u3
+				// cout <<"u3FileName: "  << endl;
+				// cout << "sol[2*N_U]: " << sol[2*N_U] << endl;
+				// cout << "sol[2*N_U+1]: " << sol[2*N_U+1] << endl;
+				// cout << "sol[2*N_U+2]: " << sol[2*N_U+2] << endl;
+				// cout << "sol[3*N_U-3]: " << sol[3*N_U-3] << endl;
+				// cout << "sol[3*N_U-2]: " << sol[3*N_U-2] << endl;
+				// cout << "sol[3*N_U-1]: " << sol[3*N_U-1] << endl;
+
+				// // Print the norm of the solution u3
+				// cout << "Norm of the solution u3: " << sqrt(Ddot(N_U,sol+2*N_U,sol+2*N_U)) << endl;
+
+
+				// // print the first three and last three values of the solution p
+				// cout <<"pFileName: " << pFileName << endl;
+				// cout << "sol[3*N_U]: " << sol[3*N_U] << endl;
+				// cout << "sol[3*N_U+1]: " << sol[3*N_U+1] << endl;
+				// cout << "sol[3*N_U+2]: " << sol[3*N_U+2] << endl;
+				// cout << "sol[3*N_U + N_P - 3]: " << sol[3*N_U + N_P - 3] << endl;
+				// cout << "sol[3*N_U + N_P - 2]: " << sol[3*N_U + N_P - 2] << endl;
+				// cout << "sol[3*N_U + N_P - 1]: " << sol[3*N_U + N_P - 1] << endl;
 
 				// Print the norm of the solution p
-				cout << "Norm of the solution p: " << sqrt(Ddot(N_P,sol+3*N_U,sol+3*N_U)) << endl;
+				// cout << "Norm of the solution p: " << sqrt(Ddot(N_P,sol+3*N_U,sol+3*N_U)) << endl;
 
 
 				// Increment the file number
@@ -863,7 +863,7 @@ int main(int argc, char *argv[])
 
 				
 
-				cout << " Total lines read : " << lineNo <<endl;
+				// cout << " Total lines read : " << lineNo <<endl;
 				// cout << " Sum : " << summm <<endl;
 				// cout << " Dot Product : " << Ddot(N_TotalDOF,sol,sol) <<endl;
 

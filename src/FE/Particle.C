@@ -608,6 +608,7 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
             TFE3D *element = TFEDatabase3D::GetFE3D(elementId);
             TFEDesc3D *fedesc = element->GetFEDesc3D();
             cell->GetShapeDesc()->GetFaceVertex(TmpFV, TmpLen, MaxLen);
+
             int **JointDOFs = fedesc->GetJointDOF();
 
             TBoundFace *Bdface; // Pointer to Boundary Face in 3D Cell
@@ -1014,12 +1015,15 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         {
             // Find the last Cell of the particle
             int cellNo = currentCell[i];
+            TBaseCell* cell = fespace->GetCollection()->GetCell(cellNo);
+            cell->GetShapeDesc()->GetFaceVertex(TmpFV, TmpLen, MaxLen);
             // int  jointID= Face_id_cellsOnBoundary[i];
 
             // Boolean Boundary Cell
             bool isBoundaryCell = false;
             int cornerID;
             int jointID;
+            bool isBoundaryDOFPresent;
             // if the cellNo is present in map then make isBoundaryCell as true
             #pragma omp critical
             {
@@ -1030,7 +1034,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                     cornerID = m_cornerTypeOfBoundCells[cellNo];                
                 }
 
-                bool isBoundaryDOFPresent = false;
+                isBoundaryDOFPresent = false;
 
                 // if cell no is present in the BoundaryDOF map, then make isBoundaryDOFPresent as true
                 if (m_BoundaryDOFsOnCell.find(cellNo) != m_BoundaryDOFsOnCell.end())
@@ -1040,13 +1044,12 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
             }
 
             // Its a Boundary Cell and the cornerID is 21
-            if (isBoundaryCell && cornerID == 21) // Last cell was not a Boundary cell
+            // Mark it as escaped. 
+            if (isBoundaryCell && cornerID == 21) 
             {
-                // Check for Boundary of the neighbours for particles.
-                cout << "Error" << endl;
                 isParticleDeposited[i] = true;
-                m_ErrorParticlesCount++;
-                isErrorParticle[i] = 1;
+                m_EscapedParticlesCount++;
+                isEscapedParticle[i] = 1;
                 continue;
             }
             
@@ -1060,7 +1063,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 {
                     #pragma omp critical
                     std::vector<double> boundaryDOF = m_BoundaryDOFsOnCell[cellNo];
-                    
+
                     position_X[i] = boundaryDOF[0];
                     position_Y[i] = boundaryDOF[1];
                     position_Z[i] = boundaryDOF[2];

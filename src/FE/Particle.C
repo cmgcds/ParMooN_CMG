@@ -1021,32 +1021,35 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
             int cornerID;
             int jointID;
             // if the cellNo is present in map then make isBoundaryCell as true
-            if (m_mapBoundaryFaceIds.find(cellNo) != m_mapBoundaryFaceIds.end())
+            #pragma omp critical
             {
-                isBoundaryCell = true;
-
-                // Check the corner id of the cell
-                cornerID = m_cornerTypeOfBoundCells[cellNo];
-
-                // check if the particle is from a corner shared by two faces 1 and 2
-                if (cornerID == 21)
+                if (m_mapBoundaryFaceIds.find(cellNo) != m_mapBoundaryFaceIds.end())
                 {
-                    // Consider the particle as escaped the domain
-                    isParticleDeposited[i] = true;
-                    m_EscapedParticlesCount++;
-                    isEscapedParticle[i] = 1;   // Mark the particle as escaped
-                    continue;
+                    isBoundaryCell = true;
+                    // Check the corner id of the cell
+                    cornerID = m_cornerTypeOfBoundCells[cellNo];                
                 }
-            
+
+                bool isBoundaryDOFPresent = false;
+
+                // if cell no is present in the BoundaryDOF map, then make isBoundaryDOFPresent as true
+                if (m_BoundaryDOFsOnCell.find(cellNo) != m_BoundaryDOFsOnCell.end())
+                {
+                    isBoundaryDOFPresent = true;
+                }
             }
 
-            bool isBoundaryDOFPresent = false;
-
-            // if cell no is present in the BoundaryDOF map, then make isBoundaryDOFPresent as true
-            if (m_BoundaryDOFsOnCell.find(cellNo) != m_BoundaryDOFsOnCell.end())
+            // Its a Boundary Cell and the cornerID is 21
+            if (isBoundaryCell && cornerID == 21) // Last cell was not a Boundary cell
             {
-                isBoundaryDOFPresent = true;
+                // Check for Boundary of the neighbours for particles.
+                cout << "Error" << endl;
+                isParticleDeposited[i] = true;
+                m_ErrorParticlesCount++;
+                isErrorParticle[i] = 1;
+                continue;
             }
+            
 
 
             // Last cell was not a boundary Cell
@@ -1055,7 +1058,9 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 
                 if (isBoundaryDOFPresent)  // Boundary DOF is present
                 {
+                    #pragma omp critical
                     std::vector<double> boundaryDOF = m_BoundaryDOFsOnCell[cellNo];
+                    
                     position_X[i] = boundaryDOF[0];
                     position_Y[i] = boundaryDOF[1];
                     position_Z[i] = boundaryDOF[2];

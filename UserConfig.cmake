@@ -52,7 +52,7 @@ set(AParMooN_MPI_IMPLEMENTATION "INTELMPI" CACHE STRING "select the MPI Implemen
 # set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Fluid_Solutions_refined/" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Fluid_1LPM/" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Particle_Solutions_l_inf/" CACHE STRING "select the model")
-set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Test_Thivin/" CACHE STRING "select the model")
+set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Particle_Solutions_Latest_t" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/thivin3d" CACHE STRING "select the model")
 #set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/burger" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/cd1dANN" CACHE STRING "select the model")
@@ -61,7 +61,7 @@ set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Test_Thivin/" CACHE S
 set(USE_PARMOON_DEFINE -D__PRIVATE__)
 
 # CMAKE_BUILD_TYPE [ DEBUG | RELEASE | RELWITHDEBINFO | MINSIZEREL ]
-set(EXE_BUILD_TYPE RELEASE)
+set(EXE_BUILD_TYPE DEBUG)
 
 
 ## Flags for ANN

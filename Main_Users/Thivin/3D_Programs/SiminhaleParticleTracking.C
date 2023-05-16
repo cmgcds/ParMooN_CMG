@@ -698,6 +698,15 @@ int main(int argc, char *argv[])
 	particleObject->OutputFile("siminhale_0000.csv");
     int StartNo = 2;
 
+        
+		if (argc > 4)
+		{
+				// update particle details from the file
+				int time = particleObject->UpdateParticleDetailsFromFile(argv[4]);
+				StartNo = time;
+				m = StartNo - 1;
+				img = m + 1;
+		}
 
 	// time loop starts
 	while (TDatabase::TimeDB->CURRENTTIME < end_time) // time cycle

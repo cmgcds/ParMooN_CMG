@@ -1061,7 +1061,6 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 
                 if (isBoundaryDOFPresent)  // Boundary DOF is present
                 {
-                    #pragma omp critical
                     std::vector<double> boundaryDOF = m_BoundaryDOFsOnCell[cellNo];
 
                     position_X[i] = boundaryDOF[0];

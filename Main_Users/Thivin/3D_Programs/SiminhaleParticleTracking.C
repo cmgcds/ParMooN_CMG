@@ -698,6 +698,15 @@ int main(int argc, char *argv[])
 	particleObject->OutputFile("siminhale_0000.csv");
     int StartNo = 2;
 
+        
+		if (argc > 4)
+		{
+				// update particle details from the file
+				int time = particleObject->UpdateParticleDetailsFromFile(argv[4]);
+				StartNo = time;
+				m = StartNo - 1;
+				img = m + 1;
+		}
 
 	// time loop starts
 	while (TDatabase::TimeDB->CURRENTTIME < end_time) // time cycle
@@ -756,8 +765,8 @@ int main(int argc, char *argv[])
 				// Considering the simulation has saturated upto 1000 time  steps, If the particle moves more than 
 
                 int lineNo=0;
-				if(StartNo >  3995)
-					StartNo = 3995;
+				if(StartNo >  9995)
+					StartNo = 9995;
                 cout << "Start No : " << StartNo <<endl;
 				
                 // Read from the CSV value into solution array 
@@ -885,19 +894,35 @@ int main(int argc, char *argv[])
 					else
 						os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
 					Output->WriteVtk(os.str().c_str());
-					img++;
 				}
+				img++;
 				
                 if (m >= 20 )  // To start the interpolation after 20 time steps ( to ensure that flow has propogated )
                 {
                     cout << " Interpolation Started" <<endl;
                     //Compute the Particle Displacement for the FTLE values 
                     particleObject->interpolateNewVelocity_Parallel(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0],Velocity_FeSpace[0]);
-                    std::string old_str = std::to_string(img-2);
-                    size_t n_zero = 4;
-                    auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
-                    std::string name =  "siminhale_" + new_str + ".csv";
-                    particleObject->OutputFile(name.c_str());
+
+										std::string old_str = std::to_string(img-2);
+										size_t n_zero = 4;
+										auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
+										std::string name =  "siminhale_" + new_str + ".csv";
+										if (m % 10 == 0)
+											particleObject->OutputFile(name.c_str());
+
+										int depositedCount = 0;
+										for (int i = 0; i < particleObject->isParticleDeposited.size(); i++) {
+											if (particleObject->isParticleDeposited[i]) depositedCount++;
+										}
+										if (depositedCount == numPart) {
+											cout << "All particles deposited/escaped" << endl;
+											cout << "Total particles: " << depositedCount << endl;
+											cout << "Particles deposited: " << depositedCount - particleObject->m_EscapedParticlesCount << endl;
+											cout << "Particles escaped: " << particleObject->m_EscapedParticlesCount << endl;
+											cout << "Error particles: " << particleObject->m_ErrorParticlesCount << endl;
+											cout << "Ghost particles: " << particleObject->m_ghostParticlesCount << endl;
+											break;
+										}
                 }
             }
 

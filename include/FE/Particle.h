@@ -1,5 +1,5 @@
 #include<vector>
-
+#include<string>
 
 // Class of Mono Disperse Particles
 class TParticles
@@ -81,5 +81,8 @@ class TParticles
         void interpolateNewVelocity_Parallel(double timeStep,TFEVectFunct3D* VelocityFEVectFunction, TFESpace3D* fespace);
 
         void OutputFile(const char* filename);
-};
 
+				int UpdateParticleDetailsFromFile(std::string filename);
+
+				void printUpdatedParticleDetailStats();
+};

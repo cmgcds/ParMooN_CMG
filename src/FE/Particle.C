@@ -405,6 +405,8 @@ void TParticles::OutputFile(const char *filename)
          << "escaped"
          << ","
          << "cell"
+         << ","
+         << "prevCell"
          << "\n";
     for (int i = 0; i < position_X.size(); i++)
     {
@@ -412,10 +414,103 @@ void TParticles::OutputFile(const char *filename)
         if (isParticleDeposited[i])
             depostionStatus = 1;
 
-        file << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << depostionStatus << "," << isErrorParticle[i] << "," << isEscapedParticle[i] << "," << currentCell[i] << "\n";
+        file << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << depostionStatus << "," << isErrorParticle[i] << "," << isEscapedParticle[i] << "," << currentCell[i] << "," << previousCell[i] << "\n";
     }
 
     file.close();
+}
+
+// Things not being considered: validity of the file, number of particles, ordering of the columns
+int TParticles::UpdateParticleDetailsFromFile(std::string filename)
+{
+		std::ifstream file(filename);
+    if (!file) {
+        std::cerr << "Failed to open the file." << std::endl;
+        return 1;
+    }
+
+		std::string line;
+		int counter = -1;
+
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string x_str, y_str, z_str, deposition_str, error_str, escaped_str, cell_str, prevCell_str;
+
+				if (counter == -1) {
+					counter++;
+					continue;
+				}
+
+        if (std::getline(iss, x_str, ',') &&
+            std::getline(iss, y_str, ',') &&
+            std::getline(iss, z_str, ',') &&
+            std::getline(iss, deposition_str, ',') &&
+            std::getline(iss, error_str, ',') &&
+            std::getline(iss, escaped_str, ',') &&
+            std::getline(iss, cell_str, ',') &&
+            std::getline(iss, prevCell_str)) {
+            try {
+								position_X[counter] = std::stod(x_str);
+								position_Y[counter] = std::stod(y_str);
+								position_Z[counter] = std::stod(z_str);
+								isParticleDeposited[counter] = std::stoi(deposition_str) == 1 ? true : false;
+								isErrorParticle[counter] = std::stoi(error_str) == 1 ? true : false;
+								isEscapedParticle[counter] = std::stoi(escaped_str) == 1 ? true : false;
+								currentCell[counter] = std::stoi(cell_str);
+								previousCell[counter] = std::stoi(prevCell_str);
+                counter++;
+            } catch (const std::exception& e) {
+                std::cerr << "Error parsing data: " << e.what() << std::endl;
+            }
+        } else {
+            std::cerr << "Invalid line format: " << line << std::endl;
+        }
+    }
+
+    file.close();
+
+    std::cout << "Data points read: " << counter << std::endl;
+
+		printUpdatedParticleDetailStats();
+
+		m_ParticlesReleased = counter;
+		cout << " Number of particles released : " << m_ParticlesReleased << endl;
+
+		// get substring containing the time from the filename
+		std::string time = filename.substr(filename.find_last_of("_") + 1);
+		time = time.substr(0, time.find("."));
+		// TDatabase::TimeDB->CURRENTTIME = std::stoi(time);
+
+		return std::stoi(time);
+}
+
+void TParticles::printUpdatedParticleDetailStats()
+{
+		int errorParticles = 0;
+		int escapedParticles = 0;
+		int depositedParticles = 0;
+		double normX = 0;
+		double normY = 0;
+		double normZ = 0;
+
+		for (int i = 0; i < position_X.size(); i++) {
+			if (isErrorParticle[i])
+				errorParticles++;
+			if (isEscapedParticle[i])
+				escapedParticles++;
+			if (isParticleDeposited[i])
+				depositedParticles++;
+			normX += position_X[i] * position_X[i];
+			normY += position_Y[i] * position_Y[i];
+			normZ += position_Z[i] * position_Z[i];
+		}
+
+		cout << " Number of error particles : " << errorParticles << endl;
+		cout << " Number of escaped particles : " << escapedParticles << endl;
+		cout << " Number of deposited particles : " << depositedParticles << endl;
+		cout << " Norm of x : " << normX << endl;
+		cout << " Norm of y : " << normY << endl;
+		cout << " Norm of z : " << normZ << endl;
 }
 
 // Helper Function
@@ -1061,8 +1156,10 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 
                 if (isBoundaryDOFPresent)  // Boundary DOF is present
                 {
-                    #pragma omp critical
-                    std::vector<double> boundaryDOF = m_BoundaryDOFsOnCell[cellNo];
+		    
+                    std::vector<double> boundaryDOF;
+		    #pragma omp critical
+		    boundaryDOF= m_BoundaryDOFsOnCell[cellNo];
 
                     position_X[i] = boundaryDOF[0];
                     position_Y[i] = boundaryDOF[1];

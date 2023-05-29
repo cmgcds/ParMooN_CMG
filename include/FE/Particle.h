@@ -43,6 +43,7 @@ class TParticles
         //Particle Cell information
         std::vector<int> currentCell;
         std::vector<int> previousCell;
+        std::vector<int> oldCell;
 
         // Particle velocity Information 
         std::vector<double> velocityX_old;
@@ -61,6 +62,10 @@ class TParticles
         // Escaped Particles Count
         int m_EscapedParticlesCount = 0;
         std::vector<int> isEscapedParticle;
+
+				// Stagnant Particles Count
+				int m_StagnantParticlesCount = 0;
+				std::vector<int> isStagnantParticle;
 
 
         // Number of particles released
@@ -85,4 +90,6 @@ class TParticles
 				int UpdateParticleDetailsFromFile(std::string filename);
 
 				void printUpdatedParticleDetailStats();
+
+				void detectStagnantParticles();
 };

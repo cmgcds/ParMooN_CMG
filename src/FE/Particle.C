@@ -92,10 +92,12 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     position_Z_old.resize(N_Particles, 0.0);
     isErrorParticle.resize(N_Particles, 0);
     isEscapedParticle.resize(N_Particles, 0);
+    isStagnantParticle.resize(N_Particles, 0);
     Density.resize(N_Particles, 914); // earlier 1266
 
     currentCell.resize(N_Particles, 0);
     previousCell.resize(N_Particles, 0);
+    oldCell.resize(N_Particles, 0);
 
     velocityX.resize(N_Particles, 0);
     velocityY.resize(N_Particles, 0);
@@ -404,6 +406,8 @@ void TParticles::OutputFile(const char *filename)
          << ","
          << "escaped"
          << ","
+         << "stagnant"
+         << ","
          << "cell"
          << ","
          << "prevCell"
@@ -414,7 +418,7 @@ void TParticles::OutputFile(const char *filename)
         if (isParticleDeposited[i])
             depostionStatus = 1;
 
-        file << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << depostionStatus << "," << isErrorParticle[i] << "," << isEscapedParticle[i] << "," << currentCell[i] << "," << previousCell[i] << "\n";
+        file << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << depostionStatus << "," << isErrorParticle[i] << "," << isEscapedParticle[i] << "," << isStagnantParticle[i] << "," << currentCell[i] << "," << previousCell[i] << "\n";
     }
 
     file.close();
@@ -434,7 +438,7 @@ int TParticles::UpdateParticleDetailsFromFile(std::string filename)
 
     while (std::getline(file, line)) {
         std::istringstream iss(line);
-        std::string x_str, y_str, z_str, deposition_str, error_str, escaped_str, cell_str, prevCell_str;
+        std::string x_str, y_str, z_str, deposition_str, error_str, escaped_str, stagnant_str, cell_str, prevCell_str;
 
 				if (counter == -1) {
 					counter++;
@@ -447,6 +451,7 @@ int TParticles::UpdateParticleDetailsFromFile(std::string filename)
             std::getline(iss, deposition_str, ',') &&
             std::getline(iss, error_str, ',') &&
             std::getline(iss, escaped_str, ',') &&
+            std::getline(iss, stagnant_str, ',') &&
             std::getline(iss, cell_str, ',') &&
             std::getline(iss, prevCell_str)) {
             try {
@@ -456,6 +461,7 @@ int TParticles::UpdateParticleDetailsFromFile(std::string filename)
 								isParticleDeposited[counter] = std::stoi(deposition_str) == 1 ? true : false;
 								isErrorParticle[counter] = std::stoi(error_str) == 1 ? true : false;
 								isEscapedParticle[counter] = std::stoi(escaped_str) == 1 ? true : false;
+								isStagnantParticle[counter] = std::stoi(stagnant_str) == 1 ? true : false;
 								currentCell[counter] = std::stoi(cell_str);
 								previousCell[counter] = std::stoi(prevCell_str);
                 counter++;
@@ -488,6 +494,7 @@ void TParticles::printUpdatedParticleDetailStats()
 {
 		int errorParticles = 0;
 		int escapedParticles = 0;
+		int stagnantParticles = 0;
 		int depositedParticles = 0;
 		double normX = 0;
 		double normY = 0;
@@ -498,6 +505,8 @@ void TParticles::printUpdatedParticleDetailStats()
 				errorParticles++;
 			if (isEscapedParticle[i])
 				escapedParticles++;
+			if (isStagnantParticle[i])
+				stagnantParticles++;
 			if (isParticleDeposited[i])
 				depositedParticles++;
 			normX += position_X[i] * position_X[i];
@@ -507,10 +516,23 @@ void TParticles::printUpdatedParticleDetailStats()
 
 		cout << " Number of error particles : " << errorParticles << endl;
 		cout << " Number of escaped particles : " << escapedParticles << endl;
+		cout << " Number of stagnant particles : " << stagnantParticles << endl;
 		cout << " Number of deposited particles : " << depositedParticles << endl;
 		cout << " Norm of x : " << normX << endl;
 		cout << " Norm of y : " << normY << endl;
 		cout << " Norm of z : " << normZ << endl;
+}
+
+// Mark particles as stagnant if they stay in the same cell for a long time
+void TParticles::detectStagnantParticles() {
+		for (int i = 0; i < N_Particles; i++) {
+				if (isParticleDeposited[i] != 1 && isStagnantParticle[i] != 1 && oldCell[i] == currentCell[i]) {
+						isParticleDeposited[i] = true;
+						isStagnantParticle[i] = 1;
+						m_StagnantParticlesCount++;
+				}
+				oldCell[i] = currentCell[i];
+		}
 }
 
 // Helper Function
@@ -529,7 +551,7 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
     double lambda = 0.00000007;
 
     // Particle Diameter = 8 Micrometers
-    double particleDiameter = 4.3e-6; // earlier 4e-6
+    double particleDiameter = 2.5e-6; // earlier 4e-6
 
     double mass_particle = (Pi * pow(particleDiameter, 3) * densityParticle) / 6;
     double mass_div_dia = mass_particle / particleDiameter;
@@ -1319,8 +1341,9 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     
     std::cout << std::setw(50) << std::left << "Number of Particles deposited or Escaped" << " : " << std::setw(10) << std::right << depositedCount << std::endl;
     std::cout << std::setw(50) << std::left << "Percentage of Particles Not Deposited" << " : " << std::setw(10) << std::right << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << std::endl;
-    std::cout << std::setw(50) << std::left << "Error particles Accumulaated" << " : " << std::setw(10) << std::right << m_ErrorParticlesCount << std::endl;
-    std::cout << std::setw(50) << std::left << "Ghost particles Accumulaated" << " : " << std::setw(10) << std::right << m_ghostParticlesCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Error particles Accumulated" << " : " << std::setw(10) << std::right << m_ErrorParticlesCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Ghost particles Accumulated" << " : " << std::setw(10) << std::right << m_ghostParticlesCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Stagnant particles Accumulated" << " : " << std::setw(10) << std::right << m_StagnantParticlesCount << std::endl;
 
     // cout << "No of particles Deposited or Escaped: " << depositedCount << endl;
     // cout << "percentage of particles Not Deposited : " << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << endl;

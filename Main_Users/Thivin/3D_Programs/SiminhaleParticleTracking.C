@@ -765,8 +765,8 @@ int main(int argc, char *argv[])
 				// Considering the simulation has saturated upto 1000 time  steps, If the particle moves more than 
 
                 int lineNo=0;
-				if(StartNo >  9995)
-					StartNo = 9995;
+				if(StartNo >  12000)
+					StartNo = 12000;
                 cout << "Start No : " << StartNo <<endl;
 				
                 // Read from the CSV value into solution array 
@@ -910,6 +910,9 @@ int main(int argc, char *argv[])
 										if (m % 10 == 0)
 											particleObject->OutputFile(name.c_str());
 
+										if (m >= 5000 && m % 200 == 0)
+											particleObject->detectStagnantParticles();
+
 										int depositedCount = 0;
 										for (int i = 0; i < particleObject->isParticleDeposited.size(); i++) {
 											if (particleObject->isParticleDeposited[i]) depositedCount++;
@@ -921,6 +924,7 @@ int main(int argc, char *argv[])
 											cout << "Particles escaped: " << particleObject->m_EscapedParticlesCount << endl;
 											cout << "Error particles: " << particleObject->m_ErrorParticlesCount << endl;
 											cout << "Ghost particles: " << particleObject->m_ghostParticlesCount << endl;
+											cout << "Stagnant particles: " << particleObject->m_StagnantParticlesCount << endl;
 											break;
 										}
                 }

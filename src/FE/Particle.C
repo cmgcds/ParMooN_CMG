@@ -90,14 +90,23 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     position_X_old.resize(N_Particles, 0.0);
     position_Y_old.resize(N_Particles, 0.0);
     position_Z_old.resize(N_Particles, 0.0);
+    previousPosition_X.resize(N_Particles, 0.0);
+    previousPosition_Y.resize(N_Particles, 0.0);
+    previousPosition_Z.resize(N_Particles, 0.0);
     isErrorParticle.resize(N_Particles, 0);
     isEscapedParticle.resize(N_Particles, 0);
     isStagnantParticle.resize(N_Particles, 0);
     Density.resize(N_Particles, 914); // earlier 1266
 
+		// initialise previousPositions to zero
+		for (int i = 0; i < N_Particles; i++) {
+			previousPosition_X[i] = 0.0;
+			previousPosition_Y[i] = 0.0;
+			previousPosition_Z[i] = 0.0;
+		}
+
     currentCell.resize(N_Particles, 0);
     previousCell.resize(N_Particles, 0);
-    oldCell.resize(N_Particles, 0);
 
     velocityX.resize(N_Particles, 0);
     velocityY.resize(N_Particles, 0);
@@ -188,7 +197,8 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
 
         // Identify, which cell the particle Belongs to.
         int N_Cells = fespace->GetCollection()->GetN_Cells();
-        #pragma omp parallel for num_threads(42) schedule(static,1)  shared(N_Cells, fespace, particleNo,currentCell) 
+				int num_threads = (int) ceil(0.9 * omp_get_max_threads());
+        #pragma omp parallel for num_threads(num_threads) schedule(static,1)  shared(N_Cells, fespace, particleNo,currentCell) 
         for (int cellId = 0; cellId < N_Cells; cellId++)
         {
             TBaseCell *cell = fespace->GetCollection()->GetCell(cellId);
@@ -236,7 +246,8 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
     int N_corner_0 = 0;
     int N_corner_m1 = 0;
     // for (int cellNo = 0; cellNo < N_Cells; cellNo++)
-    #pragma omp parallel for num_threads(32) schedule(static,1)  shared(N_Cells, fespace,m_cornerTypeOfBoundCells, m_mapBoundaryFaceIds,m_BoundaryDOFsOnCell)
+		int num_threads = (int) ceil(0.9 * omp_get_max_threads());
+    #pragma omp parallel for num_threads(num_threads) schedule(static,1)  shared(N_Cells, fespace,m_cornerTypeOfBoundCells, m_mapBoundaryFaceIds,m_BoundaryDOFsOnCell)
     for (int cellNo = 0; cellNo < N_Cells; cellNo++)
     {
 
@@ -523,15 +534,28 @@ void TParticles::printUpdatedParticleDetailStats()
 		cout << " Norm of z : " << normZ << endl;
 }
 
-// Mark particles as stagnant if they stay in the same cell for a long time
+// Checks if a particle is stagnant based on the distance between previous position and current position
+bool TParticles::isStagnant(int i) {
+		double distance = sqrt(pow(position_X[i] - previousPosition_X[i], 2) + pow(position_Y[i] - previousPosition_Y[i], 2) + pow(position_Z[i] - previousPosition_Z[i], 2));
+		if (distance < 0.0001)
+				return true;
+		else
+				return false;
+}
+
+// Mark particles as stagnant if they stay in the same area for a long time
 void TParticles::detectStagnantParticles() {
-		for (int i = 0; i < N_Particles; i++) {
-				if (isParticleDeposited[i] != 1 && isStagnantParticle[i] != 1 && oldCell[i] == currentCell[i]) {
-						isParticleDeposited[i] = true;
-						isStagnantParticle[i] = 1;
-						m_StagnantParticlesCount++;
+		if (m_ParticlesReleased == N_Particles) {
+				for (int i = 0; i < N_Particles; i++) {
+						if (isParticleDeposited[i] != 1 && isStagnant(i)) {
+								isParticleDeposited[i] = true;
+								isStagnantParticle[i] = 1;
+								m_StagnantParticlesCount++;
+						}
+						previousPosition_X[i] = position_X[i];
+						previousPosition_Y[i] = position_Y[i];
+						previousPosition_Z[i] = position_Z[i];
 				}
-				oldCell[i] = currentCell[i];
 		}
 }
 
@@ -995,7 +1019,8 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 
 
 
-    #pragma omp parallel for num_threads(42)
+		int num_threads = (int) ceil(0.9 * omp_get_max_threads());
+    #pragma omp parallel for num_threads(num_threads)
     for (int i = 0; i < m_ParticlesReleased; i++)
     {
         // cout << " =====================================================================================================================  " <<endl;

@@ -40,10 +40,14 @@ class TParticles
         std::vector<double> position_Y_old;
         std::vector<double> position_Z_old;
 
+        // Previous Particle Co-ordinates for stagnant check
+        std::vector<double> previousPosition_X;
+        std::vector<double> previousPosition_Y;
+        std::vector<double> previousPosition_Z;
+
         //Particle Cell information
         std::vector<int> currentCell;
         std::vector<int> previousCell;
-        std::vector<int> oldCell;
 
         // Particle velocity Information 
         std::vector<double> velocityX_old;
@@ -92,4 +96,7 @@ class TParticles
 				void printUpdatedParticleDetailStats();
 
 				void detectStagnantParticles();
+
+		protected:
+				bool isStagnant(int i);
 };

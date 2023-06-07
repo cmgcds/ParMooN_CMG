@@ -22,7 +22,7 @@
   #include "../Examples/CD_2D/SineLaplace.h" // smooth sol in unitsquares
 #else
   // #include "../Examples/CD_2D/SineLaplace.h"  
-  #include "../Examples/CD_2D/TempDistribution.h" 
+  #include "../Examples/CD_2D/Perturbed.h" 
 #endif
 
 
@@ -169,6 +169,27 @@ int main(int argc, char* argv[])
     t2 = GetTime();
     OutPut( "time for solving: " << t2-t1 << endl);
     
+
+  // Generate a uniformly spaced 2D Grid with mesh size as 0.01 from 0 to 1
+  double h = 0.01;
+  int N = (int)((double)(1.0/h) + 1);
+  
+  // Read the Argument from the command line as filename
+  std::string filename = argv[2];
+
+  std::ofstream outputFile(filename);
+  for (int j = 0 ; j < N ; j++)
+  {
+    for (int i = 0 ; i < N ; i++)
+    {
+      double x = i*h;
+      double y = j*h;
+      double values[4];
+
+      Scalar_FeFunction->FindGradient(x,y,values);
+      outputFile <<x<<","<<y<<","<<values[0]<<endl;
+    }
+  }
   //======================================================================
   // produce outout
   //======================================================================

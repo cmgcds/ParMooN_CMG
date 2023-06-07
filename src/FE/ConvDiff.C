@@ -704,6 +704,9 @@ double react, double linfb)
       //OutPut(i << " " << TDatabase::ParamDB->INTERNAL_P1_Array[i] << endl);
       delta =  TDatabase::ParamDB->INTERNAL_P1_Array[i];
       break;
+    case 200:  // Global tau
+      delta = TDatabase::ParamDB->DELTA0;
+      break;
     default :
       OutPut("SDFEM_TYPE "<<TDatabase::ParamDB->SDFEM_TYPE<<
         " not implemented !!!" << endl);

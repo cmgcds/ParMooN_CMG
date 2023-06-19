@@ -2332,17 +2332,23 @@ double ***LocMatrices, double **LocRhs)
       ansatz01 = Orig1[j];
       ansatz00 = Orig2[j];
 
-      val  = c0*(2*test10*ansatz10+test01*ansatz01);
+      // val  = c0*(2*test10*ansatz10+test01*ansatz01);
+      val  = c0*(test10*ansatz10+test01*ansatz01);
       val += (u1*ansatz10+u2*ansatz01)*test00;
       Matrix11Row[j] += Mult * val;
 
       val  = c0*(test01*ansatz10);
-      Matrix12Row[j] += Mult * val;
+      // Matrix12Row[j] += Mult * val;
+      Matrix12Row[j] += 0.0;
+
 
       val  = c0*(test10*ansatz01);
-      Matrix21Row[j] += Mult * val;
+      // Matrix21Row[j] += Mult * val;
+      Matrix21Row[j] += 0.0;
 
-      val  = c0*(test10*ansatz10+2*test01*ansatz01);
+
+      // val  = c0*(test10*ansatz10+2*test01*ansatz01);
+      val  = c0*(test10*ansatz10+test01*ansatz01);
       val += (u1*ansatz10+u2*ansatz01)*test00;
       Matrix22Row[j] += Mult * val;
 
@@ -3704,11 +3710,13 @@ double ***LocMatrices, double **LocRhs)
       ansatz01 = Orig1[j];
 
       val1 = (u1*ansatz10+u2*ansatz01)*test00;
-      val  = c0*(2*test10*ansatz10+test01*ansatz01);
+      // val  = c0*(2*test10*ansatz10+test01*ansatz01);
+      val  = c0*(test10*ansatz10+test01*ansatz01);
       val += val1;
       Matrix11Row[j] += Mult * val;
 
-      val  = c0*(test10*ansatz10+2*test01*ansatz01);
+      // val  = c0*(test10*ansatz10+2*test01*ansatz01);
+      val  = c0*(test10*ansatz10+test01*ansatz01);
       val += val1;
       Matrix22Row[j] += Mult * val;
 

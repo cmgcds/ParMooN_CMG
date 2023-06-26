@@ -97,6 +97,12 @@ class TParticles
 
 				void detectStagnantParticles();
 
+        #ifdef SCUDA
+        void  CD_CC_Cuda();
+        void  FindValueLocal_Parallel();
+        #endif
+
+
 		protected:
 				bool isStagnant(int i);
 };

@@ -58,7 +58,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 if("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
   project (ParMooN LANGUAGES C CXX CUDA)
-  set (CMAKE_CUDA_COMPILER "/usr/local/cuda-10.2/bin/nvcc")
+  set (CMAKE_CUDA_COMPILER "/usr/local/cuda-11.7/bin/nvcc")
+  include_directories(/usr/local/cuda-11.7/include)
+  set(PARMOON_CXX_DEF "${PARMOON_CXX_DEF} -DSCUDA")
 endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
 
 
@@ -377,7 +379,8 @@ elseif( "${AParMooN_PARALLEL_TYPE}" STREQUAL "SEQUENTIAL"  OR "${AParMooN_PARALL
 elseif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
 target_link_libraries(parmoon_${AParMooN_GEO}_${AParMooN_PARALLEL_TYPE}.exe "solver" "sys" "geo"  "fe" "gen" "geo" "fe" "gen" "fe"
                   "amg"  "quad" "ref" "geo" "fe" "quad" "geo" "solver" "sys" "fe" "geo" "cudaSpLinSolver" ${UMFPACK_LIBRARIES} ${TECPLOT_LIBRARIES}
-                  ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  -lcusparse -lculibos -lcublas -lcusolver -lnvToolsExt  "${ARMADILLO_LIBRARIES}"  "${MLPACK_LIBRARIES}" "ann")
+                  ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}  -lcusparse -lculibos -lcublas -lcusolver -lnvToolsExt )
+                  # ${BLAS_LIBRARIES} ${TETGEN_LIBRARIES} ${GRIDGEN_LIBRARIES}   -lculibos -lcublas -lnvToolsExt )
 endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "MPI"  OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "HYBRID" OR "${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI")
 
 

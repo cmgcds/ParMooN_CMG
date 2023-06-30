@@ -120,6 +120,8 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
 
     // Create N particles
     Initialiseparticles(N_Particles_, circle_x, circle_y, radius, fespace);
+
+
 }
 
 void TParticles::Initialiseparticles(int N_Particles, double circle_x, double circle_y, double radius, TFESpace3D *fespace)
@@ -163,11 +165,410 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
             }
         }
 
+        if(particleNo==0){
+position_X[particleNo]=-0.007369244;
+position_Z[particleNo]=-0.0008269974;
+}
+if(particleNo==1){
+position_X[particleNo]=-0.005620816;
+position_Z[particleNo]=0.003577294;
+}
+if(particleNo==2){
+position_X[particleNo]=0.008693858;
+position_Z[particleNo]=0.0003883274;
+}
+if(particleNo==3){
+position_X[particleNo]=-0.009308558;
+position_Z[particleNo]=0.0005940039;
+}
+if(particleNo==4){
+position_X[particleNo]=0.003735454;
+position_Z[particleNo]=0.00860873;
+}
+if(particleNo==5){
+position_X[particleNo]=0.0005385756;
+position_Z[particleNo]=0.003078379;
+}
+if(particleNo==6){
+position_X[particleNo]=0.004023812;
+position_Z[particleNo]=0.005243961;
+}
+if(particleNo==7){
+position_X[particleNo]=0.00512821;
+position_Z[particleNo]=-0.002693227;
+}
+if(particleNo==8){
+position_X[particleNo]=-0.001271772;
+position_Z[particleNo]=-0.0004453647;
+}
+if(particleNo==9){
+position_X[particleNo]=-0.004501863;
+position_Z[particleNo]=-0.006669856;
+}
+if(particleNo==10){
+position_X[particleNo]=9.04579e-05;
+position_Z[particleNo]=-0.003619341;
+}
+if(particleNo==11){
+position_X[particleNo]=-0.0001204663;
+position_Z[particleNo]=-0.008185342;
+}
+if(particleNo==12){
+position_X[particleNo]=-0.008525018;
+position_Z[particleNo]=-0.002317157;
+}
+if(particleNo==13){
+position_X[particleNo]=0.008276349;
+position_Z[particleNo]=-0.0007110835;
+}
+if(particleNo==14){
+position_X[particleNo]=-0.007492692;
+position_Z[particleNo]=0.003769106;
+}
+if(particleNo==15){
+position_X[particleNo]=0.002590868;
+position_Z[particleNo]=0.00450824;
+}
+if(particleNo==16){
+position_X[particleNo]=0.007771444;
+position_Z[particleNo]=-0.003873563;
+}
+if(particleNo==17){
+position_X[particleNo]=0.000265474;
+position_Z[particleNo]=0.006919631;
+}
+if(particleNo==18){
+position_X[particleNo]=0.006830213;
+position_Z[particleNo]=-0.001692108;
+}
+if(particleNo==19){
+position_X[particleNo]=-0.0006416526;
+position_Z[particleNo]=-0.006433446;
+}
+if(particleNo==20){
+position_X[particleNo]=0.001433096;
+position_Z[particleNo]=-0.009338925;
+}
+if(particleNo==21){
+position_X[particleNo]=-3.039762e-05;
+position_Z[particleNo]=0.004965853;
+}
+if(particleNo==22){
+position_X[particleNo]=-0.00574497;
+position_Z[particleNo]=-0.007391455;
+}
+if(particleNo==23){
+position_X[particleNo]=-0.004508237;
+position_Z[particleNo]=-0.001714135;
+}
+if(particleNo==24){
+position_X[particleNo]=0.004196392;
+position_Z[particleNo]=-0.005201784;
+}
+if(particleNo==25){
+position_X[particleNo]=-0.003649209;
+position_Z[particleNo]=0.003041174;
+}
+if(particleNo==26){
+position_X[particleNo]=0.003626924;
+position_Z[particleNo]=-0.002245493;
+}
+if(particleNo==27){
+position_X[particleNo]=-0.001824666;
+position_Z[particleNo]=0.001297974;
+}
+if(particleNo==28){
+position_X[particleNo]=-0.000229709;
+position_Z[particleNo]=0.009221903;
+}
+if(particleNo==29){
+position_X[particleNo]=-0.006004856;
+position_Z[particleNo]=0.002585383;
+}
+if(particleNo==30){
+position_X[particleNo]=0.003025075;
+position_Z[particleNo]=0.00606146;
+}
+if(particleNo==31){
+position_X[particleNo]=-0.0004713639;
+position_Z[particleNo]=-0.005934993;
+}
+if(particleNo==32){
+position_X[particleNo]=-0.001793739;
+position_Z[particleNo]=0.007712967;
+}
+if(particleNo==33){
+position_X[particleNo]=-0.006756029;
+position_Z[particleNo]=-0.002693219;
+}
+if(particleNo==34){
+position_X[particleNo]=-0.007297813;
+position_Z[particleNo]=-0.0008938543;
+}
+if(particleNo==35){
+position_X[particleNo]=-0.0009539966;
+position_Z[particleNo]=0.008633488;
+}
+if(particleNo==36){
+position_X[particleNo]=0.007217197;
+position_Z[particleNo]=0.0001191175;
+}
+if(particleNo==37){
+position_X[particleNo]=0.00635123;
+position_Z[particleNo]=-0.0007551004;
+}
+if(particleNo==38){
+position_X[particleNo]=0.002654774;
+position_Z[particleNo]=0.006493948;
+}
+if(particleNo==39){
+position_X[particleNo]=-0.004213676;
+position_Z[particleNo]=0.0002886933;
+}
+if(particleNo==40){
+position_X[particleNo]=-0.00171943;
+position_Z[particleNo]=0.007531314;
+}
+if(particleNo==41){
+position_X[particleNo]=0.004594954;
+position_Z[particleNo]=0.004312847;
+}
+if(particleNo==42){
+position_X[particleNo]=0.0004997481;
+position_Z[particleNo]=-0.008696123;
+}
+if(particleNo==43){
+position_X[particleNo]=-0.0002211368;
+position_Z[particleNo]=0.003640982;
+}
+if(particleNo==44){
+position_X[particleNo]=-0.001079531;
+position_Z[particleNo]=0.0002931892;
+}
+if(particleNo==45){
+position_X[particleNo]=-0.001205489;
+position_Z[particleNo]=0.006132998;
+}
+if(particleNo==46){
+position_X[particleNo]=-0.005769621;
+position_Z[particleNo]=-0.00692791;
+}
+if(particleNo==47){
+position_X[particleNo]=0.0045467;
+position_Z[particleNo]=-0.001645526;
+}
+if(particleNo==48){
+position_X[particleNo]=0.00361124;
+position_Z[particleNo]=0.006728398;
+}
+if(particleNo==49){
+position_X[particleNo]=0.002591437;
+position_Z[particleNo]=-0.005729064;
+}
+if(particleNo==50){
+position_X[particleNo]=-0.002223535;
+position_Z[particleNo]=0.008950901;
+}
+if(particleNo==51){
+position_X[particleNo]=-0.004615705;
+position_Z[particleNo]=-0.004319299;
+}
+if(particleNo==52){
+position_X[particleNo]=0.005677304;
+position_Z[particleNo]=-0.004356882;
+}
+if(particleNo==53){
+position_X[particleNo]=0.006394522;
+position_Z[particleNo]=-0.002037126;
+}
+if(particleNo==54){
+position_X[particleNo]=-0.006462393;
+position_Z[particleNo]=-0.006845376;
+}
+if(particleNo==55){
+position_X[particleNo]=-0.004856627;
+position_Z[particleNo]=-0.007967252;
+}
+if(particleNo==56){
+position_X[particleNo]=0.002694349;
+position_Z[particleNo]=0.005895396;
+}
+if(particleNo==57){
+position_X[particleNo]=0.005058808;
+position_Z[particleNo]=0.002668598;
+}
+if(particleNo==58){
+position_X[particleNo]=0.001964333;
+position_Z[particleNo]=-0.003624442;
+}
+if(particleNo==59){
+position_X[particleNo]=-0.007651261;
+position_Z[particleNo]=0.0005224655;
+}
+if(particleNo==60){
+position_X[particleNo]=0.001759778;
+position_Z[particleNo]=0.004059788;
+}
+if(particleNo==61){
+position_X[particleNo]=0.001136716;
+position_Z[particleNo]=-0.003679853;
+}
+if(particleNo==62){
+position_X[particleNo]=0.0005709654;
+position_Z[particleNo]=0.001762382;
+}
+if(particleNo==63){
+position_X[particleNo]=-0.001383044;
+position_Z[particleNo]=-0.002595474;
+}
+if(particleNo==64){
+position_X[particleNo]=-0.001062681;
+position_Z[particleNo]=-0.002243376;
+}
+if(particleNo==65){
+position_X[particleNo]=0.003524738;
+position_Z[particleNo]=0.004572167;
+}
+if(particleNo==66){
+position_X[particleNo]=-0.0007913165;
+position_Z[particleNo]=0.00322711;
+}
+if(particleNo==67){
+position_X[particleNo]=0.002112794;
+position_Z[particleNo]=-0.006992122;
+}
+if(particleNo==68){
+position_X[particleNo]=-0.003123649;
+position_Z[particleNo]=0.0004561543;
+}
+if(particleNo==69){
+position_X[particleNo]=0.006879507;
+position_Z[particleNo]=-0.000884968;
+}
+if(particleNo==70){
+position_X[particleNo]=-0.001267231;
+position_Z[particleNo]=0.005034202;
+}
+if(particleNo==71){
+position_X[particleNo]=0.003913583;
+position_Z[particleNo]=0.005077255;
+}
+if(particleNo==72){
+position_X[particleNo]=0.008066024;
+position_Z[particleNo]=0.004933583;
+}
+if(particleNo==73){
+position_X[particleNo]=0.0008804542;
+position_Z[particleNo]=-0.005683482;
+}
+if(particleNo==74){
+position_X[particleNo]=0.002537227;
+position_Z[particleNo]=0.004186397;
+}
+if(particleNo==75){
+position_X[particleNo]=-0.004394222;
+position_Z[particleNo]=-0.002561806;
+}
+if(particleNo==76){
+position_X[particleNo]=-0.003796621;
+position_Z[particleNo]=-0.007924054;
+}
+if(particleNo==77){
+position_X[particleNo]=-0.006794522;
+position_Z[particleNo]=-0.004059558;
+}
+if(particleNo==78){
+position_X[particleNo]=-0.0004439137;
+position_Z[particleNo]=0.0003997697;
+}
+if(particleNo==79){
+position_X[particleNo]=0.00155552;
+position_Z[particleNo]=-0.003376501;
+}
+if(particleNo==80){
+position_X[particleNo]=-0.00941289;
+position_Z[particleNo]=-0.0002069659;
+}
+if(particleNo==81){
+position_X[particleNo]=0.004779175;
+position_Z[particleNo]=0.0007253354;
+}
+if(particleNo==82){
+position_X[particleNo]=0.00228251;
+position_Z[particleNo]=-0.007481344;
+}
+if(particleNo==83){
+position_X[particleNo]=-0.004819716;
+position_Z[particleNo]=-0.001513283;
+}
+if(particleNo==84){
+position_X[particleNo]=-0.0009629754;
+position_Z[particleNo]=0.003310069;
+}
+if(particleNo==85){
+position_X[particleNo]=-0.005808754;
+position_Z[particleNo]=0.0009394967;
+}
+if(particleNo==86){
+position_X[particleNo]=-0.006480515;
+position_Z[particleNo]=-0.001361834;
+}
+if(particleNo==87){
+position_X[particleNo]=0.00374829;
+position_Z[particleNo]=0.006724131;
+}
+if(particleNo==88){
+position_X[particleNo]=0.005388748;
+position_Z[particleNo]=-0.004996895;
+}
+if(particleNo==89){
+position_X[particleNo]=0.005382281;
+position_Z[particleNo]=0.004985032;
+}
+if(particleNo==90){
+position_X[particleNo]=-0.005566654;
+position_Z[particleNo]=0.003052438;
+}
+if(particleNo==91){
+position_X[particleNo]=-0.002570685;
+position_Z[particleNo]=-0.00532617;
+}
+if(particleNo==92){
+position_X[particleNo]=0.0003834973;
+position_Z[particleNo]=-0.008692875;
+}
+if(particleNo==93){
+position_X[particleNo]=0.004865479;
+position_Z[particleNo]=-0.006572413;
+}
+if(particleNo==94){
+position_X[particleNo]=-0.007896303;
+position_Z[particleNo]=-0.002628757;
+}
+if(particleNo==95){
+position_X[particleNo]=-0.003455449;
+position_Z[particleNo]=0.001535517;
+}
+if(particleNo==96){
+position_X[particleNo]=0.005164915;
+position_Z[particleNo]=0.003995822;
+}
+if(particleNo==97){
+position_X[particleNo]=0.008704832;
+position_Z[particleNo]=-0.002758327;
+}
+if(particleNo==98){
+position_X[particleNo]=-0.0008985522;
+position_Z[particleNo]=-0.00519119;
+}
+if(particleNo==99){
+position_X[particleNo]=-0.001568427;
+position_Z[particleNo]=-0.004204671;
+}
 
-
-        position_X[particleNo] = y;
+        // position_X[particleNo] = y;
         position_Y[particleNo] = 0.001;
-        position_Z[particleNo] = z;
+        // position_Z[particleNo] = z;
 
         
        
@@ -364,6 +765,9 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
 
     // cout << " No ofBoundary faces Identified : " << Face_id_cellsOnBoundary.size() << endl;
 
+    #ifdef _CUDA
+    SetupCudaDataStructures(fespace);
+    #endif
 
 }
 
@@ -610,6 +1014,7 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
     TFEFunction3D *FEFuncVelocityY = VelocityFEVectFunction->GetComponent(1);
     TFEFunction3D *FEFuncVelocityZ = VelocityFEVectFunction->GetComponent(2);
 
+    // Function send all the velocities 
     
 
     for (int i = 0; i < m_ParticlesReleased; i++)
@@ -921,6 +1326,7 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
 // Function to Interpolate the velocity of the particles in next time step 
 // PARALLEL Version 
 // Function to Interpolate the Velocity of the Particle in next time Step
+#ifdef _CUDA
 void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D *VelocityFEVectFunction, TFESpace3D* fespace)
 {
     // Constants required for computation
@@ -994,13 +1400,13 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     TFEFunction3D *FEFuncVelocityZ = VelocityFEVectFunction->GetComponent(2);
 
 
-    cout << "PART RELWEASED : " << m_ParticlesReleased <<endl;
+    cout << "PART RELEASED : " << m_ParticlesReleased <<endl;
 
-		int num_threads = (int) ceil(0.9 * omp_get_max_threads());
-    #pragma omp parallel for num_threads(num_threads)
+    
+
     for (int i = 0; i < m_ParticlesReleased; i++)
     {
-        cout << " =====================================================================================================================  " <<endl;
+        cout << " ======================" << i << "=============================== \n" <<endl;
         if (isParticleDeposited[i] == true)
             continue;
         double values[4];
@@ -1016,9 +1422,10 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         FEFuncVelocityZ->FindValueLocal_Parallel(cell, CellNo, position_X[i], position_Y[i], position_Z[i], values);
         double fluidVelocityZ = values[0];
 
+
         # pragma omp critical
         {
-            cout << "----------------- Particle " << i  <<" : -------------------------------------------" <<endl;
+            cout << "\n----------------- Particle " << i  <<" : -------------------------------------------\n" <<endl;
             cout << "Thread : "  << omp_get_thread_num() << " , " << CellNo <<endl;
             cout << "Cell No   : " << CellNo <<endl;
             cout << "POsition X: " <<  position_X[i] <<endl;
@@ -1030,10 +1437,445 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         }
 
 
-        #pragma omp critical
-        cout << i << "," << CellNo << "," << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << fluidVelocityX << "," << fluidVelocityY << "," << fluidVelocityZ << " , " << omp_get_thread_num() << endl;
+        // #pragma omp critical
+        // cout << i << "," << CellNo << "," << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << fluidVelocityX << "," << fluidVelocityY << "," << fluidVelocityZ << " , " << omp_get_thread_num() << endl;
         
-        exit(0);
+        
+        double cdcc_x = CD_CC(velocityX[i], fluidVelocityX);
+        double cdcc_y = CD_CC(velocityY[i], fluidVelocityY);
+        double cdcc_z = CD_CC(velocityZ[i], fluidVelocityZ);
+
+        // equivalent to setting Re_p as L_inf norm
+        cdcc_x = std::min({cdcc_x, cdcc_y, cdcc_z});
+        cdcc_y = cdcc_x;
+        cdcc_z = cdcc_x;
+                                                                                             
+        double rhs_x = intertialConstant * cdcc_x * fabs(fluidVelocityX - velocityX[i]) * (fluidVelocityX - velocityX[i]) + gForceConst_x * (densityFluid - densityParticle) / densityParticle;
+        double rhs_y = intertialConstant * cdcc_y * fabs(fluidVelocityY - velocityY[i]) * (fluidVelocityY - velocityY[i]) + gForceConst_y * (densityFluid - densityParticle) / densityParticle;
+        double rhs_z = intertialConstant * cdcc_z * fabs(fluidVelocityZ - velocityZ[i]) * (fluidVelocityZ - velocityZ[i]) + gForceConst_z * (densityFluid - densityParticle) / densityParticle;
+
+        // cout << "-- intertialConstant : " << intertialConstant   << "  CDCC : " << (CD_CC(velocityX[i],fluidVelocityX)) << " fluidVelocityX: " << fluidVelocityX << "    velocityX : " <<velocityX[i] << "\n";
+        // cout << "-- intertialConstant     : " << intertialConstant <<"  CDCC : " << (CD_CC(velocityY[i],fluidVelocityY)) <<"     fluidVelocityY: " << fluidVelocityY << "    velocityY : " <<velocityY[i] << "\n";
+        // cout << "-- intertialConstant : " << intertialConstant << "  CDCC : " << (CD_CC(velocityZ[i],fluidVelocityZ)) <<" fluidVelocityZ: " << fluidVelocityZ << "    velocityZ : " <<velocityZ[i] << "\n";
+
+        // Now, Compute the Updated Velocity of particle Using Forward Euler
+
+        double velocityParticle_X_New = rhs_x * (timeStep) + velocityX[i];
+        double velocityParticle_Y_New = rhs_y * (timeStep) + velocityY[i];
+        double velocityParticle_Z_New = rhs_z * (timeStep) + velocityZ[i];
+
+        // cout << "-- vel new x: " << velocityParticle_X_New << " rhs: " << rhs_x << " t: " << (timeStep) << "\n";
+        // cout << "-- vel new y: " << velocityParticle_Y_New << " rhs: " << rhs_y << " t : " << (timeStep) << "\n";
+        // cout << "-- vel new z: " << velocityParticle_Z_New << " rhs: " << rhs_z << " t : " << (timeStep) << "\n";
+
+        // Transfer current velocity as velocity old
+        velocityX_old[i] = velocityX[i];
+        velocityY_old[i] = velocityY[i];
+        velocityZ_old[i] = velocityZ[i];
+
+        // Udpate new velocity as current velocity
+        velocityX[i] = velocityParticle_X_New;
+        velocityY[i] = velocityParticle_Y_New;
+        velocityZ[i] = velocityParticle_Z_New;
+
+        // cout << "-- " << "Vel x : " << velocityX[i] <<  " old vel x :" << velocityX_old[i] << " \n";
+        // cout << "-- " << "Vel y : " << velocityY[i] <<  " old vel y :" << velocityY_old[i] << " \n";
+        // cout << "-- " << "Vel z : " << velocityZ[i] <<  " old vel z :" << velocityZ_old[i] << " \n";
+
+        //  Now Compute the new position of the particle using the updated velocity
+        position_X_old[i] = position_X[i];
+        position_Y_old[i] = position_Y[i];
+        position_Z_old[i] = position_Z[i];
+
+        position_X[i] += timeStep * 0.5 * (velocityX_old[i] + velocityX[i]);
+        position_Y[i] += timeStep * 0.5 * (velocityY_old[i] + velocityY[i]);
+        position_Z[i] += timeStep * 0.5 * (velocityZ_old[i] + velocityZ[i]);
+
+   
+
+        // Update the current position of cell.
+        // Check if the particle Exists in the current Domain
+        int N_Cells = fespace->GetN_Cells();
+        bool insideDomain = false;
+        for (int cellId = 0; cellId < N_Cells; cellId++)
+        {
+            TBaseCell* cell = fespace->GetCollection()->GetCell(cellId);
+            bool insideCell = cell->PointInCell_Parallel(position_X[i], position_Y[i], position_Z[i]);
+            if (insideCell)
+            {
+                // #pragma omp critical
+                // {
+                //     cout << "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " , PrevCell " << previousCell[i] << " , Curr cell " << currentCell[i] << " Cell iD : " << cellId <<endl;
+                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << position_X[i] << " , " << position_Y[i] << " , " << position_Z[i] <<endl;
+                //     double x0,y0,z0;
+                //     cell->GetVertex(0)->GetCoords(x0, y0, z0);
+                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x0: " << x0 << " , y0: " << y0 << " , z0: " << z0 <<endl;
+                //     double x1,y1,z1;
+                //     cell->GetVertex(1)->GetCoords(x1, y1, z1);
+                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x1: " << x1 << " , y1: " << y1 << " , z1: " << z1 <<endl;
+                //     double x2,y2,z2;
+                //     cell->GetVertex(2)->GetCoords(x2, y2, z2);
+                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x2: " << x2 << " , y2: " << y2 << " , z2: " << z2 <<endl;
+                //     double x3,y3,z3;
+                //     cell->GetVertex(3)->GetCoords(x3, y3, z3);
+                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x3: " << x3 << " , y3: " << y3 << " , z3: " << z3 <<endl;
+                // }
+                
+                insideDomain = true;
+                previousCell[i] = currentCell[i];
+                currentCell[i] = cellId;
+                
+                break;
+            }
+        }
+        
+        // #pragma omp critical
+        // {
+        //     cout << "Particle " << i << " is in cell " << currentCell[i] << " and was in cell " << previousCell[i] << endl;
+        // }
+
+        // If Not, particle is deposited.
+        if (!insideDomain)
+        {
+            // Find the last Cell of the particle
+            int cellNo = currentCell[i];
+            TBaseCell* cell = fespace->GetCollection()->GetCell(cellNo);
+            cell->GetShapeDesc()->GetFaceVertex(TmpFV, TmpLen, MaxLen);
+            // int  jointID= Face_id_cellsOnBoundary[i];
+
+            // Boolean Boundary Cell
+            bool isBoundaryCell = false;
+            int cornerID;
+            int jointID;
+            bool isBoundaryDOFPresent;
+            // if the cellNo is present in map then make isBoundaryCell as true
+            #pragma omp critical
+            {
+                if (m_mapBoundaryFaceIds.find(cellNo) != m_mapBoundaryFaceIds.end())
+                {
+                    isBoundaryCell = true;
+                    // Check the corner id of the cell
+                    cornerID = m_cornerTypeOfBoundCells[cellNo];                
+                }
+
+                isBoundaryDOFPresent = false;
+
+                // if cell no is present in the BoundaryDOF map, then make isBoundaryDOFPresent as true
+                if (m_BoundaryDOFsOnCell.find(cellNo) != m_BoundaryDOFsOnCell.end())
+                {
+                    isBoundaryDOFPresent = true;
+                }
+            }
+
+            // Its a Boundary Cell and the cornerID is 21
+            // Mark it as escaped. 
+            if (isBoundaryCell && cornerID == 21) 
+            {
+                isParticleDeposited[i] = true;
+                m_EscapedParticlesCount++;
+                isEscapedParticle[i] = 1;
+                continue;
+            }
+            
+
+
+            // Last cell was not a boundary Cell
+            if (!isBoundaryCell) // Last cell was not a Boundary cell
+            {
+
+                if (isBoundaryDOFPresent)  // Boundary DOF is present
+                {
+		    
+                    std::vector<double> boundaryDOF;
+		    #pragma omp critical
+		    boundaryDOF= m_BoundaryDOFsOnCell[cellNo];
+
+                    position_X[i] = boundaryDOF[0];
+                    position_Y[i] = boundaryDOF[1];
+                    position_Z[i] = boundaryDOF[2];
+                    isParticleDeposited[i] = true;
+                    continue;
+                }
+                else
+                {
+                    // Check for Boundary of the neighbours for particles.
+                    cout << "Error" << endl;
+                    isParticleDeposited[i] = true;
+                    m_ErrorParticlesCount++;
+                    isErrorParticle[i] = 1;
+                    continue;
+                }
+            }
+
+             // Check if the particle is from a corner shared by two faces 0 and 1
+            if (cornerID == 20)
+            {
+                jointID  = 2;
+            }
+            else
+            {
+                jointID = cornerID;
+            }
+            
+            TJoint *Joint = cell->GetJoint(jointID);
+            double x1, x2, x3, y1, y2, y3, z1, z2, z3;
+
+            cell->GetVertex(TmpFV[jointID * MaxLen + 0])->GetCoords(x1, y1, z1);
+            cell->GetVertex(TmpFV[jointID * MaxLen + 1])->GetCoords(x2, y2, z2);
+            double t11 = x2 - x1;
+            double t12 = y2 - y1;
+            double t13 = z2 - z1;
+            double len = sqrt(t11 * t11 + t12 * t12 + t13 * t13);
+            t11 /= len;
+            t12 /= len;
+            t13 /= len;
+
+            cell->GetVertex(TmpFV[jointID * MaxLen + (TmpLen[jointID] - 1)])->GetCoords(x2, y2, z2);
+            double t21 = x2 - x1;
+            double t22 = y2 - y1;
+            double t23 = z2 - z1;
+            len = sqrt(t21 * t21 + t22 * t22 + t23 * t23);
+            t21 /= len;
+            t22 /= len;
+            t23 /= len;
+
+            double N1 = t12 * t23 - t13 * t22;
+            double N2 = t13 * t21 - t11 * t23;
+            double N3 = t11 * t22 - t12 * t21;
+            len = sqrt(N1 * N1 + N2 * N2 + N3 * N3);
+            N1 /= len;
+            N2 /= len;
+            N3 /= len;
+
+            VectorStruct firstPoint;
+            VectorStruct secondPoint;
+            VectorStruct LineVector;
+            VectorStruct pointOnSurface;
+            VectorStruct normalSurface;
+            VectorStruct temp1;
+            VectorStruct temp2;
+
+            firstPoint.x = position_X_old[i];
+            firstPoint.y = position_Y_old[i];
+            firstPoint.z = position_Z_old[i];
+            secondPoint.x = position_X[i];
+            secondPoint.y = position_Y[i];
+            secondPoint.z = position_Z[i];
+
+            normalSurface.x = N1;
+            normalSurface.y = N2;
+            normalSurface.z = N3;
+            pointOnSurface.x = x1;
+            pointOnSurface.y = y1;
+            pointOnSurface.z = z1;
+
+            //  u = p1 - p0
+            LineVector.x = firstPoint.x - secondPoint.x;
+            LineVector.y = firstPoint.y - secondPoint.y;
+            LineVector.z = firstPoint.z - secondPoint.z;
+
+            // Dot
+            double dot = normalSurface.x * firstPoint.x + normalSurface.y * firstPoint.y + normalSurface.z * firstPoint.z;
+
+            if (fabs(dot - 0.0) > 1e-3)
+            {
+                // w = p0 - pC0
+                temp1.x = firstPoint.x - pointOnSurface.x;
+                temp1.y = firstPoint.y - pointOnSurface.y;
+                temp1.z = firstPoint.z - pointOnSurface.z;
+
+                double fac = -1.0 * (normalSurface.x * temp1.x + normalSurface.y * temp1.y + normalSurface.z * temp1.z);
+                fac /= fac;
+
+                // u = u*fac
+                LineVector.x = LineVector.x * fac;
+                LineVector.y = LineVector.y * fac;
+                LineVector.z = LineVector.z * fac;
+
+                temp2.x = LineVector.x + firstPoint.x;
+                temp2.y = LineVector.y + firstPoint.y;
+                temp2.z = LineVector.z + firstPoint.z;
+
+                // Mark the Particle as deposited
+                isParticleDeposited[i] = true;
+
+                
+
+                position_X[i] = temp2.x;
+                position_Y[i] = temp2.y;
+                position_Z[i] = temp2.z;
+
+                // if jointID is 1, then mark the particle as escaped
+                if(jointID == 1)
+                {
+                    isParticleDeposited[i] = true;
+                    m_EscapedParticlesCount++;
+                    isEscapedParticle[i] = 1;   // Mark the particle as escaped
+                    continue;
+                }
+            }
+            else
+            {
+                // Mark the Particle as deposited
+                isParticleDeposited[i] = true;
+                // Ghost particle, Make the vertex as deposition
+                position_X[i] = x1;
+                position_Y[i] = y1;
+                position_Z[i] = z1;
+                m_ghostParticlesCount++;
+
+                // if jointID is 1, then mark the particle as escaped
+                if(jointID == 1)
+                {
+                    isParticleDeposited[i] = true;
+                    m_EscapedParticlesCount++;
+                    isEscapedParticle[i] = 1;   // Mark the particle as escaped
+                    continue;
+                }
+            }
+        }
+        // check if the particle is in any border cell
+    }
+
+    cout << " Difference in position X : " << Ddot(N_Particles, position_X.data(), position_X_old.data()) << "\n";
+    cout << " Difference in position Y : " << Ddot(N_Particles, position_Y.data(), position_Y_old.data()) << "\n";
+    cout << " Difference in position Z : " << Ddot(N_Particles, position_Z.data(), position_Z_old.data()) << "\n";
+
+    int depositedCount = 0;
+    for (int l = 0; l < isParticleDeposited.size(); l++)
+        if (isParticleDeposited[l] == true)
+            depositedCount++;
+    int NotDeposited = N_Particles - depositedCount;
+
+    // cout using right and left allignment and with fixed width
+    
+    std::cout << std::setw(50) << std::left << "Number of Particles deposited or Escaped" << " : " << std::setw(10) << std::right << depositedCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Percentage of Particles Not Deposited" << " : " << std::setw(10) << std::right << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << std::endl;
+    std::cout << std::setw(50) << std::left << "Error particles Accumulated" << " : " << std::setw(10) << std::right << m_ErrorParticlesCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Ghost particles Accumulated" << " : " << std::setw(10) << std::right << m_ghostParticlesCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Stagnant particles Accumulated" << " : " << std::setw(10) << std::right << m_StagnantParticlesCount << std::endl;
+
+    // cout << "No of particles Deposited or Escaped: " << depositedCount << endl;
+    // cout << "percentage of particles Not Deposited : " << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << endl;
+    // cout << "Error particles Accumulaated : " << m_ErrorParticlesCount << endl;
+}
+#else
+void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D *VelocityFEVectFunction, TFESpace3D* fespace)
+{
+    // Constants required for computation
+    double densityFluid = 1.1385;
+    double densityParticle = 914; // earlier 1266
+    double g_x = 0;
+    double g_y = 0;
+    // double g_z = 1.0 / 51.6414;
+    double g_z = 9.81;
+
+    double dynamicViscosityFluid = 0.00001893;
+    double lambda = 0.00000007;
+
+    // Particle Diameter = 8 Micrometers
+    double particleDiameter = 4.3e-6; // earlier 4e-6
+
+    double mass_particle = (Pi * pow(particleDiameter, 3) * densityParticle) / 6;
+    double mass_div_dia = mass_particle / particleDiameter;
+    // For the First Term
+    double intertialConstant = (3. / 4.) * (densityFluid / densityParticle) * (1 / particleDiameter);
+
+    // For the second term
+    double gForceConst_x = g_x;
+    double gForceConst_y = g_y;
+    double gForceConst_z = g_z;
+
+    int MaxLen;
+    int N_Joints;
+    const int *TmpLen;
+    const int *TmpFV;
+
+    int ErrorParticles = 0;
+
+    int FirstTime = 1;
+
+    // Lambda Function to compute CD/CC
+    auto CD_CC = [&](double particleVel, double fluidVel)
+    {
+        double Re_Particle = densityFluid * particleDiameter * fabs(fluidVel - particleVel) / dynamicViscosityFluid;
+        double CD = (24 / Re_Particle) * (1 + 0.15 * pow(Re_Particle, 0.687));
+        double CC = 1.0 + ((2 * lambda) / particleDiameter) * (1.257 + 0.4 * exp(-1.0 * ((1.1 * particleDiameter) / (2 * lambda))));
+        // CC = 1.0;
+        return CD/CC;
+        // return 1;
+    };
+
+    // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
+    int numParticlesReleasedPerTimeStep = 1000;
+    int timeStepCounter = 0;
+    int timeStepInterval = 10;   // Release particles every n steps
+    
+    int actualTimeStep = (int) (TDatabase::TimeDB->CURRENTTIME / TDatabase::TimeDB->TIMESTEPLENGTH);
+
+
+    // release at first time step and at every 10th time step
+    if(actualTimeStep % timeStepInterval == 0  || (m_ParticlesReleased ==0))
+    {
+        m_ParticlesReleased += numParticlesReleasedPerTimeStep;
+        cout << " Addional Particles Released : " << numParticlesReleasedPerTimeStep << " Total Particles Released : " << m_ParticlesReleased <<endl;
+    }
+
+    if(m_ParticlesReleased > N_Particles)
+    {
+        m_ParticlesReleased = N_Particles;
+        cout << " All Particles Released : " << m_ParticlesReleased <<endl;
+    }
+    
+    //Get the FEFunction3D for the Velocity
+    TFEFunction3D *FEFuncVelocityX = VelocityFEVectFunction->GetComponent(0);
+    TFEFunction3D *FEFuncVelocityY = VelocityFEVectFunction->GetComponent(1);
+    TFEFunction3D *FEFuncVelocityZ = VelocityFEVectFunction->GetComponent(2);
+
+
+    cout << "PART RELEASED : " << m_ParticlesReleased <<endl;
+
+    int num_threads = (int) ceil(0.9 * omp_get_max_threads());
+    num_threads = 1; // For Debugging pusposes only
+
+    #pragma omp parallel for num_threads(num_threads)
+    for (int i = 0; i < m_ParticlesReleased; i++)
+    {
+        cout << " ======================" << i << "=============================== \n" <<endl;
+        if (isParticleDeposited[i] == true)
+            continue;
+        double values[4];
+        int CellNo = currentCell[i];
+        // cout << "Thread : "  << omp_get_thread_num() << " , " << CellNo <<endl;
+        
+        TBaseCell *cell = fespace->GetCollection()->GetCell(CellNo);
+        FEFuncVelocityX->FindValueLocal_Parallel(cell, CellNo, position_X[i], position_Y[i], position_Z[i], values);
+        double fluidVelocityX = values[0];
+        
+        FEFuncVelocityY->FindValueLocal_Parallel(cell, CellNo, position_X[i], position_Y[i], position_Z[i], values);
+        double fluidVelocityY = values[0];
+        FEFuncVelocityZ->FindValueLocal_Parallel(cell, CellNo, position_X[i], position_Y[i], position_Z[i], values);
+        double fluidVelocityZ = values[0];
+
+
+        # pragma omp critical
+        {
+            cout << "\n----------------- Particle " << i  <<" : -------------------------------------------\n" <<endl;
+            cout << "Thread : "  << omp_get_thread_num() << " , " << CellNo <<endl;
+            cout << "Cell No   : " << CellNo <<endl;
+            cout << "POsition X: " <<  position_X[i] <<endl;
+            cout << "POsition Y: " <<  position_Y[i] <<endl;
+            cout << "POsition Z: " <<  position_Z[i] <<endl;
+            cout << "Velocity X: " <<  fluidVelocityX<<endl;
+            cout << "Velocity Y: " <<  fluidVelocityY<<endl;
+            cout << "Velocity Z: " <<  fluidVelocityZ<<endl;
+        }
+
+
+        // #pragma omp critical
+        // cout << i << "," << CellNo << "," << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << fluidVelocityX << "," << fluidVelocityY << "," << fluidVelocityZ << " , " << omp_get_thread_num() << endl;
+        
+        
         double cdcc_x = CD_CC(velocityX[i], fluidVelocityX);
         double cdcc_y = CD_CC(velocityY[i], fluidVelocityY);
         double cdcc_z = CD_CC(velocityZ[i], fluidVelocityZ);
@@ -1354,3 +2196,4 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     // cout << "percentage of particles Not Deposited : " << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << endl;
     // cout << "Error particles Accumulaated : " << m_ErrorParticlesCount << endl;
 }
+#endif

@@ -168,6 +168,7 @@
         "FEDatabase3D.C": "cpp",
         "HexaIsoparametric.C": "cpp",
         "SquareMatrix1D.C": "cpp",
-        "NSE3D_Siminhale.C": "cpp"
+        "NSE3D_Siminhale.C": "cpp",
+        "SiminhaleParticleTracking_MPI.C": "cpp"
     }
 }

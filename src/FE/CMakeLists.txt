@@ -175,6 +175,8 @@ endif("${AParMooN_GEO}" STREQUAL "2D")
 
 if("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
 list(APPEND FE_SOURCES "${PROJECT_SOURCE_DIR}/src/FE/FE3D_ALE.cu") 
+## Added by thivin for Particle Deposition Model 
+list(APPEND FE_SOURCES "${PROJECT_SOURCE_DIR}/src/FE/Particle.cu") 
 endif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
 
 

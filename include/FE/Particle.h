@@ -1,5 +1,12 @@
 #include<vector>
 #include<string>
+#include <map>
+#include <vector>
+#include <AllClasses.h>
+#include <FEFunction3D.h>
+
+#ifndef __Particle__
+#define __Particle__
 
 // Class of Mono Disperse Particles
 class TParticles
@@ -97,12 +104,56 @@ class TParticles
 
 				void detectStagnantParticles();
 
-        #ifdef SCUDA
-        void  CD_CC_Cuda();
-        void  FindValueLocal_Parallel();
+        #ifdef _CUDA
+        
+          void  CD_CC_Cuda();
+          void  FindValueLocal_Parallel();
+
+          // Setup the essential data structures for CUDA
+          void SetupCudaDataStructures(TFESpace3D* fespace);
+        
+          // Particle Co-ordinates
+          double* h_m_cell_vertices;
+          // DOF Indices
+          int* h_m_global_dof_indices;
+          int* h_m_begin_indices;
+
+          // velocity Arrays
+          double* h_m_velocityX;
+          double* h_m_velocityY;
+          double* h_m_velocityZ;
+
+          // n_basis_functions for each cell
+          int h_m_n_basis_functions;
+
+          // basis functions for each cell
+          double* h_m_basis_functions_values;
+
+          // Lets delcare all the cuda variables 
+          // Particle Co-ordinates
+          double* c_m_cell_vertices;
+          // DOF Indices
+          int* c_m_global_dof_indices;
+          int* c_m_begin_indices;
+
+          // velocity Arrays
+          double* c_m_velocityX;
+          double* c_m_velocityY;
+          double* c_m_velocityZ;
+
+          // n_basis_functions for each cell
+          int* c_m_n_basis_functions;
+
+          // basis functions for each cell
+          double* c_m_basis_functions_values;
+
+        // 
+
         #endif
 
 
 		protected:
 				bool isStagnant(int i);
 };
+
+#endif

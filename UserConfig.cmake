@@ -127,6 +127,9 @@ endif()
     set(PARMOON_PRG_DEFINE "-D_SEQ ")
  elseif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SCUDA")
     set(PARMOON_PRG_DEFINE "-D_SEQ -D_CUDA")
+    # Added by thivin to pass the -D_CUDA flag to the Cuda definitions
+    set(PARMOON_CUDA_DEF "${PARMOON_CUDA_DEF} -D_CUDA")
+    
   elseif("${AParMooN_PARALLEL_TYPE}" STREQUAL "SMPI")
     set(PARMOON_PRG_DEFINE "-D_SEQ -D_SMPI")
  endif()

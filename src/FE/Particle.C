@@ -769,6 +769,7 @@ position_Z[particleNo]=-0.004204671;
     SetupCudaDataStructures(fespace);
     #endif
 
+ 
 }
 
 // Generates output file for Visualisation
@@ -1401,360 +1402,40 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 
 
     cout << "PART RELEASED : " << m_ParticlesReleased <<endl;
-
     
 
-    for (int i = 0; i < m_ParticlesReleased; i++)
+    // Call the host wrapper function to call the device kernel
+    // This function will be called for every time step
+    int n_dof = fespace->GetN_DegreesOfFreedom();
+    int n_cells = fespace->GetN_Cells();
+    double *fe_function_velocity_x = FEFuncVelocityX->GetValues();
+    double *fe_function_velocity_y = FEFuncVelocityY->GetValues();
+    double *fe_function_velocity_z = FEFuncVelocityZ->GetValues();
+
+    // print the first 10 values of the velocity
+    for(int i=0;i<10;i++)
     {
-        cout << " ======================" << i << "=============================== \n" <<endl;
-        if (isParticleDeposited[i] == true)
-            continue;
-        double values[4];
-        int CellNo = currentCell[i];
-        // cout << "Thread : "  << omp_get_thread_num() << " , " << CellNo <<endl;
-        
-        TBaseCell *cell = fespace->GetCollection()->GetCell(CellNo);
-        FEFuncVelocityX->FindValueLocal_Parallel(cell, CellNo, position_X[i], position_Y[i], position_Z[i], values);
-        double fluidVelocityX = values[0];
-        
-        FEFuncVelocityY->FindValueLocal_Parallel(cell, CellNo, position_X[i], position_Y[i], position_Z[i], values);
-        double fluidVelocityY = values[0];
-        FEFuncVelocityZ->FindValueLocal_Parallel(cell, CellNo, position_X[i], position_Y[i], position_Z[i], values);
-        double fluidVelocityZ = values[0];
-
-
-        # pragma omp critical
-        {
-            cout << "\n----------------- Particle " << i  <<" : -------------------------------------------\n" <<endl;
-            cout << "Thread : "  << omp_get_thread_num() << " , " << CellNo <<endl;
-            cout << "Cell No   : " << CellNo <<endl;
-            cout << "POsition X: " <<  position_X[i] <<endl;
-            cout << "POsition Y: " <<  position_Y[i] <<endl;
-            cout << "POsition Z: " <<  position_Z[i] <<endl;
-            cout << "Velocity X: " <<  fluidVelocityX<<endl;
-            cout << "Velocity Y: " <<  fluidVelocityY<<endl;
-            cout << "Velocity Z: " <<  fluidVelocityZ<<endl;
-        }
-
-
-        // #pragma omp critical
-        // cout << i << "," << CellNo << "," << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << fluidVelocityX << "," << fluidVelocityY << "," << fluidVelocityZ << " , " << omp_get_thread_num() << endl;
-        
-        
-        double cdcc_x = CD_CC(velocityX[i], fluidVelocityX);
-        double cdcc_y = CD_CC(velocityY[i], fluidVelocityY);
-        double cdcc_z = CD_CC(velocityZ[i], fluidVelocityZ);
-
-        // equivalent to setting Re_p as L_inf norm
-        cdcc_x = std::min({cdcc_x, cdcc_y, cdcc_z});
-        cdcc_y = cdcc_x;
-        cdcc_z = cdcc_x;
-                                                                                             
-        double rhs_x = intertialConstant * cdcc_x * fabs(fluidVelocityX - velocityX[i]) * (fluidVelocityX - velocityX[i]) + gForceConst_x * (densityFluid - densityParticle) / densityParticle;
-        double rhs_y = intertialConstant * cdcc_y * fabs(fluidVelocityY - velocityY[i]) * (fluidVelocityY - velocityY[i]) + gForceConst_y * (densityFluid - densityParticle) / densityParticle;
-        double rhs_z = intertialConstant * cdcc_z * fabs(fluidVelocityZ - velocityZ[i]) * (fluidVelocityZ - velocityZ[i]) + gForceConst_z * (densityFluid - densityParticle) / densityParticle;
-
-        // cout << "-- intertialConstant : " << intertialConstant   << "  CDCC : " << (CD_CC(velocityX[i],fluidVelocityX)) << " fluidVelocityX: " << fluidVelocityX << "    velocityX : " <<velocityX[i] << "\n";
-        // cout << "-- intertialConstant     : " << intertialConstant <<"  CDCC : " << (CD_CC(velocityY[i],fluidVelocityY)) <<"     fluidVelocityY: " << fluidVelocityY << "    velocityY : " <<velocityY[i] << "\n";
-        // cout << "-- intertialConstant : " << intertialConstant << "  CDCC : " << (CD_CC(velocityZ[i],fluidVelocityZ)) <<" fluidVelocityZ: " << fluidVelocityZ << "    velocityZ : " <<velocityZ[i] << "\n";
-
-        // Now, Compute the Updated Velocity of particle Using Forward Euler
-
-        double velocityParticle_X_New = rhs_x * (timeStep) + velocityX[i];
-        double velocityParticle_Y_New = rhs_y * (timeStep) + velocityY[i];
-        double velocityParticle_Z_New = rhs_z * (timeStep) + velocityZ[i];
-
-        // cout << "-- vel new x: " << velocityParticle_X_New << " rhs: " << rhs_x << " t: " << (timeStep) << "\n";
-        // cout << "-- vel new y: " << velocityParticle_Y_New << " rhs: " << rhs_y << " t : " << (timeStep) << "\n";
-        // cout << "-- vel new z: " << velocityParticle_Z_New << " rhs: " << rhs_z << " t : " << (timeStep) << "\n";
-
-        // Transfer current velocity as velocity old
-        velocityX_old[i] = velocityX[i];
-        velocityY_old[i] = velocityY[i];
-        velocityZ_old[i] = velocityZ[i];
-
-        // Udpate new velocity as current velocity
-        velocityX[i] = velocityParticle_X_New;
-        velocityY[i] = velocityParticle_Y_New;
-        velocityZ[i] = velocityParticle_Z_New;
-
-        // cout << "-- " << "Vel x : " << velocityX[i] <<  " old vel x :" << velocityX_old[i] << " \n";
-        // cout << "-- " << "Vel y : " << velocityY[i] <<  " old vel y :" << velocityY_old[i] << " \n";
-        // cout << "-- " << "Vel z : " << velocityZ[i] <<  " old vel z :" << velocityZ_old[i] << " \n";
-
-        //  Now Compute the new position of the particle using the updated velocity
-        position_X_old[i] = position_X[i];
-        position_Y_old[i] = position_Y[i];
-        position_Z_old[i] = position_Z[i];
-
-        position_X[i] += timeStep * 0.5 * (velocityX_old[i] + velocityX[i]);
-        position_Y[i] += timeStep * 0.5 * (velocityY_old[i] + velocityY[i]);
-        position_Z[i] += timeStep * 0.5 * (velocityZ_old[i] + velocityZ[i]);
-
-   
-
-        // Update the current position of cell.
-        // Check if the particle Exists in the current Domain
-        int N_Cells = fespace->GetN_Cells();
-        bool insideDomain = false;
-        for (int cellId = 0; cellId < N_Cells; cellId++)
-        {
-            TBaseCell* cell = fespace->GetCollection()->GetCell(cellId);
-            bool insideCell = cell->PointInCell_Parallel(position_X[i], position_Y[i], position_Z[i]);
-            if (insideCell)
-            {
-                // #pragma omp critical
-                // {
-                //     cout << "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " , PrevCell " << previousCell[i] << " , Curr cell " << currentCell[i] << " Cell iD : " << cellId <<endl;
-                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << position_X[i] << " , " << position_Y[i] << " , " << position_Z[i] <<endl;
-                //     double x0,y0,z0;
-                //     cell->GetVertex(0)->GetCoords(x0, y0, z0);
-                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x0: " << x0 << " , y0: " << y0 << " , z0: " << z0 <<endl;
-                //     double x1,y1,z1;
-                //     cell->GetVertex(1)->GetCoords(x1, y1, z1);
-                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x1: " << x1 << " , y1: " << y1 << " , z1: " << z1 <<endl;
-                //     double x2,y2,z2;
-                //     cell->GetVertex(2)->GetCoords(x2, y2, z2);
-                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x2: " << x2 << " , y2: " << y2 << " , z2: " << z2 <<endl;
-                //     double x3,y3,z3;
-                //     cell->GetVertex(3)->GetCoords(x3, y3, z3);
-                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x3: " << x3 << " , y3: " << y3 << " , z3: " << z3 <<endl;
-                // }
-                
-                insideDomain = true;
-                previousCell[i] = currentCell[i];
-                currentCell[i] = cellId;
-                
-                break;
-            }
-        }
-        
-        // #pragma omp critical
-        // {
-        //     cout << "Particle " << i << " is in cell " << currentCell[i] << " and was in cell " << previousCell[i] << endl;
-        // }
-
-        // If Not, particle is deposited.
-        if (!insideDomain)
-        {
-            // Find the last Cell of the particle
-            int cellNo = currentCell[i];
-            TBaseCell* cell = fespace->GetCollection()->GetCell(cellNo);
-            cell->GetShapeDesc()->GetFaceVertex(TmpFV, TmpLen, MaxLen);
-            // int  jointID= Face_id_cellsOnBoundary[i];
-
-            // Boolean Boundary Cell
-            bool isBoundaryCell = false;
-            int cornerID;
-            int jointID;
-            bool isBoundaryDOFPresent;
-            // if the cellNo is present in map then make isBoundaryCell as true
-            #pragma omp critical
-            {
-                if (m_mapBoundaryFaceIds.find(cellNo) != m_mapBoundaryFaceIds.end())
-                {
-                    isBoundaryCell = true;
-                    // Check the corner id of the cell
-                    cornerID = m_cornerTypeOfBoundCells[cellNo];                
-                }
-
-                isBoundaryDOFPresent = false;
-
-                // if cell no is present in the BoundaryDOF map, then make isBoundaryDOFPresent as true
-                if (m_BoundaryDOFsOnCell.find(cellNo) != m_BoundaryDOFsOnCell.end())
-                {
-                    isBoundaryDOFPresent = true;
-                }
-            }
-
-            // Its a Boundary Cell and the cornerID is 21
-            // Mark it as escaped. 
-            if (isBoundaryCell && cornerID == 21) 
-            {
-                isParticleDeposited[i] = true;
-                m_EscapedParticlesCount++;
-                isEscapedParticle[i] = 1;
-                continue;
-            }
-            
-
-
-            // Last cell was not a boundary Cell
-            if (!isBoundaryCell) // Last cell was not a Boundary cell
-            {
-
-                if (isBoundaryDOFPresent)  // Boundary DOF is present
-                {
-		    
-                    std::vector<double> boundaryDOF;
-		    #pragma omp critical
-		    boundaryDOF= m_BoundaryDOFsOnCell[cellNo];
-
-                    position_X[i] = boundaryDOF[0];
-                    position_Y[i] = boundaryDOF[1];
-                    position_Z[i] = boundaryDOF[2];
-                    isParticleDeposited[i] = true;
-                    continue;
-                }
-                else
-                {
-                    // Check for Boundary of the neighbours for particles.
-                    cout << "Error" << endl;
-                    isParticleDeposited[i] = true;
-                    m_ErrorParticlesCount++;
-                    isErrorParticle[i] = 1;
-                    continue;
-                }
-            }
-
-             // Check if the particle is from a corner shared by two faces 0 and 1
-            if (cornerID == 20)
-            {
-                jointID  = 2;
-            }
-            else
-            {
-                jointID = cornerID;
-            }
-            
-            TJoint *Joint = cell->GetJoint(jointID);
-            double x1, x2, x3, y1, y2, y3, z1, z2, z3;
-
-            cell->GetVertex(TmpFV[jointID * MaxLen + 0])->GetCoords(x1, y1, z1);
-            cell->GetVertex(TmpFV[jointID * MaxLen + 1])->GetCoords(x2, y2, z2);
-            double t11 = x2 - x1;
-            double t12 = y2 - y1;
-            double t13 = z2 - z1;
-            double len = sqrt(t11 * t11 + t12 * t12 + t13 * t13);
-            t11 /= len;
-            t12 /= len;
-            t13 /= len;
-
-            cell->GetVertex(TmpFV[jointID * MaxLen + (TmpLen[jointID] - 1)])->GetCoords(x2, y2, z2);
-            double t21 = x2 - x1;
-            double t22 = y2 - y1;
-            double t23 = z2 - z1;
-            len = sqrt(t21 * t21 + t22 * t22 + t23 * t23);
-            t21 /= len;
-            t22 /= len;
-            t23 /= len;
-
-            double N1 = t12 * t23 - t13 * t22;
-            double N2 = t13 * t21 - t11 * t23;
-            double N3 = t11 * t22 - t12 * t21;
-            len = sqrt(N1 * N1 + N2 * N2 + N3 * N3);
-            N1 /= len;
-            N2 /= len;
-            N3 /= len;
-
-            VectorStruct firstPoint;
-            VectorStruct secondPoint;
-            VectorStruct LineVector;
-            VectorStruct pointOnSurface;
-            VectorStruct normalSurface;
-            VectorStruct temp1;
-            VectorStruct temp2;
-
-            firstPoint.x = position_X_old[i];
-            firstPoint.y = position_Y_old[i];
-            firstPoint.z = position_Z_old[i];
-            secondPoint.x = position_X[i];
-            secondPoint.y = position_Y[i];
-            secondPoint.z = position_Z[i];
-
-            normalSurface.x = N1;
-            normalSurface.y = N2;
-            normalSurface.z = N3;
-            pointOnSurface.x = x1;
-            pointOnSurface.y = y1;
-            pointOnSurface.z = z1;
-
-            //  u = p1 - p0
-            LineVector.x = firstPoint.x - secondPoint.x;
-            LineVector.y = firstPoint.y - secondPoint.y;
-            LineVector.z = firstPoint.z - secondPoint.z;
-
-            // Dot
-            double dot = normalSurface.x * firstPoint.x + normalSurface.y * firstPoint.y + normalSurface.z * firstPoint.z;
-
-            if (fabs(dot - 0.0) > 1e-3)
-            {
-                // w = p0 - pC0
-                temp1.x = firstPoint.x - pointOnSurface.x;
-                temp1.y = firstPoint.y - pointOnSurface.y;
-                temp1.z = firstPoint.z - pointOnSurface.z;
-
-                double fac = -1.0 * (normalSurface.x * temp1.x + normalSurface.y * temp1.y + normalSurface.z * temp1.z);
-                fac /= fac;
-
-                // u = u*fac
-                LineVector.x = LineVector.x * fac;
-                LineVector.y = LineVector.y * fac;
-                LineVector.z = LineVector.z * fac;
-
-                temp2.x = LineVector.x + firstPoint.x;
-                temp2.y = LineVector.y + firstPoint.y;
-                temp2.z = LineVector.z + firstPoint.z;
-
-                // Mark the Particle as deposited
-                isParticleDeposited[i] = true;
-
-                
-
-                position_X[i] = temp2.x;
-                position_Y[i] = temp2.y;
-                position_Z[i] = temp2.z;
-
-                // if jointID is 1, then mark the particle as escaped
-                if(jointID == 1)
-                {
-                    isParticleDeposited[i] = true;
-                    m_EscapedParticlesCount++;
-                    isEscapedParticle[i] = 1;   // Mark the particle as escaped
-                    continue;
-                }
-            }
-            else
-            {
-                // Mark the Particle as deposited
-                isParticleDeposited[i] = true;
-                // Ghost particle, Make the vertex as deposition
-                position_X[i] = x1;
-                position_Y[i] = y1;
-                position_Z[i] = z1;
-                m_ghostParticlesCount++;
-
-                // if jointID is 1, then mark the particle as escaped
-                if(jointID == 1)
-                {
-                    isParticleDeposited[i] = true;
-                    m_EscapedParticlesCount++;
-                    isEscapedParticle[i] = 1;   // Mark the particle as escaped
-                    continue;
-                }
-            }
-        }
-        // check if the particle is in any border cell
+        cout << "Velocity X : " << fe_function_velocity_x[i] << " Velocity Y : " << fe_function_velocity_y[i] << " Velocity Z : " << fe_function_velocity_z[i] <<endl;
     }
 
-    cout << " Difference in position X : " << Ddot(N_Particles, position_X.data(), position_X_old.data()) << "\n";
-    cout << " Difference in position Y : " << Ddot(N_Particles, position_Y.data(), position_Y_old.data()) << "\n";
-    cout << " Difference in position Z : " << Ddot(N_Particles, position_Z.data(), position_Z_old.data()) << "\n";
-
-    int depositedCount = 0;
-    for (int l = 0; l < isParticleDeposited.size(); l++)
-        if (isParticleDeposited[l] == true)
-            depositedCount++;
-    int NotDeposited = N_Particles - depositedCount;
-
-    // cout using right and left allignment and with fixed width
+    SetupVelocityValues(fe_function_velocity_x,fe_function_velocity_y,fe_function_velocity_z,m_ParticlesReleased,n_dof);
     
-    std::cout << std::setw(50) << std::left << "Number of Particles deposited or Escaped" << " : " << std::setw(10) << std::right << depositedCount << std::endl;
-    std::cout << std::setw(50) << std::left << "Percentage of Particles Not Deposited" << " : " << std::setw(10) << std::right << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << std::endl;
-    std::cout << std::setw(50) << std::left << "Error particles Accumulated" << " : " << std::setw(10) << std::right << m_ErrorParticlesCount << std::endl;
-    std::cout << std::setw(50) << std::left << "Ghost particles Accumulated" << " : " << std::setw(10) << std::right << m_ghostParticlesCount << std::endl;
-    std::cout << std::setw(50) << std::left << "Stagnant particles Accumulated" << " : " << std::setw(10) << std::right << m_StagnantParticlesCount << std::endl;
+    // Call the kernel function wrapper to perform the interpolation
+    // This function will be called for every time step
+    
+    InterpolateVelocityHostWrapper(timeStep, m_ParticlesReleased,n_dof,n_cells); 
 
+    // print the velocity values
+    for(int i=0;i<m_ParticlesReleased;i++)
+    {
+        cout << "Velocity X : " << velocityX[i] << " Velocity Y : " << velocityY[i] << " Velocity Z : " << velocityZ[i] <<endl;
+    }
+
+    cout << "Reached here" <<endl;
+    exit(0);
+
+
+    
     // cout << "No of particles Deposited or Escaped: " << depositedCount << endl;
     // cout << "percentage of particles Not Deposited : " << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << endl;
     // cout << "Error particles Accumulaated : " << m_ErrorParticlesCount << endl;

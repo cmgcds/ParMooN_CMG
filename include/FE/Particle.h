@@ -105,15 +105,11 @@ class TParticles
 				void detectStagnantParticles();
 
         #ifdef _CUDA
-        
-          void  CD_CC_Cuda();
-          void  FindValueLocal_Parallel();
 
-          // Setup the essential data structures for CUDA
-          void SetupCudaDataStructures(TFESpace3D* fespace);
-        
           // Particle Co-ordinates
-          double* h_m_cell_vertices;
+          double* h_m_cell_vertices_x;
+          double* h_m_cell_vertices_y;
+          double* h_m_cell_vertices_z;
           // DOF Indices
           int* h_m_global_dof_indices;
           int* h_m_begin_indices;
@@ -130,24 +126,53 @@ class TParticles
           double* h_m_basis_functions_values;
 
           // Lets delcare all the cuda variables 
-          // Particle Co-ordinates
-          double* c_m_cell_vertices;
+          // Cell Co-ordinates
+          double* d_m_cell_vertices_x;
+          double* d_m_cell_vertices_y;
+          double* d_m_cell_vertices_z;
+
           // DOF Indices
-          int* c_m_global_dof_indices;
-          int* c_m_begin_indices;
+          int* d_m_global_dof_indices;
+          int* d_m_begin_indices;
 
           // velocity Arrays
-          double* c_m_velocityX;
-          double* c_m_velocityY;
-          double* c_m_velocityZ;
+          double* d_m_velocity_nodal_values_x;
+          double* d_m_velocity_nodal_values_y;
+          double* d_m_velocity_nodal_values_z;
 
-          // n_basis_functions for each cell
-          int* c_m_n_basis_functions;
+          // copy the current cell location to GPU
+          int* d_m_current_cell;
 
-          // basis functions for each cell
-          double* c_m_basis_functions_values;
+          // copy the previous cell location to GPU
+          int* d_m_previous_cell;
 
-        // 
+          // Allocate Arrays for the particle position
+          double* d_m_particle_position_x;
+          double* d_m_particle_position_y;
+          double* d_m_particle_position_z;
+
+          // Allocate Arrays for the particle previous position
+          double* d_m_particle_previous_position_x;
+          double* d_m_particle_previous_position_y;
+          double* d_m_particle_previous_position_z;
+
+          // Allocate memory for the particle velocity
+          double* d_m_particle_velocity_x;
+          double* d_m_particle_velocity_y;
+          double* d_m_particle_velocity_z;
+
+          // --- CUDA RELATED FUNCTIONS -- //
+          void  CD_CC_Cuda();
+          void  FindValueLocal_Parallel();
+
+          // Setup the essential data structures for CUDA
+          void SetupCudaDataStructures(TFESpace3D* fespace);
+
+          // Wrapper function for transfering velocity and N_particles_released to GPU
+          void SetupVelocityValues(double* velocity_x_data, double* velocity_y_data, double* velocity_z_data, int N_Particles_released, int n_dof);
+
+          // Host wrapper for calling interpolate function
+          void InterpolateVelocityHostWrapper(double timeStep,int N_Particles_released, int N_DOF, int N_cells);
 
         #endif
 

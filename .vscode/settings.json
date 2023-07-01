@@ -169,6 +169,7 @@
         "HexaIsoparametric.C": "cpp",
         "SquareMatrix1D.C": "cpp",
         "NSE3D_Siminhale.C": "cpp",
-        "SiminhaleParticleTracking_MPI.C": "cpp"
+        "SiminhaleParticleTracking_MPI.C": "cpp",
+        "HexaAffin.C": "cpp"
     }
 }

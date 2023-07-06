@@ -84,6 +84,7 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
 
     // Resize all the vectors
     DiameterParticles.resize(N_Particles, 4.3e-6); // earlier 10e-6
+    Density.resize(N_Particles, 914); // earlier 1266
     position_X.resize(N_Particles, 0.0);
     position_Y.resize(N_Particles, 0.0);
     position_Z.resize(N_Particles, 0.0);
@@ -96,7 +97,6 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     isErrorParticle.resize(N_Particles, 0);
     isEscapedParticle.resize(N_Particles, 0);
     isStagnantParticle.resize(N_Particles, 0);
-    Density.resize(N_Particles, 914); // earlier 1266
 
 		// initialise previousPositions to zero
 		for (int i = 0; i < N_Particles; i++) {
@@ -133,13 +133,29 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
 
     int N_Cells = fespace->GetCollection()->GetN_Cells();
 
-    std::default_random_engine generator;
+		std::random_device rd, rd_diameter, rd_density;
+		std::mt19937 generator(rd()), generator_diameter(rd_diameter()), generator_density(rd_density());
     std::uniform_real_distribution<double> distribution(circle_x - radius, circle_y + radius);
+		std::normal_distribution<double> normalDistribution(2.5, 0.1);
+		std::discrete_distribution<int> discreteDistribution({52.6, 28.1, 1.9, 17.4});
+
+		auto densityGenerator = [&](double output) {
+			if (output == 0) return 1040;
+			if (output == 1) return 1260;
+			if (output == 2) return 1010;
+			if (output == 3) return 997;
+			else {
+				cout << "Error in density generator. Output: " << output << endl;
+				return 1040;
+			}
+		};
 
     // For the siminhale, the inlet in in k0
-
     for (int particleNo = 0; particleNo < N_Particles; particleNo++)
     {
+			  DiameterParticles[particleNo] = normalDistribution(generator_diameter) * 1e-6;
+				Density[particleNo] = densityGenerator(discreteDistribution(generator_density));
+			
         if(particleNo % 1000 == 0)
             cout << "Particle : " << particleNo <<endl;
         // Use rejection Sampling for points inside circle
@@ -193,7 +209,12 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
         //     position_Z[particleNo] = 0.0008369974;
         // }
 
-       
+				// cout << "if(particleNo == " << particleNo << ")\n";
+				// cout << "{\n";
+				// cout << "    position_X[particleNo] = " << position_X[particleNo] << ";\n";
+				// cout << "    position_Z[particleNo] = " << position_Z[particleNo] << ";\n";
+				// cout << "}\n";
+
 
         // Identify, which cell the particle Belongs to.
         int N_Cells = fespace->GetCollection()->GetN_Cells();
@@ -422,6 +443,10 @@ void TParticles::OutputFile(const char *filename)
          << "cell"
          << ","
          << "prevCell"
+         << ","
+         << "diameter"
+         << ","
+         << "density"
          << "\n";
     for (int i = 0; i < position_X.size(); i++)
     {
@@ -429,7 +454,7 @@ void TParticles::OutputFile(const char *filename)
         if (isParticleDeposited[i])
             depostionStatus = 1;
 
-        file << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << depostionStatus << "," << isErrorParticle[i] << "," << isEscapedParticle[i] << "," << isStagnantParticle[i] << "," << currentCell[i] << "," << previousCell[i] << "\n";
+        file << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << depostionStatus << "," << isErrorParticle[i] << "," << isEscapedParticle[i] << "," << isStagnantParticle[i] << "," << currentCell[i] << "," << previousCell[i] << "," << DiameterParticles[i] << "," << Density[i] << "\n";
     }
 
     file.close();
@@ -957,13 +982,14 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     double dynamicViscosityFluid = 0.00001893;
     double lambda = 0.00000007;
 
-    // Particle Diameter = 8 Micrometers
-    double particleDiameter = 4.3e-6; // earlier 4e-6
+    double particleDiameter = 4.3e-6;
 
-    double mass_particle = (Pi * pow(particleDiameter, 3) * densityParticle) / 6;
-    double mass_div_dia = mass_particle / particleDiameter;
+    // double mass_particle = (Pi * pow(particleDiameter, 3) * densityParticle) / 6;
+    // double mass_div_dia = mass_particle / particleDiameter;
+
     // For the First Term
-    double intertialConstant = (3. / 4.) * (densityFluid / densityParticle) * (1 / particleDiameter);
+    // double intertialConstant = (3. / 4.) * (densityFluid / densityParticle) * (1 / particleDiameter);
+		auto intertialConstant = [&](double particleDiameter, double densityParticle) { return (3. / 4.) * (densityFluid / densityParticle) * (1 / particleDiameter); };
 
     // For the second term
     double gForceConst_x = g_x;
@@ -980,7 +1006,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     int FirstTime = 1;
 
     // Lambda Function to compute CD/CC
-    auto CD_CC = [&](double particleVel, double fluidVel)
+    auto CD_CC = [&](double particleVel, double fluidVel, double particleDiameter)
     {
         double Re_Particle = densityFluid * particleDiameter * fabs(fluidVel - particleVel) / dynamicViscosityFluid;
         double CD = (24 / Re_Particle) * (1 + 0.15 * pow(Re_Particle, 0.687));
@@ -1057,9 +1083,9 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         // cout << i << "," << CellNo << "," << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << fluidVelocityX << "," << fluidVelocityY << "," << fluidVelocityZ << " , " << omp_get_thread_num() << endl;
         
 
-        double cdcc_x = CD_CC(velocityX[i], fluidVelocityX);
-        double cdcc_y = CD_CC(velocityY[i], fluidVelocityY);
-        double cdcc_z = CD_CC(velocityZ[i], fluidVelocityZ);
+        double cdcc_x = CD_CC(velocityX[i], fluidVelocityX, DiameterParticles[i]);
+        double cdcc_y = CD_CC(velocityY[i], fluidVelocityY, DiameterParticles[i]);
+        double cdcc_z = CD_CC(velocityZ[i], fluidVelocityZ, DiameterParticles[i]);
 
         // equivalent to setting Re_p as L_inf norm
         cdcc_x = std::min({cdcc_x, cdcc_y, cdcc_z});
@@ -1068,9 +1094,9 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 
 
         // The RHS will be
-        double rhs_x = intertialConstant * cdcc_x * fabs(fluidVelocityX - velocityX[i]) * (fluidVelocityX - velocityX[i]) + gForceConst_x * (densityFluid - densityParticle) / densityParticle;
-        double rhs_y = intertialConstant * cdcc_y * fabs(fluidVelocityY - velocityY[i]) * (fluidVelocityY - velocityY[i]) + gForceConst_y * (densityFluid - densityParticle) / densityParticle;
-        double rhs_z = intertialConstant * cdcc_z * fabs(fluidVelocityZ - velocityZ[i]) * (fluidVelocityZ - velocityZ[i]) + gForceConst_z * (densityFluid - densityParticle) / densityParticle;
+        double rhs_x = intertialConstant(DiameterParticles[i], Density[i]) * cdcc_x * fabs(fluidVelocityX - velocityX[i]) * (fluidVelocityX - velocityX[i]) + gForceConst_x * (densityFluid - Density[i]) / Density[i];
+        double rhs_y = intertialConstant(DiameterParticles[i], Density[i]) * cdcc_y * fabs(fluidVelocityY - velocityY[i]) * (fluidVelocityY - velocityY[i]) + gForceConst_y * (densityFluid - Density[i]) / Density[i];
+        double rhs_z = intertialConstant(DiameterParticles[i], Density[i]) * cdcc_z * fabs(fluidVelocityZ - velocityZ[i]) * (fluidVelocityZ - velocityZ[i]) + gForceConst_z * (densityFluid - Density[i]) / Density[i];
 
         // cout << "-- intertialConstant : " << intertialConstant   << "  CDCC : " << (CD_CC(velocityX[i],fluidVelocityX)) << " fluidVelocityX: " << fluidVelocityX << "    velocityX : " <<velocityX[i] << "\n";
         // cout << "-- intertialConstant     : " << intertialConstant <<"  CDCC : " << (CD_CC(velocityY[i],fluidVelocityY)) <<"     fluidVelocityY: " << fluidVelocityY << "    velocityY : " <<velocityY[i] << "\n";

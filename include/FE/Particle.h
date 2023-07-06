@@ -11,7 +11,7 @@ class TParticles
         // Size(diameter) of particles
         std::vector<double> DiameterParticles;
 
-        // Density of the Moecules 
+        // Density of the Molecules 
         std::vector<double> Density;
 
         // mass of the particles 

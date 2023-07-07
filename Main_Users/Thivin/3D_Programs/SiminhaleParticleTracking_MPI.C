@@ -900,6 +900,8 @@ int main(int argc, char *argv[])
                 if (m >= 20 )  // To start the interpolation after 20 time steps ( to ensure that flow has propogated )
                 {
                     cout << " Interpolation Started" <<endl;
+
+					
                     //Compute the Particle Displacement for the FTLE values 
                     particleObject->interpolateNewVelocity_Parallel(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0],Velocity_FeSpace[0]);
 

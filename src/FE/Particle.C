@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <vector>
+#include <chrono>
 
 // #include <FTLE.h>
 #include <stdlib.h>
@@ -77,6 +78,24 @@ struct VectorStruct
     double z;
 };
 
+// Supporting Functions 
+// function to compute the difference between two vectors and their dot product
+double diff_dot_product(const std::vector<double>& v1, const std::vector<double>& v2) {
+    // compute the difference between the vectors
+    std::vector<double> diff(v1.size());
+    for (int i = 0; i < v1.size(); i++) {
+        diff[i] = v1[i] - v2[i];
+    }
+
+    // compute the dot product of the difference vector
+    double dot_product = 0.0;
+    for (int i = 0; i < diff.size(); i++) {
+        dot_product += diff[i] * diff[i];
+    }
+
+    return dot_product;
+}
+
 /* Constructor for Particle Class */
 TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, double radius, TFESpace3D *fespace)
 {
@@ -97,6 +116,7 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     isErrorParticle.resize(N_Particles, 0);
     isEscapedParticle.resize(N_Particles, 0);
     isStagnantParticle.resize(N_Particles, 0);
+    isGhostParticle.resize(N_Particles, 0);
 
 
 		// initialise previousPositions to zero
@@ -117,7 +137,7 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     velocityY_old.resize(N_Particles, 0);
     velocityZ_old.resize(N_Particles, 0);
 
-    isParticleDeposited.resize(N_Particles, false);
+    isParticleDeposited.resize(N_Particles, 0);
 
     // Create N particles
     Initialiseparticles(N_Particles_, circle_x, circle_y, radius, fespace);
@@ -126,7 +146,13 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     InitialiseParticleParameters(N_Particles_);
 
     #ifdef _CUDA
+
+    // time the below function
+    auto start_time = std::chrono::high_resolution_clock::now();
     SetupCudaDataStructures(fespace);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end_time - start_time;
+    cout << "Time taken for SetupCudaDataStructures : " << elapsed.count() << " s\n";
     #endif
 
 
@@ -836,6 +862,9 @@ position_Z[particleNo]=-0.004204671;
                     cout << " exiting Process()" << endl;
                     exit(0);
                 }
+                co_ordinates.emplace_back(xx);
+                co_ordinates.emplace_back(yy);
+                co_ordinates.emplace_back(zz);
                 
                 // #pragma omp critical
                 // {
@@ -851,8 +880,6 @@ position_Z[particleNo]=-0.004204671;
         }
     }
 
-    cout <<" Reached here 2" <<endl;
-    exit(0);
 
 
     /// Print the Statistics of the Particle INitialisation
@@ -954,10 +981,10 @@ int TParticles::UpdateParticleDetailsFromFile(std::string filename)
 								position_X[counter] = std::stod(x_str);
 								position_Y[counter] = std::stod(y_str);
 								position_Z[counter] = std::stod(z_str);
-								isParticleDeposited[counter] = std::stoi(deposition_str) == 1 ? true : false;
-								isErrorParticle[counter] = std::stoi(error_str) == 1 ? true : false;
-								isEscapedParticle[counter] = std::stoi(escaped_str) == 1 ? true : false;
-								isStagnantParticle[counter] = std::stoi(stagnant_str) == 1 ? true : false;
+								isParticleDeposited[counter] = std::stoi(deposition_str) == 1;
+								isErrorParticle[counter] = std::stoi(error_str) == 1;
+								isEscapedParticle[counter] = std::stoi(escaped_str) == 1;
+								isStagnantParticle[counter] = std::stoi(stagnant_str) == 1;
 								currentCell[counter] = std::stoi(cell_str);
 								previousCell[counter] = std::stoi(prevCell_str);
                 counter++;
@@ -1033,7 +1060,7 @@ void TParticles::detectStagnantParticles() {
 		if (m_ParticlesReleased == N_Particles) {
 				for (int i = 0; i < N_Particles; i++) {
 						if (isParticleDeposited[i] != 1 && isStagnant(i)) {
-								isParticleDeposited[i] = true;
+								isParticleDeposited[i] = 1;
 								isStagnantParticle[i] = 1;
 								m_StagnantParticlesCount++;
 						}
@@ -1124,7 +1151,7 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
     for (int i = 0; i < m_ParticlesReleased; i++)
     {
         // cout << " =====================================================================================================================  " <<endl;
-        if (isParticleDeposited[i] == true)
+        if (isParticleDeposited[i] == 1)
             continue;
         double values[4];
         int CellNo = currentCell[i];
@@ -1297,14 +1324,14 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
                     position_X[i] = xx;
                     position_Y[i] = yy;
                     position_Z[i] = zz;
-                    isParticleDeposited[i] = true;
+                    isParticleDeposited[i] = 1;
                     continue;
                 }
                 else
                 {
                     // Check for Boundary of the neighbours for particles.
                     cout << "Error" << endl;
-                    isParticleDeposited[i] = true;
+                    isParticleDeposited[i] = 1;
                     m_ErrorParticlesCount++;
                     isErrorParticle[i] = 1;
                     continue;
@@ -1391,7 +1418,7 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
                 temp2.z = LineVector.z + firstPoint.z;
 
                 // Mark the Particle as deposited
-                isParticleDeposited[i] = true;
+                isParticleDeposited[i] = 1;
 
                 position_X[i] = temp2.x;
                 position_Y[i] = temp2.y;
@@ -1400,7 +1427,7 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
             else
             {
                 // Mark the Particle as deposited
-                isParticleDeposited[i] = true;
+                isParticleDeposited[i] = 1;
                 // Ghost particle, Make the vertex as deposition
                 position_X[i] = x1;
                 position_Y[i] = y1;
@@ -1417,7 +1444,7 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
 
     int depositedCount = 0;
     for (int l = 0; l < isParticleDeposited.size(); l++)
-        if (isParticleDeposited[l] == true)
+        if (isParticleDeposited[l] == 1)
             depositedCount++;
     int NotDeposited = N_Particles - depositedCount;
     cout << "No of particles Deposited : " << depositedCount << endl;
@@ -1433,56 +1460,9 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
 #ifdef _CUDA
 void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D *VelocityFEVectFunction, TFESpace3D* fespace)
 {
-    // Constants required for computation
-    double densityFluid = 1.1385;
-    double densityParticle = 914; // earlier 1266
-    double g_x = 0;
-    double g_y = 0;
-    // double g_z = 1.0 / 51.6414;
-    double g_z = 9.81;
-
-    double dynamicViscosityFluid = 0.00001893;
-    double lambda = 0.00000007;
-
-    // Particle Diameter = 8 Micrometers
-    double particleDiameter = 4.3e-6; // earlier 4e-6
-
-    double mass_particle = (Pi * pow(particleDiameter, 3) * densityParticle) / 6;
-    double mass_div_dia = mass_particle / particleDiameter;
-    // For the First Term
-    double intertialConstant = (3. / 4.) * (densityFluid / densityParticle) * (1 / particleDiameter);
-
-
-    // Lets send all the recently assigned variables into the cpu
-    
-
-    // For the second term
-    double gForceConst_x = g_x;
-    double gForceConst_y = g_y;
-    double gForceConst_z = g_z;
-
-    int MaxLen;
-    int N_Joints;
-    const int *TmpLen;
-    const int *TmpFV;
-
-    int ErrorParticles = 0;
-
-    int FirstTime = 1;
-
-    // Lambda Function to compute CD/CC
-    auto CD_CC = [&](double particleVel, double fluidVel)
-    {
-        double Re_Particle = densityFluid * particleDiameter * fabs(fluidVel - particleVel) / dynamicViscosityFluid;
-        double CD = (24 / Re_Particle) * (1 + 0.15 * pow(Re_Particle, 0.687));
-        double CC = 1.0 + ((2 * lambda) / particleDiameter) * (1.257 + 0.4 * exp(-1.0 * ((1.1 * particleDiameter) / (2 * lambda))));
-        // CC = 1.0;
-        return CD/CC;
-        // return 1;
-    };
 
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
-    int numParticlesReleasedPerTimeStep = 1000;
+    int numParticlesReleasedPerTimeStep = 50000;
     int timeStepCounter = 0;
     int timeStepInterval = 10;   // Release particles every n steps
     
@@ -1527,19 +1507,25 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     
     InterpolateVelocityHostWrapper(timeStep, m_ParticlesReleased,n_dof,n_cells); 
 
+    double x_difference_position =  diff_dot_product(position_X,position_X_old);
+    double y_difference_position =  diff_dot_product(position_Y,position_Y_old);
+    double z_difference_position =  diff_dot_product(position_Z,position_Z_old);
+    cout << " Difference in position X : " << x_difference_position<< "\n";
+    cout << " Difference in position Y : " << y_difference_position<< "\n";
+    cout << " Difference in position Z : " << z_difference_position<< "\n";
 
-    // print the position of the particles
-    for(int i=0;i<m_ParticlesReleased;i++)
-    {
-        if(i==10)
-       cout << i <<", " << currentCell[i] << "," << previousCell[i]<< ", " <<  position_X[i] << " , " << position_Y[i] << " , " << position_Z[i] <<endl;
-    }
+    int depositedCount = std::count(isParticleDeposited.begin(), isParticleDeposited.end(), 1);
+    m_ErrorParticlesCount = std::count(isErrorParticle.begin(), isErrorParticle.end(), 1);
+    m_ghostParticlesCount = std::count(isGhostParticle.begin(), isGhostParticle.end(), 1);
+    m_StagnantParticlesCount = std::count(isStagnantParticle.begin(), isStagnantParticle.end(), 1);
 
-    cout << "Reached here" <<endl;
+    std::cout << std::setw(50) << std::left << "Number of Particles deposited or Escaped" << " : " << std::setw(10) << std::right << depositedCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Percentage of Particles Not Deposited" << " : " << std::setw(10) << std::right << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << std::endl;
+    std::cout << std::setw(50) << std::left << "Error particles Accumulated" << " : " << std::setw(10) << std::right << m_ErrorParticlesCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Ghost particles Accumulated" << " : " << std::setw(10) << std::right << m_ghostParticlesCount << std::endl;
+    std::cout << std::setw(50) << std::left << "Stagnant particles Accumulated" << " : " << std::setw(10) << std::right << m_StagnantParticlesCount << std::endl;
 
 
-    
-    
     // cout << "No of particles Deposited or Escaped: " << depositedCount << endl;
     // cout << "percentage of particles Not Deposited : " << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << endl;
     // cout << "Error particles Accumulaated : " << m_ErrorParticlesCount << endl;
@@ -1547,6 +1533,10 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 #else
 void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D *VelocityFEVectFunction, TFESpace3D* fespace)
 {
+
+    // time the function
+    auto start = std::chrono::high_resolution_clock::now();
+
     // Constants required for computation
     double densityFluid = 1.1385;
     double densityParticle = 914; // earlier 1266
@@ -1592,7 +1582,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     };
 
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
-    int numParticlesReleasedPerTimeStep = 1000;
+    int numParticlesReleasedPerTimeStep = 50000;
     int timeStepCounter = 0;
     int timeStepInterval = 10;   // Release particles every n steps
     
@@ -1620,19 +1610,18 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 
     cout << "PART RELEASED : " << m_ParticlesReleased <<endl;
 
-    int num_threads = (int) ceil(0.9 * omp_get_max_threads());
-    num_threads = 1; // For Debugging pusposes only
     
     // Open a file to write the data based on the actual time step
-    std::string filename = "Debug_ParticleData_" + std::to_string(actualTimeStep) + ".csv";
-    std::ofstream myfile;
-    myfile.open(filename);
+    // std::string filename = "Debug_ParticleData_" + std::to_string(actualTimeStep) + ".csv";
+    // std::ofstream myfile;
+    // myfile.open(filename);
 
+    int num_threads = (int) ceil(0.9 * omp_get_max_threads());
     #pragma omp parallel for num_threads(num_threads)
     for (int i = 0; i < m_ParticlesReleased; i++)
     {
         // cout << " ======================" << i << "=============================== \n" <<endl;
-        if (isParticleDeposited[i] == true)
+        if (isParticleDeposited[i] == 1)
             continue;
         double values[4];
         int CellNo = currentCell[i];
@@ -1720,10 +1709,10 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         position_Y[i] += timeStep * 0.5 * (velocityY_old[i] + velocityY[i]);
         position_Z[i] += timeStep * 0.5 * (velocityZ_old[i] + velocityZ[i]);
 
-          #pragma omp critical
-          {
-            myfile << i << "," << CellNo << "," << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << fluidVelocityX << "," << fluidVelocityY << "," << fluidVelocityZ << ", " << cdcc_x << ", " << cdcc_y << ", " << cdcc_z << ", " << rhs_x << ", " << rhs_y << ", " << rhs_z << ", " << velocityX[i] << ", " << velocityY[i] << ", " << velocityZ[i] << ", " << position_X[i] << ", " << position_Y[i] << ", " << position_Z[i] << endl;
-          }
+        //   #pragma omp critical
+        //   {
+        //     myfile << i << "," << CellNo << "," << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << fluidVelocityX << "," << fluidVelocityY << "," << fluidVelocityZ << ", " << cdcc_x << ", " << cdcc_y << ", " << cdcc_z << ", " << rhs_x << ", " << rhs_y << ", " << rhs_z << ", " << velocityX[i] << ", " << velocityY[i] << ", " << velocityZ[i] << ", " << position_X[i] << ", " << position_Y[i] << ", " << position_Z[i] << endl;
+        //   }
         
 
    
@@ -1818,14 +1807,14 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                     position_X[i] = boundaryDOF[0];
                     position_Y[i] = boundaryDOF[1];
                     position_Z[i] = boundaryDOF[2];
-                    isParticleDeposited[i] = true;
+                    isParticleDeposited[i] = 1;
                     continue;
                 }
                 else
                 {
                     // Check for Boundary of the neighbours for particles.
                     cout << "Error" << endl;
-                    isParticleDeposited[i] = true;
+                    isParticleDeposited[i] = 1;
                     m_ErrorParticlesCount++;
                     isErrorParticle[i] = 1;
                     continue;
@@ -1837,7 +1826,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
             // Do not perform the intersection logic for a particle , which is at verge of escaping
             if (isBoundaryCell && cornerID == 21 ) 
             {
-                isParticleDeposited[i] = true;
+                isParticleDeposited[i] = 1;
                 m_EscapedParticlesCount++;
                 isEscapedParticle[i] = 1;
                 continue;
@@ -1854,7 +1843,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
             // This will only happen if there is a backflow
             if(cornerID == 0)
             {
-                isParticleDeposited[i] = true;
+                isParticleDeposited[i] = 1;
                 m_ErrorParticlesCount++;
                 isErrorParticle[i] = 1;
                 continue;
@@ -1947,7 +1936,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 temp2.z = LineVector.z + firstPoint.z;
 
                 // Mark the Particle as deposited
-                isParticleDeposited[i] = true;
+                isParticleDeposited[i] = 1;
 
                 
 
@@ -1958,7 +1947,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 // if bdId/corner ID is 1, then mark the particle as escaped
                 if(cornerID == 1)
                 {
-                    isParticleDeposited[i] = true;
+                    isParticleDeposited[i] = 1;
                     m_EscapedParticlesCount++;
                     isEscapedParticle[i] = 1;   // Mark the particle as escaped
                     continue;
@@ -1969,7 +1958,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 // if bdId/corner ID is 1, then mark the particle as escaped
                 if(cornerID == 1)
                 {
-                    isParticleDeposited[i] = true;
+                    isParticleDeposited[i] = 1;
                     m_EscapedParticlesCount++;
                     isEscapedParticle[i] = 1;   // Mark the particle as escaped
                     continue;
@@ -1977,7 +1966,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 
                 
                 // Mark the Particle as deposited
-                isParticleDeposited[i] = true;
+                isParticleDeposited[i] = 1;
                 // Ghost particle, Make the vertex as deposition
                 position_X[i] = x1;
                 position_Y[i] = y1;
@@ -1990,13 +1979,25 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         // check if the particle is in any border cell
     }
 
-    cout << " Difference in position X : " << Ddot(N_Particles, position_X.data(), position_X_old.data()) << "\n";
-    cout << " Difference in position Y : " << Ddot(N_Particles, position_Y.data(), position_Y_old.data()) << "\n";
-    cout << " Difference in position Z : " << Ddot(N_Particles, position_Z.data(), position_Z_old.data()) << "\n";
+    // finih the timer
+    auto finish = std::chrono::high_resolution_clock::now();
+
+    // calculate the time taken from start to finish
+    std::chrono::duration<double> elapsed = finish - start;
+
+    // print the time taken
+    std::cout << "[INFORMATION] Time taken for Interpolation: " << elapsed.count() << " s\n";
+
+    double x_difference_position =  diff_dot_product(position_X,position_X_old);
+    double y_difference_position =  diff_dot_product(position_Y,position_Y_old);
+    double z_difference_position =  diff_dot_product(position_Z,position_Z_old);
+    cout << " Difference in position X : " << x_difference_position<< "\n";
+    cout << " Difference in position Y : " << y_difference_position<< "\n";
+    cout << " Difference in position Z : " << z_difference_position<< "\n";
 
     int depositedCount = 0;
     for (int l = 0; l < isParticleDeposited.size(); l++)
-        if (isParticleDeposited[l] == true)
+        if (isParticleDeposited[l] == 1)
             depositedCount++;
     int NotDeposited = N_Particles - depositedCount;
 

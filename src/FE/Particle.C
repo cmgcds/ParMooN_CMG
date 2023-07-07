@@ -15,6 +15,7 @@
 #include <MainUtilities.h>
 #include <string.h>
 #include <sstream>
+#include <cstring>
 
 
 #include <LinAlg.h>
@@ -83,7 +84,7 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     this->N_Particles = N_Particles_;
 
     // Resize all the vectors
-    DiameterParticles.resize(N_Particles, 4.3e-6); // earlier 10e-6
+
     position_X.resize(N_Particles, 0.0);
     position_Y.resize(N_Particles, 0.0);
     position_Z.resize(N_Particles, 0.0);
@@ -96,7 +97,7 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     isErrorParticle.resize(N_Particles, 0);
     isEscapedParticle.resize(N_Particles, 0);
     isStagnantParticle.resize(N_Particles, 0);
-    Density.resize(N_Particles, 914); // earlier 1266
+
 
 		// initialise previousPositions to zero
 		for (int i = 0; i < N_Particles; i++) {
@@ -121,8 +122,46 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     // Create N particles
     Initialiseparticles(N_Particles_, circle_x, circle_y, radius, fespace);
 
+    // INitialise particle and fluid Parameters required for the simulation
+    InitialiseParticleParameters(N_Particles_);
+
+    #ifdef _CUDA
+    SetupCudaDataStructures(fespace);
+    #endif
+
 
 }
+
+
+// Initialise particle and fluid Parameters required for the simulation
+void TParticles::InitialiseParticleParameters(int N_Particles_)
+{
+    // Density of the fluid
+    m_fluid_density = 1.1385; // kg/m^3
+
+    // Dynamic Viscosity of the fluid
+    m_fluid_dynamic_viscosity = 0.00001893; // Pa.s
+
+    // resize density
+    m_particle_density.resize(N_Particles_, 914); // earlier 1266
+
+    // mean free path
+    m_lambda = 0.00000007; // m
+
+    // resize particle diameter
+    m_particle_diameter.resize(N_Particles_, 4.3e-6); // earlier 10e-6
+
+    // Gravity
+    m_gravity_x = 0;
+    m_gravity_y = 0;
+    m_gravity_z = 9.81; // m/s^2
+
+    // Store the time step 
+    #ifdef _CUDA
+    h_m_time_step = TDatabase::TimeDB->CURRENTTIMESTEPLENGTH;
+    #endif
+}
+
 
 void TParticles::Initialiseparticles(int N_Particles, double circle_x, double circle_y, double radius, TFESpace3D *fespace)
 {
@@ -624,7 +663,7 @@ position_Z[particleNo]=-0.004204671;
     int N_corner_0 = 0;
     int N_corner_m1 = 0;
     // for (int cellNo = 0; cellNo < N_Cells; cellNo++)
-		int num_threads = (int) ceil(0.9 * omp_get_max_threads());
+    int num_threads = (int) ceil(0.9 * omp_get_max_threads());
     #pragma omp parallel for num_threads(num_threads) schedule(static,1)  shared(N_Cells, fespace,m_cornerTypeOfBoundCells, m_mapBoundaryFaceIds,m_BoundaryDOFsOnCell)
     for (int cellNo = 0; cellNo < N_Cells; cellNo++)
     {
@@ -642,6 +681,7 @@ position_Z[particleNo]=-0.004204671;
         N_Joints = cell->GetN_Joints();
         bool BoundaryJointFound = false;
         std::vector<int> tmp_face_ids;
+        std::vector<int> joint_ids;
         for (int jointId = 0; jointId < N_Joints; jointId++)
         {
             TJoint *Joint = cell->GetJoint(jointId);
@@ -654,6 +694,7 @@ position_Z[particleNo]=-0.004204671;
                 int bdid = BoundComp->GetID();
                 // cellsOnBoundary.push_back(cellNo);
                 tmp_face_ids.push_back(bdid);
+                joint_ids.push_back(jointId);
                 BoundaryJointFound = true;
             }
         }
@@ -677,26 +718,62 @@ position_Z[particleNo]=-0.004204671;
             if(std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 0) != tmp_face_ids.end() && std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 2) != tmp_face_ids.end())
             {
                 cornerType = 20;
+                // Assign the joint id , based on the index of the 2 in the tmp_face_ids
+                // This is required to identify the deposition of the particle.
+                #pragma omp critical
+                {
+                    auto it = std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 2);
+                    int index = std::distance(tmp_face_ids.begin(), it);
+                    m_jointidOfBoundCells[cellNo] = joint_ids[index];
+                }
+
                 N_corner_20++;
             }
             else if(std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 1) != tmp_face_ids.end() && std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 2) != tmp_face_ids.end())
             {
                 cornerType = 21;
+                // Assign the joint id , based on the index of the 1 in the tmp_face_ids
+                // We will consider this particle as escaping particle via bdid 1
+
+                #pragma omp critical
+                {
+                    auto it = std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 1);
+                    int index = std::distance(tmp_face_ids.begin(), it);
+                    m_jointidOfBoundCells[cellNo] = joint_ids[index];
+                }
                 N_corner_21++;
             }
             else if(std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 2) != tmp_face_ids.end())
             {
                 cornerType = 2;
+                #pragma omp critical
+                {
+                    auto it = std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 2);
+                    int index = std::distance(tmp_face_ids.begin(), it);
+                    m_jointidOfBoundCells[cellNo] = joint_ids[index];
+                }
                 N_corner_2++;
             }
             else if(std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 0) != tmp_face_ids.end())
             {
                 cornerType = 0;
+                #pragma omp critical
+                {
+                    auto it = std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 0);
+                    int index = std::distance(tmp_face_ids.begin(), it);
+                    m_jointidOfBoundCells[cellNo] = joint_ids[index];
+                }
                 N_corner_0++;
             }
             else if(std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 1) != tmp_face_ids.end())
             {
                 cornerType = 1;
+                #pragma omp critical
+                {
+                    auto it = std::find(tmp_face_ids.begin(), tmp_face_ids.end(), 1);
+                    int index = std::distance(tmp_face_ids.begin(), it);
+                    m_jointidOfBoundCells[cellNo] = joint_ids[index];
+                }
                 N_corner_1++;
             }
             else
@@ -709,10 +786,7 @@ position_Z[particleNo]=-0.004204671;
             #pragma omp critical
             m_cornerTypeOfBoundCells[cellNo] = cornerType;
             
-
         }
-
-        
 
         // In A given cell, Identify all the Boundary DOF Co-ordinates that exists within the cell. 
         // This is required to identify the deposition of the particle.
@@ -725,18 +799,49 @@ position_Z[particleNo]=-0.004204671;
         
         for (int index = start; index < end; index++)
         {
+            int shift_in_index_per_cell = index - start;
             if (globalDOFindex[index] >= N_Active)
             {
                 double xx = 0.;
                 double yy = 0.;
                 double zz = 0.;
-                
+                double *xi, *eta, *zeta;
+                int N_Points ;
+                double absdetjk[1];
                 // mark the deposition as the vertex point.
-                fespace->GetDOFPosition_Parallel(globalDOFindex[index], xx, yy, zz);
-                co_ordinates.push_back(xx);
-                co_ordinates.push_back(yy);
-                co_ordinates.push_back(zz);
+                // fespace->GetDOFPosition(globalDOFindex[index], xx, yy, zz);
+                
 
+                RefTrans3D* RefTransArray = TFEDatabase3D::GetRefTrans3D_IDFromFE3D();
+                RefTrans3D RefTrans = RefTransArray[elementId];
+                BF3DRefElements RefElement = TFEDatabase3D::GetRefElementFromFE3D(elementId);
+
+                TNodalFunctional3D *nf = TFEDatabase3D::GetNodalFunctional3DFromFE3D(elementId);
+                nf->GetPointsForAll(N_Points, xi, eta, zeta);
+
+                switch(RefTrans)
+                {
+                    case TetraAffin:
+                    TTetraAffin* ta_rt = new TTetraAffin();
+                    ((TTetraAffin *)ta_rt)->SetCell(cell);
+                    ((TTetraAffin *)ta_rt)->GetOrigFromRef(1, xi+shift_in_index_per_cell, eta+shift_in_index_per_cell, zeta+shift_in_index_per_cell,
+                                                            &xx, &yy, &zz, absdetjk);
+                    delete ta_rt;
+                    break;
+
+                    // default case - Error needs to be thrown
+                    default:
+                    cout << " Error in RefTrans3D " << endl;
+                    cout << " File : Particle.C :: Function : InitialiseParticles()" << endl;
+                    cout << " exiting Process()" << endl;
+                    exit(0);
+                }
+                
+                // #pragma omp critical
+                // {
+                //     printf("%d, %d, %d, %f, %f, %f \n",omp_get_thread_num(), cellNo, globalDOFindex[index], xx, yy, zz);
+                // }
+                
                 // Assign the DOF Co-ordinates to the map with cellNo as key
                 #pragma omp critical
                 m_BoundaryDOFsOnCell[cellNo] = co_ordinates;
@@ -747,7 +852,7 @@ position_Z[particleNo]=-0.004204671;
     }
 
     cout <<" Reached here 2" <<endl;
-
+    exit(0);
 
 
     /// Print the Statistics of the Particle INitialisation
@@ -765,9 +870,7 @@ position_Z[particleNo]=-0.004204671;
 
     // cout << " No ofBoundary faces Identified : " << Face_id_cellsOnBoundary.size() << endl;
 
-    #ifdef _CUDA
-    SetupCudaDataStructures(fespace);
-    #endif
+
 
  
 }
@@ -1349,6 +1452,10 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     // For the First Term
     double intertialConstant = (3. / 4.) * (densityFluid / densityParticle) * (1 / particleDiameter);
 
+
+    // Lets send all the recently assigned variables into the cpu
+    
+
     // For the second term
     double gForceConst_x = g_x;
     double gForceConst_y = g_y;
@@ -1412,11 +1519,6 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     double *fe_function_velocity_y = FEFuncVelocityY->GetValues();
     double *fe_function_velocity_z = FEFuncVelocityZ->GetValues();
 
-    // print the first 10 values of the velocity
-    for(int i=0;i<10;i++)
-    {
-        cout << "Velocity X : " << fe_function_velocity_x[i] << " Velocity Y : " << fe_function_velocity_y[i] << " Velocity Z : " << fe_function_velocity_z[i] <<endl;
-    }
 
     SetupVelocityValues(fe_function_velocity_x,fe_function_velocity_y,fe_function_velocity_z,m_ParticlesReleased,n_dof);
     
@@ -1425,16 +1527,18 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     
     InterpolateVelocityHostWrapper(timeStep, m_ParticlesReleased,n_dof,n_cells); 
 
-    // print the velocity values
+
+    // print the position of the particles
     for(int i=0;i<m_ParticlesReleased;i++)
     {
-        cout << "Velocity X : " << velocityX[i] << " Velocity Y : " << velocityY[i] << " Velocity Z : " << velocityZ[i] <<endl;
+        if(i==10)
+       cout << i <<", " << currentCell[i] << "," << previousCell[i]<< ", " <<  position_X[i] << " , " << position_Y[i] << " , " << position_Z[i] <<endl;
     }
 
     cout << "Reached here" <<endl;
-    exit(0);
 
 
+    
     
     // cout << "No of particles Deposited or Escaped: " << depositedCount << endl;
     // cout << "percentage of particles Not Deposited : " << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << endl;
@@ -1518,11 +1622,16 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 
     int num_threads = (int) ceil(0.9 * omp_get_max_threads());
     num_threads = 1; // For Debugging pusposes only
+    
+    // Open a file to write the data based on the actual time step
+    std::string filename = "Debug_ParticleData_" + std::to_string(actualTimeStep) + ".csv";
+    std::ofstream myfile;
+    myfile.open(filename);
 
     #pragma omp parallel for num_threads(num_threads)
     for (int i = 0; i < m_ParticlesReleased; i++)
     {
-        cout << " ======================" << i << "=============================== \n" <<endl;
+        // cout << " ======================" << i << "=============================== \n" <<endl;
         if (isParticleDeposited[i] == true)
             continue;
         double values[4];
@@ -1539,22 +1648,21 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         double fluidVelocityZ = values[0];
 
 
-        # pragma omp critical
-        {
-            cout << "\n----------------- Particle " << i  <<" : -------------------------------------------\n" <<endl;
-            cout << "Thread : "  << omp_get_thread_num() << " , " << CellNo <<endl;
-            cout << "Cell No   : " << CellNo <<endl;
-            cout << "POsition X: " <<  position_X[i] <<endl;
-            cout << "POsition Y: " <<  position_Y[i] <<endl;
-            cout << "POsition Z: " <<  position_Z[i] <<endl;
-            cout << "Velocity X: " <<  fluidVelocityX<<endl;
-            cout << "Velocity Y: " <<  fluidVelocityY<<endl;
-            cout << "Velocity Z: " <<  fluidVelocityZ<<endl;
-        }
+        // # pragma omp critical
+        // {
+        //     cout << "\n----------------- Particle " << i  <<" : -------------------------------------------\n" <<endl;
+        //     cout << "Thread : "  << omp_get_thread_num() << " , " << CellNo <<endl;
+        //     cout << "Cell No   : " << CellNo <<endl;
+        //     cout << "POsition X: " <<  position_X[i] <<endl;
+        //     cout << "POsition Y: " <<  position_Y[i] <<endl;
+        //     cout << "POsition Z: " <<  position_Z[i] <<endl;
+        //     cout << "Velocity X: " <<  fluidVelocityX<<endl;
+        //     cout << "Velocity Y: " <<  fluidVelocityY<<endl;
+        //     cout << "Velocity Z: " <<  fluidVelocityZ<<endl;
+        // }
 
 
-        // #pragma omp critical
-        // cout << i << "," << CellNo << "," << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << fluidVelocityX << "," << fluidVelocityY << "," << fluidVelocityZ << " , " << omp_get_thread_num() << endl;
+       
         
         
         double cdcc_x = CD_CC(velocityX[i], fluidVelocityX);
@@ -1571,6 +1679,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         double rhs_x = intertialConstant * cdcc_x * fabs(fluidVelocityX - velocityX[i]) * (fluidVelocityX - velocityX[i]) + gForceConst_x * (densityFluid - densityParticle) / densityParticle;
         double rhs_y = intertialConstant * cdcc_y * fabs(fluidVelocityY - velocityY[i]) * (fluidVelocityY - velocityY[i]) + gForceConst_y * (densityFluid - densityParticle) / densityParticle;
         double rhs_z = intertialConstant * cdcc_z * fabs(fluidVelocityZ - velocityZ[i]) * (fluidVelocityZ - velocityZ[i]) + gForceConst_z * (densityFluid - densityParticle) / densityParticle;
+        
 
         // cout << "-- intertialConstant : " << intertialConstant   << "  CDCC : " << (CD_CC(velocityX[i],fluidVelocityX)) << " fluidVelocityX: " << fluidVelocityX << "    velocityX : " <<velocityX[i] << "\n";
         // cout << "-- intertialConstant     : " << intertialConstant <<"  CDCC : " << (CD_CC(velocityY[i],fluidVelocityY)) <<"     fluidVelocityY: " << fluidVelocityY << "    velocityY : " <<velocityY[i] << "\n";
@@ -1581,6 +1690,8 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         double velocityParticle_X_New = rhs_x * (timeStep) + velocityX[i];
         double velocityParticle_Y_New = rhs_y * (timeStep) + velocityY[i];
         double velocityParticle_Z_New = rhs_z * (timeStep) + velocityZ[i];
+
+       
 
         // cout << "-- vel new x: " << velocityParticle_X_New << " rhs: " << rhs_x << " t: " << (timeStep) << "\n";
         // cout << "-- vel new y: " << velocityParticle_Y_New << " rhs: " << rhs_y << " t : " << (timeStep) << "\n";
@@ -1608,6 +1719,12 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         position_X[i] += timeStep * 0.5 * (velocityX_old[i] + velocityX[i]);
         position_Y[i] += timeStep * 0.5 * (velocityY_old[i] + velocityY[i]);
         position_Z[i] += timeStep * 0.5 * (velocityZ_old[i] + velocityZ[i]);
+
+          #pragma omp critical
+          {
+            myfile << i << "," << CellNo << "," << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << fluidVelocityX << "," << fluidVelocityY << "," << fluidVelocityZ << ", " << cdcc_x << ", " << cdcc_y << ", " << cdcc_z << ", " << rhs_x << ", " << rhs_y << ", " << rhs_z << ", " << velocityX[i] << ", " << velocityY[i] << ", " << velocityZ[i] << ", " << position_X[i] << ", " << position_Y[i] << ", " << position_Z[i] << endl;
+          }
+        
 
    
 
@@ -1685,28 +1802,18 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 }
             }
 
-            // Its a Boundary Cell and the cornerID is 21
-            // Mark it as escaped. 
-            if (isBoundaryCell && cornerID == 21) 
-            {
-                isParticleDeposited[i] = true;
-                m_EscapedParticlesCount++;
-                isEscapedParticle[i] = 1;
-                continue;
-            }
             
-
 
             // Last cell was not a boundary Cell
             if (!isBoundaryCell) // Last cell was not a Boundary cell
             {
-
                 if (isBoundaryDOFPresent)  // Boundary DOF is present
                 {
 		    
                     std::vector<double> boundaryDOF;
-		    #pragma omp critical
-		    boundaryDOF= m_BoundaryDOFsOnCell[cellNo];
+
+                    #pragma omp critical
+                    boundaryDOF= m_BoundaryDOFsOnCell[cellNo];
 
                     position_X[i] = boundaryDOF[0];
                     position_Y[i] = boundaryDOF[1];
@@ -1725,19 +1832,44 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 }
             }
 
-             // Check if the particle is from a corner shared by two faces 0 and 1
-            if (cornerID == 20)
+            // Its a Boundary Cell and the cornerID is 21
+            // Mark it as escaped. 
+            // Do not perform the intersection logic for a particle , which is at verge of escaping
+            if (isBoundaryCell && cornerID == 21 ) 
             {
-                jointID  = 2;
+                isParticleDeposited[i] = true;
+                m_EscapedParticlesCount++;
+                isEscapedParticle[i] = 1;
+                continue;
             }
-            else
+
+             // Check if the particle is from a corner shared by two bdids 2 and 0
+            if (isBoundaryCell && cornerID == 20)
             {
-                jointID = cornerID;
+                #pragma omp critical
+                jointID  = m_jointidOfBoundCells[cellNo];  
+            }
+
+            // If a paricle escaped from a cell, in which there is only inlet surface then its an error particle
+            // This will only happen if there is a backflow
+            if(cornerID == 0)
+            {
+                isParticleDeposited[i] = true;
+                m_ErrorParticlesCount++;
+                isErrorParticle[i] = 1;
+                continue;
+            }
+            else // Corner ID is 1 or 2
+            {   
+                #pragma omp critical
+                jointID = m_jointidOfBoundCells[cellNo];
+
             }
             
             TJoint *Joint = cell->GetJoint(jointID);
             double x1, x2, x3, y1, y2, y3, z1, z2, z3;
 
+            // Get the coordinates of the joint
             cell->GetVertex(TmpFV[jointID * MaxLen + 0])->GetCoords(x1, y1, z1);
             cell->GetVertex(TmpFV[jointID * MaxLen + 1])->GetCoords(x2, y2, z2);
             double t11 = x2 - x1;
@@ -1823,8 +1955,8 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 position_Y[i] = temp2.y;
                 position_Z[i] = temp2.z;
 
-                // if jointID is 1, then mark the particle as escaped
-                if(jointID == 1)
+                // if bdId/corner ID is 1, then mark the particle as escaped
+                if(cornerID == 1)
                 {
                     isParticleDeposited[i] = true;
                     m_EscapedParticlesCount++;
@@ -1834,6 +1966,16 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
             }
             else
             {
+                // if bdId/corner ID is 1, then mark the particle as escaped
+                if(cornerID == 1)
+                {
+                    isParticleDeposited[i] = true;
+                    m_EscapedParticlesCount++;
+                    isEscapedParticle[i] = 1;   // Mark the particle as escaped
+                    continue;
+                }
+
+                
                 // Mark the Particle as deposited
                 isParticleDeposited[i] = true;
                 // Ghost particle, Make the vertex as deposition
@@ -1842,14 +1984,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
                 position_Z[i] = z1;
                 m_ghostParticlesCount++;
 
-                // if jointID is 1, then mark the particle as escaped
-                if(jointID == 1)
-                {
-                    isParticleDeposited[i] = true;
-                    m_EscapedParticlesCount++;
-                    isEscapedParticle[i] = 1;   // Mark the particle as escaped
-                    continue;
-                }
+                
             }
         }
         // check if the particle is in any border cell

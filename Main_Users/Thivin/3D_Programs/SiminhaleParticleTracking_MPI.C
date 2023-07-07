@@ -704,7 +704,7 @@ int main(int argc, char *argv[])
 				// update particle details from the file
 				int time = particleObject->UpdateParticleDetailsFromFile(argv[4]);
 				StartNo = time;
-				m = StartNo - 1;
+				m = StartNo ;
 				img = m + 1;
 		}
 

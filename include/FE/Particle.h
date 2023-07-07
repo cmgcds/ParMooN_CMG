@@ -16,10 +16,25 @@ class TParticles
         int N_Particles;
 
         // Size(diameter) of particles
-        std::vector<double> DiameterParticles;
+        std::vector<double> m_particle_diameter;
 
         // Density of the Moecules 
-        std::vector<double> Density;
+        std::vector<double> m_particle_density;
+
+        // Gravity
+        double m_gravity_x;
+        double m_gravity_y;
+        double m_gravity_z;
+
+        // mean free path 
+        double m_lambda;
+
+        // fluid density
+        double m_fluid_density;
+
+        // Dynamic Viscosity
+        double m_fluid_dynamic_viscosity;
+
 
         // mass of the particles 
         std::vector<double> MassParticles;
@@ -31,6 +46,8 @@ class TParticles
         // Generate a map of cells with boundary faces using map 
         std::map<int,std::vector<int> > m_mapBoundaryFaceIds;
         std::map<int,int > m_cornerTypeOfBoundCells;
+        std::map<int,int > m_jointidOfBoundCells;
+
         
         std::map<int,std::vector<double> > m_BoundaryDOFsOnCell; 
         // Track the Neibhour DOF's with a vector
@@ -92,6 +109,9 @@ class TParticles
         // -- Methods to Initialise Particles -- //
         void  Initialiseparticles(int N_Particles,double circle_x, double circle_y, double radius,TFESpace3D* fespace);
 
+        // -- Methods to Update Simulation Parmameters -- //
+        void InitialiseParticleParameters(int N_Particles_);
+
         void interpolateNewVelocity(double timeStep,TFEVectFunct3D* VelocityFEVectFunction, TFESpace3D* fespace);
 
         void interpolateNewVelocity_Parallel(double timeStep,TFEVectFunct3D* VelocityFEVectFunction, TFESpace3D* fespace);
@@ -106,13 +126,19 @@ class TParticles
 
         #ifdef _CUDA
 
-          // Particle Co-ordinates
+          // FEM Data Structures
+          // Cell Vertex  Co-ordinates
           double* h_m_cell_vertices_x;
           double* h_m_cell_vertices_y;
           double* h_m_cell_vertices_z;
           // DOF Indices
           int* h_m_global_dof_indices;
           int* h_m_begin_indices;
+
+          // TempFV
+          int* h_m_tempFV;
+          int* h_m_maxlen;
+          int* h_m_tmplen;
 
           // velocity Arrays
           double* h_m_velocityX;
@@ -125,6 +151,13 @@ class TParticles
           // basis functions for each cell
           double* h_m_basis_functions_values;
 
+          // To store the timestep 
+          // NOte : This value is not used in actual host rotuine, rather these value are 
+          // directly passed as fnction parameter
+          double h_m_time_step;
+
+
+          // -- FE Related Datastructures -- //
           // Lets delcare all the cuda variables 
           // Cell Co-ordinates
           double* d_m_cell_vertices_x;
@@ -134,6 +167,11 @@ class TParticles
           // DOF Indices
           int* d_m_global_dof_indices;
           int* d_m_begin_indices;
+
+          // TempFV
+          int* h_m_tempFV;
+          int* h_m_maxlen;
+          int* h_m_tmplen;
 
           // velocity Arrays
           double* d_m_velocity_nodal_values_x;
@@ -160,6 +198,41 @@ class TParticles
           double* d_m_particle_velocity_x;
           double* d_m_particle_velocity_y;
           double* d_m_particle_velocity_z;
+
+          // Allocate memory for the particle previous velocity
+          double* d_m_particle_previous_velocity_x;
+          double* d_m_particle_previous_velocity_y;
+          double* d_m_particle_previous_velocity_z;
+
+          // Allocate memory to store the interpolated velocity values at the current particle position
+          double* d_m_interpolated_velocity_x;
+          double* d_m_interpolated_velocity_y;
+          double* d_m_interpolated_velocity_z;
+          
+          // Allocate memory for the density of particles
+          double* d_m_particle_density;
+
+          // Allocate memory for the diameter of particles
+          double* d_m_particle_diameter;
+
+          // Fluid density 
+          double* d_m_fluid_density;
+
+          // Fluid viscosity
+          double* d_m_dynamic_viscosity_fluid;
+
+          // lambda
+          double* d_m_lambda;
+
+          // Gravity parameters
+          double* d_m_gravity_x;
+          double* d_m_gravity_y;
+          double* d_m_gravity_z;
+          
+          // Store the time step
+          double* d_m_time_step;
+
+
 
           // --- CUDA RELATED FUNCTIONS -- //
           void  CD_CC_Cuda();

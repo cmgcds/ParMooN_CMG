@@ -1537,10 +1537,6 @@ void TFEFunction3D::FindValueLocal_Parallel(TBaseCell *cell, int cell_no,
 
   bf->GetDerivatives(D000, xi, eta, zeta, uref);
 
-  // Print the basis function values
-  cout << "Basis function values at the given point : " << endl;
-  for (int i = 0; i < N_BaseFunct; i++)
-    cout <<" i : " << i <<" , " << uref[i] << "\n";
 
   // bf->GetDerivatives(D100, xi, eta, zeta, uxiref);
   // bf->GetDerivatives(D010, xi, eta, zeta, uetaref);

@@ -2240,7 +2240,7 @@ void TFESpace3D::GetDOFPosition(int dof, double &x, double &y, double &z)
 
     if(DOFFound>-1) // i.e. dof was found
     {
-      //cout << "dof " << dof << " found in cell: " << i << endl;
+      cout << "dof " << dof << " found in cell: " << i << endl;
       cell  = Collection->GetCell(i);
       FEid = GetFE3D(i, cell); 
       RefTrans = RefTransArray[FEid];
@@ -2301,6 +2301,7 @@ void TFESpace3D::GetDOFPosition(int dof, double &x, double &y, double &z)
       {
         case TetraAffin:
          ((TTetraAffin *)rt)->SetCell(cell);
+         printf("DOFFound %d xi %f eta %f zeta %f\n", DOFFound, xi[DOFFound], eta[DOFFound], zeta[DOFFound]);
          ((TTetraAffin *)rt)->GetOrigFromRef(1, xi+DOFFound, eta+DOFFound, zeta+DOFFound,
                                                 &x, &y, &z, absdetjk);
         break;
@@ -2368,7 +2369,7 @@ void TFESpace3D::GetDOFPosition_Parallel(int dof, double &x, double &y, double &
   
   // RefTransArray = TFEDatabase3D::GetRefTrans3D_IDFromFE3D();
 
-  for(i=0;i<N_Cells;i++)
+  for(int i=0;i<N_Cells;i++)
   {
     DOF = GlobalNumbers + BeginIndex[i];
     k = BeginIndex[i+1] - BeginIndex[i];
@@ -2389,7 +2390,7 @@ void TFESpace3D::GetDOFPosition_Parallel(int dof, double &x, double &y, double &
       //cout << "dof " << dof << " found in cell: " << i << endl;
       cell  = Collection->GetCell(i);
       FEid = GetFE3D(i, cell); 
-      // RefTrans = RefTransArray[FEid];
+      RefTrans = RefTransArray[FEid];
   
       RefElement = TFEDatabase3D::GetRefElementFromFE3D(FEid);
   

@@ -492,6 +492,11 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
         //     printf("GPU : %f %f %f\n", rhs_x, rhs_y, rhs_z);
         // }
 
+        // Transfer the updated particle velocity to the previous particle velocity
+        d_m_particle_previous_velocity_x[tid] = d_m_particle_velocity_x[tid];
+        d_m_particle_previous_velocity_y[tid] = d_m_particle_velocity_y[tid];
+        d_m_particle_previous_velocity_z[tid] = d_m_particle_velocity_z[tid];
+
         // Compute the updated paticle velocity using forward euler
         d_m_particle_velocity_x[tid] = rhs_x * time_step + d_m_particle_velocity_x[tid];
         d_m_particle_velocity_y[tid] = rhs_y * time_step + d_m_particle_velocity_y[tid];
@@ -502,26 +507,20 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
         //     printf("GPU : %f %f %f\n", d_m_particle_velocity_x[tid], d_m_particle_velocity_y[tid], d_m_particle_velocity_z[tid]);
         // }
 
+        // Transfer current particle position to previous particle position
+        d_m_particle_previous_position_x[tid] = d_m_particle_position_x[tid];
+        d_m_particle_previous_position_y[tid] = d_m_particle_position_y[tid];
+        d_m_particle_previous_position_z[tid] = d_m_particle_position_z[tid];
+
         // Update the particle position using RK-2
         d_m_particle_position_x[tid] = time_step * 0.5 * (d_m_particle_velocity_x[tid] + d_m_particle_previous_velocity_x[tid]) + d_m_particle_position_x[tid];
         d_m_particle_position_y[tid] = time_step * 0.5 * (d_m_particle_velocity_y[tid] + d_m_particle_previous_velocity_y[tid]) + d_m_particle_position_y[tid];
         d_m_particle_position_z[tid] = time_step * 0.5 * (d_m_particle_velocity_z[tid] + d_m_particle_previous_velocity_z[tid]) + d_m_particle_position_z[tid];
         
-
-        // Transfer the updated particle velocity to the previous particle velocity
-        d_m_particle_previous_velocity_x[tid] = d_m_particle_velocity_x[tid];
-        d_m_particle_previous_velocity_y[tid] = d_m_particle_velocity_y[tid];
-        d_m_particle_previous_velocity_z[tid] = d_m_particle_velocity_z[tid];
-
         // if (tid == 0)
         // {
         //     printf("GPU : %f %f %f\n", d_m_particle_previous_velocity_x[tid], d_m_particle_previous_velocity_y[tid], d_m_particle_previous_velocity_z[tid]);
         // }
-
-        // Transfer current particle position to previous particle position
-        d_m_particle_previous_position_x[tid] = d_m_particle_position_x[tid];
-        d_m_particle_previous_position_y[tid] = d_m_particle_position_y[tid];
-        d_m_particle_previous_position_z[tid] = d_m_particle_position_z[tid];
 
 
         // Check the current position of the cells within the domain 

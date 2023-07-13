@@ -105,7 +105,7 @@ class TParticles
         // Position 
 
         //-- constructor--//
-        TParticles(int N_Particles, double circle_x, double circle_y, double radius, TFESpace3D *fespace);
+	TParticles(int N_Particles, double circle_x, double circle_y, double radius, TFESpace3D *fespace, std::string resumeFile, int *StartNo);
 
         // -- Methods to Initialise Particles -- //
         void  Initialiseparticles(int N_Particles,double circle_x, double circle_y, double radius,TFESpace3D* fespace);

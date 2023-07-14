@@ -18,9 +18,7 @@
 #include <AllClasses.h>
 #include <FEDatabase3D.h>
 #include "Particle.h"
-
-
-
+#include <cmath>
 
 struct Vector3D_Cuda
 {
@@ -28,10 +26,6 @@ struct Vector3D_Cuda
     double y;
     double z;
 };
-
-
-
-
 
 __device__ struct Vector3D_Cuda Obtain_velocity_at_a_point(int current_cell,
                                             int tid,
@@ -304,7 +298,6 @@ __device__ bool Is_Point_In_Cell_CUDA(int cellNo,
 
     return ret;
 }
-
 
 __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                                             double* d_m_cell_vertices_x,
@@ -757,11 +750,35 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
 
 }
 
+__global__ void DetectStagnantParticles_CUDA(double* d_m_particle_position_x,
+                                             double* d_m_particle_position_y,
+                                             double* d_m_particle_position_z,
+                                             double* d_m_particle_stagnant_position_x,
+                                             double* d_m_particle_stagnant_position_y,
+                                             double* d_m_particle_stagnant_position_z,
+                                             int* d_m_is_stagnant_particle,
+                                             int* d_m_is_deposited_particle)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+		if (d_m_is_deposited_particle[tid])
+				return;
 
+		double distance = sqrt(pow(d_m_particle_position_x[tid] - d_m_particle_stagnant_position_x[tid], 2) +
+													 pow(d_m_particle_position_y[tid] - d_m_particle_stagnant_position_y[tid], 2) +
+													 pow(d_m_particle_position_z[tid] - d_m_particle_stagnant_position_z[tid], 2));
+		d_m_particle_stagnant_position_x[tid] = d_m_particle_position_x[tid];
+		d_m_particle_stagnant_position_y[tid] = d_m_particle_position_y[tid];
+		d_m_particle_stagnant_position_z[tid] = d_m_particle_position_z[tid];
 
+		if (distance >= 0.0001) 
+			return;
 
+		d_m_is_stagnant_particle[tid] = 1;
+		d_m_is_deposited_particle[tid] = 1;
+}
 
-void TParticles::SetupCudaDataStructures(TFESpace3D* fespace){
+void TParticles::SetupCudaDataStructures(TFESpace3D* fespace)
+{
     // get the collection of cells from the fespace
     TCollection *coll = fespace->GetCollection();
 
@@ -1033,6 +1050,11 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace){
     checkCudaErrors(cudaMalloc((void**)&d_m_particle_previous_position_y, N_Particles * sizeof(double)));
     checkCudaErrors(cudaMalloc((void**)&d_m_particle_previous_position_z, N_Particles * sizeof(double)));
 
+    // Allocate memory for the particle previous position (for stagnancy check)
+    checkCudaErrors(cudaMalloc((void**)&d_m_particle_stagnant_position_x, N_Particles * sizeof(double)));
+    checkCudaErrors(cudaMalloc((void**)&d_m_particle_stagnant_position_y, N_Particles * sizeof(double)));
+    checkCudaErrors(cudaMalloc((void**)&d_m_particle_stagnant_position_z, N_Particles * sizeof(double)));
+
     // Allocate memory for the particle velocity
     checkCudaErrors(cudaMalloc((void**)&d_m_particle_velocity_x, N_Particles * sizeof(double)));
     checkCudaErrors(cudaMalloc((void**)&d_m_particle_velocity_y, N_Particles * sizeof(double)));
@@ -1064,6 +1086,11 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace){
     checkCudaErrors(cudaMemcpy(d_m_particle_previous_position_x, position_X_old.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_m_particle_previous_position_y, position_Y_old.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_m_particle_previous_position_z, position_Z_old.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
+
+    // Copy the previous particle position (for stagnancy check)
+    checkCudaErrors(cudaMemcpy(d_m_particle_stagnant_position_x, previousPosition_X.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_m_particle_stagnant_position_y, previousPosition_Y.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_m_particle_stagnant_position_z, previousPosition_Z.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
 
 
     // Copy the particle velocity ( This will copy only zero values ), actual values will be copied in the main loop at each time step
@@ -1261,9 +1288,12 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace){
 
 }
 
-
 // Setup function to transfer velocity data at every time step
-void TParticles::SetupVelocityValues(double *velocity_x_data, double *velocity_y_data, double *velocity_z_data, int N_particles_released, int N_DOF)
+void TParticles::SetupVelocityValues(double *velocity_x_data,
+																		 double *velocity_y_data,
+																		 double *velocity_z_data,
+																		 int N_particles_released,
+																		 int N_DOF)
 {
     // Copy the velocity values
     checkCudaErrors(cudaMemcpy(d_m_velocity_nodal_values_x, velocity_x_data, N_DOF * sizeof(double), cudaMemcpyHostToDevice));
@@ -1271,13 +1301,11 @@ void TParticles::SetupVelocityValues(double *velocity_x_data, double *velocity_y
     checkCudaErrors(cudaMemcpy(d_m_velocity_nodal_values_z, velocity_z_data, N_DOF * sizeof(double), cudaMemcpyHostToDevice));
 }
 
-
 void TParticles::CD_CC_Cuda()
 {
     cout << "Inside CD_CC_Cuda" << endl;
     exit(0);
 }
-
 
 // Host wrapper for performing the velocity interpolation at every time step
 void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles_released,int N_DOF,int N_Cells)
@@ -1422,6 +1450,70 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
 
 }
 
+// Host wrapper for detecting stagnant particles
+void TParticles::DetectStagnantParticlesHostWrapper(int N_Particles_released)
+{
+    int MAX_THREAD_PER_BLOCK = 128;
+    int N_threads; 
+
+    if(N_Particles_released >= MAX_THREAD_PER_BLOCK) 
+        N_threads = MAX_THREAD_PER_BLOCK;
+    else
+        N_threads = N_Particles_released;
+    
+    int C_NUM_BLOCKS = std::ceil(double(N_Particles_released)/MAX_THREAD_PER_BLOCK);
+
+
+   dim3 dimGrid(C_NUM_BLOCKS);
+   dim3 dimBlock(N_threads);
+
+   // time the kernel
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventRecord(start, 0);
+
+    DetectStagnantParticles_CUDA<<<dimGrid,dimBlock>>>(d_m_particle_position_x,
+																											 d_m_particle_position_y,
+																											 d_m_particle_position_z,
+																											 d_m_particle_stagnant_position_x,
+																											 d_m_particle_stagnant_position_y,
+																											 d_m_particle_stagnant_position_z,
+																											 d_m_is_stagnant_particle,
+																											 d_m_is_deposited_particle);
+
+    cudaDeviceSynchronize();
+
+    cudaEventCreate(&stop);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    float elapsedTime;
+    cudaEventElapsedTime(&elapsedTime, start, stop);
+    cout << "[INFORMATION] Time taken for the kernel to detect stagnant particles : " << elapsedTime << " ms" << endl;
+
+    // record the time taken for the transfer of data from device to host
+    cudaEvent_t start1, stop1;
+    cudaEventCreate(&start1);
+    cudaEventRecord(start1, 0);
+
+    // Lets transfer the previous position values back to the host
+    checkCudaErrors(cudaMemcpy(previousPosition_X.data(), d_m_particle_stagnant_position_x, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(previousPosition_Y.data(), d_m_particle_stagnant_position_y, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(previousPosition_Z.data(), d_m_particle_stagnant_position_z, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+
+    // Transfer Statistical variables back to the host
+    checkCudaErrors(cudaMemcpy(isParticleDeposited.data(), d_m_is_deposited_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(isStagnantParticle.data(), d_m_is_stagnant_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
+
+    // record the time taken for the transfer of data from device to host
+    cudaEventCreate(&stop1);
+    cudaEventRecord(stop1, 0);
+    cudaEventSynchronize(stop1);
+
+    float elapsedTime1;
+    cudaEventElapsedTime(&elapsedTime1, start1, stop1);
+    cout << "[INFORMATION] Time taken for the data transfer(stagnant) from device to host : " << elapsedTime1 << " ms" << endl;
+
+}
 
 
 

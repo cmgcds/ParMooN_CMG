@@ -230,6 +230,11 @@ class TParticles
           double* d_m_particle_previous_position_y;
           double* d_m_particle_previous_position_z;
 
+          // Allocate Arrays for the particle previous position for stagnant particles
+          double* d_m_particle_stagnant_position_x;
+          double* d_m_particle_stagnant_position_y;
+          double* d_m_particle_stagnant_position_z;
+
           // Allocate memory for the particle velocity
           double* d_m_particle_velocity_x;
           double* d_m_particle_velocity_y;
@@ -340,6 +345,9 @@ class TParticles
 
           // Host wrapper for calling interpolate function
           void InterpolateVelocityHostWrapper(double timeStep,int N_Particles_released, int N_DOF, int N_cells);
+
+          // Host wrapper for detecting stagnant particles
+          void DetectStagnantParticlesHostWrapper(int N_Particles_released);
 
         #endif
 

@@ -52,7 +52,7 @@ set(AParMooN_MPI_IMPLEMENTATION "INTELMPI" CACHE STRING "select the MPI Implemen
 # set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Fluid_Solutions_refined/" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Fluid_1LPM/" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Particle_Solutions_l_inf/" CACHE STRING "select the model")
-set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Particle_Testing" CACHE STRING "select the model")
+set(AParMooN_OUTPUT_DIR_PATH "../Output/Siminhale_Particle_Simulation" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/thivin3d" CACHE STRING "select the model")
 #set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/burger" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/cd1dANN" CACHE STRING "select the model")

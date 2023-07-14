@@ -1082,26 +1082,30 @@ void TParticles::printUpdatedParticleDetailStats()
 
 // Checks if a particle is stagnant based on the distance between previous position and current position
 bool TParticles::isStagnant(int i) {
-		double distance = sqrt(pow(position_X[i] - previousPosition_X[i], 2) + pow(position_Y[i] - previousPosition_Y[i], 2) + pow(position_Z[i] - previousPosition_Z[i], 2));
-		if (distance < 0.0001)
-				return true;
-		else
-				return false;
+		double distance = sqrt(pow(position_X[i] - previousPosition_X[i], 2) +
+													 pow(position_Y[i] - previousPosition_Y[i], 2) +
+													 pow(position_Z[i] - previousPosition_Z[i], 2));
+		return (distance < 0.0001) ? true : false;
 }
 
 // Mark particles as stagnant if they stay in the same area for a long time
 void TParticles::detectStagnantParticles() {
 		if (m_ParticlesReleased == N_Particles) {
-				for (int i = 0; i < N_Particles; i++) {
-						if (isParticleDeposited[i] != 1 && isStagnant(i)) {
-								isParticleDeposited[i] = 1;
-								isStagnantParticle[i] = 1;
-								m_StagnantParticlesCount++;
+				#ifdef _CUDA
+						DetectStagnantParticlesHostWrapper(m_ParticlesReleased);
+				#else
+						int num_threads = (int) ceil(0.9 * omp_get_max_threads());
+						#pragma omp parallel for num_threads(num_threads)
+						for (int i = 0; i < N_Particles; i++) {
+								if (isParticleDeposited[i] != 1 && isStagnant(i)) {
+										isParticleDeposited[i] = 1;
+										isStagnantParticle[i] = 1;
+								}
+								previousPosition_X[i] = position_X[i];
+								previousPosition_Y[i] = position_Y[i];
+								previousPosition_Z[i] = position_Z[i];
 						}
-						previousPosition_X[i] = position_X[i];
-						previousPosition_Y[i] = position_Y[i];
-						previousPosition_Z[i] = position_Z[i];
-				}
+				#endif
 		}
 }
 

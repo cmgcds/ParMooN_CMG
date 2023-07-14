@@ -690,24 +690,15 @@ int main(int argc, char *argv[])
 
 	// INTIALISE THE PARTICLES 
     int numPart = std::atoi(argv[2]);
-	TParticles* particleObject =  new TParticles(numPart,0.0,0.0,0.01,Velocity_FeSpace[0]);
-	cout << " Particles Initialised " <<endl;
-
-
-
-	particleObject->OutputFile("siminhale_0000.csv");
     int StartNo = 2;
-		img = StartNo;
+    std::string resumeFile = (argc > 4) ? argv[4] : "";
 
-        
-		if (argc > 4)
-		{
-				// update particle details from the file
-				StartNo = particleObject->UpdateParticleDetailsFromFile(argv[4]);
-				StartNo = StartNo + 1;
-				img = StartNo;
-				m = StartNo - 2;
-		}
+	TParticles* particleObject =  new TParticles(numPart,0.0,0.0,0.01,Velocity_FeSpace[0], resumeFile, &StartNo);
+    cout << " Particles Initialised " <<endl;
+
+    particleObject->OutputFile("siminhale_0000.csv");
+	img = StartNo;
+    m = StartNo - 2;
 
 	// time loop starts
 	while (TDatabase::TimeDB->CURRENTTIME < end_time) // time cycle

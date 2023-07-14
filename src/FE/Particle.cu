@@ -374,6 +374,9 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
     // Kernel code goes here
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
+		if (d_m_is_deposited_particle[tid])
+				return;
+
     if(tid < n_particles_released)
     {
         // -- BLOCK 1 : INterpolate velocity values at given particle position 
@@ -459,17 +462,17 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                                 lambda
                                 );  
         
-        // FInd the minimum cd_cc
-        double cd_cc_min = cd_cc_x;
-        if(cd_cc_y < cd_cc_min)
-            cd_cc_min = cd_cc_y;
-        if(cd_cc_z < cd_cc_min)
-            cd_cc_min = cd_cc_z;
+        // // FInd the minimum cd_cc
+        // double cd_cc_min = cd_cc_x;
+        // if(cd_cc_y < cd_cc_min)
+        //     cd_cc_min = cd_cc_y;
+        // if(cd_cc_z < cd_cc_min)
+        //     cd_cc_min = cd_cc_z;
         
-        // Set the cd_cc_x, cd_cc_y, cd_cc_z to cd_cc_min
-        cd_cc_x = cd_cc_min;
-        cd_cc_y = cd_cc_min;
-        cd_cc_z = cd_cc_min;
+        // // Set the cd_cc_x, cd_cc_y, cd_cc_z to cd_cc_min
+        // cd_cc_x = cd_cc_min;
+        // cd_cc_y = cd_cc_min;
+        // cd_cc_z = cd_cc_min;
 
         // Calculate the RHS 
         double rhs_x = 0.0;
@@ -555,12 +558,18 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
             int is_boundary_cell = d_m_is_boundary_cell[cell_no];
             int index_boundary_cell = 0;
             int index_bounday_dof = 0;
-            
+            int corner_id;
+            int joint_id;
             
             if(is_boundary_cell < 0) // non positive value, preferably -99999, which is used as place holder
+						{
                 is_boundary_cell = 0;
+						}
             else
+						{
                 index_boundary_cell = is_boundary_cell; // assign the index
+								corner_id = d_m_corner_id[index_boundary_cell];
+						}
 
             // Check if boundary DOF is present
             int is_boundary_dof_present = d_m_is_boundary_dof_present[tid];
@@ -569,9 +578,6 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                 is_boundary_dof_present = 0;
             else
                 index_bounday_dof = is_boundary_dof_present; // assign the index
-
-            int corner_id;
-            int joint_id;
             
             // If last cell not a boundary cell, check for the boundary DOF's within the cell. 
             if(!is_boundary_cell)
@@ -596,8 +602,11 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                 // FUTURE TODO : May be add a check to see if the neighbouring cells have boundary DOF's or boundary faces
                 else  // Does not have a Boundary face nor a boundary DOF
                 {
-                    // Mark the particle as escaped
-                    d_m_is_deposited_particle[tid] = 1;
+										// Mark the particle as deposited , for book keeping purposes
+										d_m_is_deposited_particle[tid] = 1;
+
+										// Mark the particle as error 
+										d_m_is_error_particle[tid] = 1;
                     return;
                 }
             }

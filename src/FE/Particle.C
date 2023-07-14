@@ -97,7 +97,7 @@ double diff_dot_product(const std::vector<double>& v1, const std::vector<double>
 }
 
 /* Constructor for Particle Class */
-TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, double radius, TFESpace3D *fespace)
+TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, double radius, TFESpace3D *fespace, std::string resumeFile, int *StartNo)
 {
     // Initialise particle Stream
     this->N_Particles = N_Particles_;
@@ -144,6 +144,10 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
 
     // INitialise particle and fluid Parameters required for the simulation
     InitialiseParticleParameters(N_Particles_);
+
+		if (resumeFile != "") {
+			*StartNo = UpdateParticleDetailsFromFile(resumeFile);
+		}
 
     #ifdef _CUDA
 
@@ -1039,9 +1043,8 @@ int TParticles::UpdateParticleDetailsFromFile(std::string filename)
 		// get substring containing the time from the filename
 		std::string time = filename.substr(filename.find_last_of("_") + 1);
 		time = time.substr(0, time.find("."));
-		// TDatabase::TimeDB->CURRENTTIME = std::stoi(time);
-
-		return std::stoi(time);
+		TDatabase::TimeDB->CURRENTTIME = (std::stoi(time) - 1) * TDatabase::TimeDB->TIMESTEPLENGTH;
+		return std::stoi(time) + 1;
 }
 
 void TParticles::printUpdatedParticleDetailStats()
@@ -1677,10 +1680,10 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         double cdcc_y = CD_CC(velocityY[i], fluidVelocityY, m_particle_diameter[i]);
         double cdcc_z = CD_CC(velocityZ[i], fluidVelocityZ, m_particle_diameter[i]);
 
-        // equivalent to setting Re_p as L_inf norm
-        cdcc_x = std::min({cdcc_x, cdcc_y, cdcc_z});
-        cdcc_y = cdcc_x;
-        cdcc_z = cdcc_x;
+        // // equivalent to setting Re_p as L_inf norm
+        // cdcc_x = std::min({cdcc_x, cdcc_y, cdcc_z});
+        // cdcc_y = cdcc_x;
+        // cdcc_z = cdcc_x;
 
         // The RHS will be
         double rhs_x = inertialConstant(m_particle_density[i], m_particle_diameter[i]) * cdcc_x
@@ -2019,11 +2022,10 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     cout << " Difference in position Y : " << y_difference_position<< "\n";
     cout << " Difference in position Z : " << z_difference_position<< "\n";
 
-    int depositedCount = 0;
-    for (int l = 0; l < isParticleDeposited.size(); l++)
-        if (isParticleDeposited[l] == 1)
-            depositedCount++;
-    int NotDeposited = N_Particles - depositedCount;
+    int depositedCount = std::count(isParticleDeposited.begin(), isParticleDeposited.end(), 1);
+    m_ErrorParticlesCount = std::count(isErrorParticle.begin(), isErrorParticle.end(), 1);
+    m_ghostParticlesCount = std::count(isGhostParticle.begin(), isGhostParticle.end(), 1);
+    m_StagnantParticlesCount = std::count(isStagnantParticle.begin(), isStagnantParticle.end(), 1);
 
     // cout using right and left allignment and with fixed width
     

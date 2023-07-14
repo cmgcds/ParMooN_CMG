@@ -40,7 +40,7 @@ class TParticles
         std::vector<double> MassParticles;
 
         // Bool for deposition
-        std::vector<bool> isParticleDeposited;
+        std::vector<int> isParticleDeposited;
 
         //  Track cells with Boundary Faces. 
         // Generate a map of cells with boundary faces using map 
@@ -101,10 +101,11 @@ class TParticles
 
         // Number of Ghose Particles 
         int m_ghostParticlesCount = 0;
+        std::vector<int>  isGhostParticle;
         // Position 
 
         //-- constructor--//
-        TParticles(int N_Particles, double circle_x, double circle_y, double radius, TFESpace3D *fespace);
+	TParticles(int N_Particles, double circle_x, double circle_y, double radius, TFESpace3D *fespace, std::string resumeFile, int *StartNo);
 
         // -- Methods to Initialise Particles -- //
         void  Initialiseparticles(int N_Particles,double circle_x, double circle_y, double radius,TFESpace3D* fespace);
@@ -135,10 +136,6 @@ class TParticles
           int* h_m_global_dof_indices;
           int* h_m_begin_indices;
 
-          // TempFV
-          int* h_m_tempFV;
-          int* h_m_maxlen;
-          int* h_m_tmplen;
 
           // velocity Arrays
           double* h_m_velocityX;
@@ -157,6 +154,49 @@ class TParticles
           double h_m_time_step;
 
 
+          // -- Depositon Related Datastructures -- //
+
+          // To save if a cell is boundary cell or not
+          int* h_m_is_boundary_cell;
+
+          // To save the corner id of the given cell
+          int* h_m_corner_id;
+
+          // to check if the cell has boundary DOF or not
+          int* h_m_is_boundary_dof_present;
+
+          // to Store the x-coordinates of the boundary DOF's
+          double* h_m_boundary_dof_x;
+
+          // to Store the y-coordinates of the boundary DOF's
+          double* h_m_boundary_dof_y;
+
+          // to Store the z-coordinates of the boundary DOF's
+          double* h_m_boundary_dof_z;
+
+          // Store the Joint id of the boundary cell
+          int* h_m_joint_id;
+
+          // Store the normal in x direction of the boundary cell
+          double* h_m_joint_normal_x;
+
+          // Store the normal in y direction of the boundary cell
+          double* h_m_joint_normal_y;
+
+          // Store the normal in z direction of the boundary cell
+          double* h_m_joint_normal_z;
+
+          // Store the Co-ordinate of the boundary joint - x direction
+          double* h_m_joint_coordinate_x;
+
+          // Store the Co-ordinate of the boundary joint - y direction
+          double* h_m_joint_coordinate_y;
+
+          // Store the Co-ordinate of the boundary joint - z direction
+          double* h_m_joint_coordinate_z;
+
+
+          // ------------ DEVICE VARIABLES DECLARATION -------------- //
           // -- FE Related Datastructures -- //
           // Lets delcare all the cuda variables 
           // Cell Co-ordinates
@@ -168,10 +208,6 @@ class TParticles
           int* d_m_global_dof_indices;
           int* d_m_begin_indices;
 
-          // TempFV
-          int* h_m_tempFV;
-          int* h_m_maxlen;
-          int* h_m_tmplen;
 
           // velocity Arrays
           double* d_m_velocity_nodal_values_x;
@@ -193,6 +229,11 @@ class TParticles
           double* d_m_particle_previous_position_x;
           double* d_m_particle_previous_position_y;
           double* d_m_particle_previous_position_z;
+
+          // Allocate Arrays for the particle previous position for stagnant particles
+          double* d_m_particle_stagnant_position_x;
+          double* d_m_particle_stagnant_position_y;
+          double* d_m_particle_stagnant_position_z;
 
           // Allocate memory for the particle velocity
           double* d_m_particle_velocity_x;
@@ -233,6 +274,64 @@ class TParticles
           double* d_m_time_step;
 
 
+          // -- Deposition Related Datastructures -- //
+          // To save if a cell is boundary cell or not
+          int* d_m_is_boundary_cell;
+
+          // To save the corner id of the given cell
+          int* d_m_corner_id;
+
+          // to check if the cell has boundary DOF or not
+          int* d_m_is_boundary_dof_present;
+
+          // to Store the x-coordinates of the boundary DOF's
+          double* d_m_boundary_dof_x;
+
+          // to Store the y-coordinates of the boundary DOF's
+          double* d_m_boundary_dof_y;
+
+          // to Store the z-coordinates of the boundary DOF's
+          double* d_m_boundary_dof_z;
+
+          // Store the Joint id of the boundary cell
+          int* d_m_joint_id;
+
+          // Store the normal in x direction of the boundary cell
+          double* d_m_joint_normal_x;
+
+          // Store the normal in y direction of the boundary cell
+          double* d_m_joint_normal_y;
+
+          // Store the normal in z direction of the boundary cell
+          double* d_m_joint_normal_z;
+
+          // Store the Co-ordinate of the boundary joint - x direction
+          double* d_m_joint_coordinate_x;
+
+          // Store the Co-ordinate of the boundary joint - y direction
+          double* d_m_joint_coordinate_y;
+
+          // Store the Co-ordinate of the boundary joint - z direction
+          double* d_m_joint_coordinate_z;
+
+
+          // To save the Summary Statistics of a given particle. 
+          
+          // escaped particles status
+          int* d_m_is_escaped_particle;
+
+          // error particles status
+          int* d_m_is_error_particle;
+
+          // stagnant particles status
+          int* d_m_is_stagnant_particle;
+
+          // ghost particles status
+          int* d_m_is_ghost_particle;
+
+          // deposited particles status
+          int* d_m_is_deposited_particle;
+
 
           // --- CUDA RELATED FUNCTIONS -- //
           void  CD_CC_Cuda();
@@ -246,6 +345,9 @@ class TParticles
 
           // Host wrapper for calling interpolate function
           void InterpolateVelocityHostWrapper(double timeStep,int N_Particles_released, int N_DOF, int N_cells);
+
+          // Host wrapper for detecting stagnant particles
+          void DetectStagnantParticlesHostWrapper(int N_Particles_released);
 
         #endif
 

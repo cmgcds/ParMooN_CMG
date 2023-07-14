@@ -18,9 +18,7 @@
 #include <AllClasses.h>
 #include <FEDatabase3D.h>
 #include "Particle.h"
-
-
-
+#include <cmath>
 
 struct Vector3D_Cuda
 {
@@ -28,10 +26,6 @@ struct Vector3D_Cuda
     double y;
     double z;
 };
-
-
-
-
 
 __device__ struct Vector3D_Cuda Obtain_velocity_at_a_point(int current_cell,
                                             int tid,
@@ -305,7 +299,6 @@ __device__ bool Is_Point_In_Cell_CUDA(int cellNo,
     return ret;
 }
 
-
 __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                                             double* d_m_cell_vertices_x,
                                             double* d_m_cell_vertices_y,
@@ -342,13 +335,40 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                                             int* d_m_previous_cell,
                                             int* d_m_global_dof_indices,
                                             int* d_m_begin_indices,
+
+                                            // FEM parameters for deposition
+                                            int* d_m_is_boundary_cell,
+                                            int* d_m_corner_id,
+                                            int* d_m_is_boundary_dof_present,
+                                            double* d_m_boundary_dof_x,
+                                            double* d_m_boundary_dof_y,
+                                            double* d_m_boundary_dof_z,
+                                            int* d_m_joint_id,
+                                            double* d_m_joint_normal_x,
+                                            double* d_m_joint_normal_y,
+                                            double* d_m_joint_normal_z,
+                                            double* d_m_joint_coordinate_x,
+                                            double* d_m_joint_coordinate_y,
+                                            double* d_m_joint_coordinate_z,
+
+                                            // STATISTICAL Parameters
+                                            int* d_m_is_deposited_particle,
+                                            int* d_m_is_escaped_particle,
+                                            int* d_m_is_error_particle,
+                                            int* d_m_is_stagnant_particle,
+                                            int* d_m_is_ghost_particle,
+
                                             int n_cells,
                                             int n_dOF,
                                             int n_particles_released,
-                                            double time_step)
+                                            double time_step
+                                            )
 {
     // Kernel code goes here
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+		if (d_m_is_deposited_particle[tid])
+				return;
 
     if(tid < n_particles_released)
     {
@@ -435,17 +455,17 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                                 lambda
                                 );  
         
-        // FInd the minimum cd_cc
-        double cd_cc_min = cd_cc_x;
-        if(cd_cc_y < cd_cc_min)
-            cd_cc_min = cd_cc_y;
-        if(cd_cc_z < cd_cc_min)
-            cd_cc_min = cd_cc_z;
+        // // FInd the minimum cd_cc
+        // double cd_cc_min = cd_cc_x;
+        // if(cd_cc_y < cd_cc_min)
+        //     cd_cc_min = cd_cc_y;
+        // if(cd_cc_z < cd_cc_min)
+        //     cd_cc_min = cd_cc_z;
         
-        // Set the cd_cc_x, cd_cc_y, cd_cc_z to cd_cc_min
-        cd_cc_x = cd_cc_min;
-        cd_cc_y = cd_cc_min;
-        cd_cc_z = cd_cc_min;
+        // // Set the cd_cc_x, cd_cc_y, cd_cc_z to cd_cc_min
+        // cd_cc_x = cd_cc_min;
+        // cd_cc_y = cd_cc_min;
+        // cd_cc_z = cd_cc_min;
 
         // Calculate the RHS 
         double rhs_x = 0.0;
@@ -468,6 +488,11 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
         //     printf("GPU : %f %f %f\n", rhs_x, rhs_y, rhs_z);
         // }
 
+        // Transfer the updated particle velocity to the previous particle velocity
+        d_m_particle_previous_velocity_x[tid] = d_m_particle_velocity_x[tid];
+        d_m_particle_previous_velocity_y[tid] = d_m_particle_velocity_y[tid];
+        d_m_particle_previous_velocity_z[tid] = d_m_particle_velocity_z[tid];
+
         // Compute the updated paticle velocity using forward euler
         d_m_particle_velocity_x[tid] = rhs_x * time_step + d_m_particle_velocity_x[tid];
         d_m_particle_velocity_y[tid] = rhs_y * time_step + d_m_particle_velocity_y[tid];
@@ -478,26 +503,20 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
         //     printf("GPU : %f %f %f\n", d_m_particle_velocity_x[tid], d_m_particle_velocity_y[tid], d_m_particle_velocity_z[tid]);
         // }
 
+        // Transfer current particle position to previous particle position
+        d_m_particle_previous_position_x[tid] = d_m_particle_position_x[tid];
+        d_m_particle_previous_position_y[tid] = d_m_particle_position_y[tid];
+        d_m_particle_previous_position_z[tid] = d_m_particle_position_z[tid];
+
         // Update the particle position using RK-2
         d_m_particle_position_x[tid] = time_step * 0.5 * (d_m_particle_velocity_x[tid] + d_m_particle_previous_velocity_x[tid]) + d_m_particle_position_x[tid];
         d_m_particle_position_y[tid] = time_step * 0.5 * (d_m_particle_velocity_y[tid] + d_m_particle_previous_velocity_y[tid]) + d_m_particle_position_y[tid];
         d_m_particle_position_z[tid] = time_step * 0.5 * (d_m_particle_velocity_z[tid] + d_m_particle_previous_velocity_z[tid]) + d_m_particle_position_z[tid];
         
-
-        // Transfer the updated particle velocity to the previous particle velocity
-        d_m_particle_previous_velocity_x[tid] = d_m_particle_velocity_x[tid];
-        d_m_particle_previous_velocity_y[tid] = d_m_particle_velocity_y[tid];
-        d_m_particle_previous_velocity_z[tid] = d_m_particle_velocity_z[tid];
-
         // if (tid == 0)
         // {
         //     printf("GPU : %f %f %f\n", d_m_particle_previous_velocity_x[tid], d_m_particle_previous_velocity_y[tid], d_m_particle_previous_velocity_z[tid]);
         // }
-
-        // Transfer current particle position to previous particle position
-        d_m_particle_previous_position_x[tid] = d_m_particle_position_x[tid];
-        d_m_particle_previous_position_y[tid] = d_m_particle_position_y[tid];
-        d_m_particle_previous_position_z[tid] = d_m_particle_position_z[tid];
 
 
         // Check the current position of the cells within the domain 
@@ -514,22 +533,252 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
             if (insideCell)
             {
                 inside_domain = true;
-                d_m_current_cell[tid] = cell_id;
                 // copy the current cell to previous cell
-                d_m_previous_cell[tid] = cell_id;
+                d_m_previous_cell[tid] = d_m_current_cell[tid];
+                d_m_current_cell[tid] = cell_id;
+                
                 break;
             }
+        }
+
+        // If not inside the domain, then the particle is either escaped or deposited.
+        if(!inside_domain)
+        {
+           // Find the last cell that the particle was present in 
+           int cell_no = d_m_current_cell[tid];
+
+            // Check if the cell is a boundary cell (cell with a boundary face)
+            int is_boundary_cell = d_m_is_boundary_cell[cell_no];
+            int index_boundary_cell = 0;
+            int index_bounday_dof = 0;
+            int corner_id;
+            int joint_id;
+            
+            if(is_boundary_cell < 0) // non positive value, preferably -99999, which is used as place holder
+						{
+                is_boundary_cell = 0;
+						}
+            else
+						{
+                index_boundary_cell = is_boundary_cell; // assign the index
+								corner_id = d_m_corner_id[index_boundary_cell];
+						}
+
+            // Check if boundary DOF is present
+            int is_boundary_dof_present = d_m_is_boundary_dof_present[tid];
+
+            if(is_boundary_dof_present < 0) // non positive value, preferably -99999, which is used as place holder
+                is_boundary_dof_present = 0;
+            else
+                index_bounday_dof = is_boundary_dof_present; // assign the index
+            
+            // If last cell not a boundary cell, check for the boundary DOF's within the cell. 
+            if(!is_boundary_cell)
+            {
+                if(is_boundary_dof_present)  // Atleast a boundary DOF is present
+                {
+                    // obtain the bound dof coordinates using the index_bounday_dof index from d_m_boundary_dof_x, d_m_boundary_dof_y, d_m_boundary_dof_z
+                    double boundary_dof_x = d_m_boundary_dof_x[index_bounday_dof];
+                    double boundary_dof_y = d_m_boundary_dof_y[index_bounday_dof];
+                    double boundary_dof_z = d_m_boundary_dof_z[index_bounday_dof];
+
+                    // Assign it to the particle position
+                    d_m_particle_position_x[tid] = boundary_dof_x;
+                    d_m_particle_position_y[tid] = boundary_dof_y;
+                    d_m_particle_position_z[tid] = boundary_dof_z;
+
+                    // Mark the particle as deposited
+                    d_m_is_deposited_particle[tid] = 1;
+                    return;
+                }
+
+                // FUTURE TODO : May be add a check to see if the neighbouring cells have boundary DOF's or boundary faces
+                else  // Does not have a Boundary face nor a boundary DOF
+                {
+										// Mark the particle as deposited , for book keeping purposes
+										d_m_is_deposited_particle[tid] = 1;
+
+										// Mark the particle as error 
+										d_m_is_error_particle[tid] = 1;
+                    return;
+                }
+            }
+
+            // if the corner id = 21, then it means, the cell has boundary faces on wall and outflow boundary
+            // So the particle is at the the last cell near the exit
+            // since the particle has reached here, we will consider the particle escaped via the outflow boundary
+            if (is_boundary_cell && corner_id == 21 ) 
+            {
+                // Mark the particle as deposited , for book keeping purposes
+                d_m_is_deposited_particle[tid] = 1;
+
+                // Mark the particle as escaped
+                d_m_is_escaped_particle[tid] = 1;
+
+                return;
+            }
+
+             // Check if the particle is from a corner shared by two bdids 2 and 0
+             // this is an inlet between wall and inlet, so we will consider the particle escaped via the wall
+            if (is_boundary_cell && corner_id == 20)
+            {
+                joint_id  = d_m_joint_id[index_boundary_cell];  
+            }
+
+            // If a paricle escaped from a cell, in which there is only inlet surface then its an error particle
+            // This will only happen if there is a backflow
+            if(corner_id == 0)
+            {
+                // Mark the particle as deposited , for book keeping purposes
+                d_m_is_deposited_particle[tid] = 1;
+                
+                // Mark the particle as error 
+                d_m_is_error_particle[tid] = 1;
+                
+                return;
+            }
+            else // Corner ID is 1 or 2
+            {   
+                // get the joint id
+                joint_id  = d_m_joint_id[index_boundary_cell];
+            }
+
+            // With the obtained joint id and get the corresponding joint normal and joint coordinate
+            double joint_normal_x = d_m_joint_normal_x[index_boundary_cell];
+            double joint_normal_y = d_m_joint_normal_y[index_boundary_cell];
+            double joint_normal_z = d_m_joint_normal_z[index_boundary_cell];
+
+            double joint_coordinate_x = d_m_joint_coordinate_x[index_boundary_cell];
+            double joint_coordinate_y = d_m_joint_coordinate_y[index_boundary_cell];
+            double joint_coordinate_z = d_m_joint_coordinate_z[index_boundary_cell];
+
+            // Get the structs
+            struct Vector3D_Cuda first_position;
+            struct Vector3D_Cuda second_position;
+            struct Vector3D_Cuda line_vector;
+            struct Vector3D_Cuda point_on_surface;
+            struct Vector3D_Cuda normal_surface;
+            struct Vector3D_Cuda temp1;
+            struct Vector3D_Cuda temp2;
+
+            first_position.x = d_m_particle_previous_position_x[tid];
+            first_position.y = d_m_particle_previous_position_y[tid];
+            first_position.z = d_m_particle_previous_position_z[tid];
+
+            second_position.x = d_m_particle_position_x[tid];
+            second_position.y = d_m_particle_position_y[tid];
+            second_position.z = d_m_particle_position_z[tid];
+
+            normal_surface.x = joint_normal_x;
+            normal_surface.y = joint_normal_y;
+            normal_surface.z = joint_normal_z;
+
+            point_on_surface.x = joint_coordinate_x;
+            point_on_surface.y = joint_coordinate_y;
+            point_on_surface.z = joint_coordinate_z;
+
+            //  u = p1 - p0
+            line_vector.x = first_position.x - second_position.x;
+            line_vector.y = first_position.y - second_position.y;
+            line_vector.z = first_position.z - second_position.z;
+
+            // Dot
+            double dot = normal_surface.x * first_position.x + normal_surface.y * first_position.y + normal_surface.z * first_position.z;
+
+            if(fabs(dot - 0.0) > 1e-3)
+            {
+                // w = p0 - pC0
+                temp1.x = first_position.x - point_on_surface.x;
+                temp1.y = first_position.y - point_on_surface.y;
+                temp1.z = first_position.z - point_on_surface.z;
+
+                double fac = -1.0 * (normal_surface.x * temp1.x + normal_surface.y * temp1.y + normal_surface.z * temp1.z);
+                fac /= fac;
+
+                // u = u*fac
+                line_vector.x = line_vector.x * fac;
+                line_vector.y = line_vector.y * fac;
+                line_vector.z = line_vector.z * fac;
+
+                temp2.x = line_vector.x + first_position.x;
+                temp2.y = line_vector.y + first_position.y;
+                temp2.z = line_vector.z + first_position.z;
+
+                // Mark the Particle as deposited
+                d_m_is_deposited_particle[tid] = 1;
+
+                d_m_particle_position_x[tid] = temp2.x;
+                d_m_particle_position_y[tid] = temp2.y;
+                d_m_particle_position_z[tid] = temp2.z;
+
+                // if bdId/corner ID is 1, then mark the particle as escaped
+                if(corner_id == 1)
+                {
+                    // Mark the Particle as deposited
+                    d_m_is_deposited_particle[tid] = 1;
+
+                    // Mark the particle as escaped
+                    d_m_is_escaped_particle[tid] = 1;
+
+                    return;
+                }
+            }
+            else
+            {
+                if(corner_id ==1)
+                {
+                    d_m_is_deposited_particle[tid] = 1; // Mark the Particle as deposited
+                    d_m_is_escaped_particle[tid] = 1;   // Mark the particle as escaped
+                }
+
+                // mark them as deposited 
+
+                d_m_is_deposited_particle[tid] = 1;
+
+                // Ghost particle, make the vertex position as deposition position
+                d_m_particle_position_x[tid] = point_on_surface.x;
+                d_m_particle_position_y[tid] = point_on_surface.y;
+                d_m_particle_position_z[tid] = point_on_surface.z;
+
+                d_m_is_ghost_particle[tid] = 1;
+                
+            }
+
         }
 
     }
 
 }
 
+__global__ void DetectStagnantParticles_CUDA(double* d_m_particle_position_x,
+                                             double* d_m_particle_position_y,
+                                             double* d_m_particle_position_z,
+                                             double* d_m_particle_stagnant_position_x,
+                                             double* d_m_particle_stagnant_position_y,
+                                             double* d_m_particle_stagnant_position_z,
+                                             int* d_m_is_stagnant_particle,
+                                             int* d_m_is_deposited_particle)
+{
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+		if (d_m_is_deposited_particle[tid])
+				return;
 
+		double distance = sqrt(pow(d_m_particle_position_x[tid] - d_m_particle_stagnant_position_x[tid], 2) +
+													 pow(d_m_particle_position_y[tid] - d_m_particle_stagnant_position_y[tid], 2) +
+													 pow(d_m_particle_position_z[tid] - d_m_particle_stagnant_position_z[tid], 2));
+		d_m_particle_stagnant_position_x[tid] = d_m_particle_position_x[tid];
+		d_m_particle_stagnant_position_y[tid] = d_m_particle_position_y[tid];
+		d_m_particle_stagnant_position_z[tid] = d_m_particle_position_z[tid];
 
+		if (distance >= 0.0001) 
+			return;
 
+		d_m_is_stagnant_particle[tid] = 1;
+		d_m_is_deposited_particle[tid] = 1;
+}
 
-void TParticles::SetupCudaDataStructures(TFESpace3D* fespace){
+void TParticles::SetupCudaDataStructures(TFESpace3D* fespace)
+{
     // get the collection of cells from the fespace
     TCollection *coll = fespace->GetCollection();
 
@@ -589,10 +838,186 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace){
         h_m_begin_indices[i] = BeginIndex[i];
     }
 
-    // Lets fill the tempFV array for each cell
-    
-    // 
+    // Refer to Documentation "DepositionLogic.md" for further details. 
+    // In a Nutshell, there will be a `is_***` array, which will be of size N_Cells
+    // if the cell does not match the category, then the value will be given as `-99999`
+    // if the cell do match the category, then the value will be given as a positive number, which will be the index at which the corresponding values will be present
 
+    // For Eg : Lets say , there are 5 cells , and cells 0,2,3 has boundary_faces, then the is_boundary_faces array will be as follows
+    // is_boundary_faces = [0, -99999,1, 2, -99999], and the joint ids of the cells 0,2,3 wil be saved in the array
+    // joint_ids = [4, 0, 1] , where 4 is the joint id of cell 0, 0 is the joint id of cell 2 and 1 is the joint id of cell 3
+
+    // Lets fill the is_boundary_faces array
+    h_m_is_boundary_cell = new int[N_Cells];
+
+    // get size of the m_mapBoundaryFaceIds map
+    int size_of_boundary_face = m_mapBoundaryFaceIds.size();
+    
+    // create joint_ids array and corner_ids array of size equal to the size of the m_mapBoundaryFaceIds map
+    h_m_joint_id = new int[size_of_boundary_face];
+    h_m_corner_id = new int[size_of_boundary_face];
+
+    // Allocate memory for joint normals and joint coordinates
+    h_m_joint_normal_x = new double[size_of_boundary_face];
+    h_m_joint_normal_y = new double[size_of_boundary_face];
+    h_m_joint_normal_z = new double[size_of_boundary_face];
+
+    h_m_joint_coordinate_x = new double[size_of_boundary_face];
+    h_m_joint_coordinate_y = new double[size_of_boundary_face];
+    h_m_joint_coordinate_z = new double[size_of_boundary_face];
+
+
+    // Initialise the h_m_is_boundary_faces, h_m_joint_ids and h_m_corner_ids array 
+    // using maps, m_mapBoundaryFaceIds, m_mapJointIds and m_mapCornerIds
+    // if the key is present in the map, then the value will be the index at which the corresponding values will be present
+    // if the key is not present in the map, then the value will be -99999
+
+    int index_for_boundary_face = 0;
+    // loop through the cells
+    for (int cell_no = 0 ; cell_no < N_Cells; cell_no++)
+    {
+        // check if the cell no is present in the map
+        if (m_mapBoundaryFaceIds.find(cell_no) != m_mapBoundaryFaceIds.end())
+        {
+            // if the cell no is present in the map, then the value will be the index at which the corresponding values will be present
+            h_m_is_boundary_cell[cell_no] = index_for_boundary_face;
+
+            // get the joint id and corner id from the map
+            int joint_id = m_jointidOfBoundCells[cell_no];
+            int corner_id = m_cornerTypeOfBoundCells[cell_no];
+
+            // save the joint id and corner id in the corresponding arrays
+            h_m_joint_id[index_for_boundary_face] = joint_id;
+            h_m_corner_id[index_for_boundary_face] = corner_id;
+
+            // get the joint normal and joint coordinate from the map
+            double joint_normal_x ;
+            double joint_normal_y ;
+            double joint_normal_z ;
+
+            double joint_coordinate_x;
+            double joint_coordinate_y;
+            double joint_coordinate_z;
+
+
+            // Variables required for normal Computation 
+            int MaxLen;
+            int N_Joints;
+            const int *TmpLen;
+            const int *TmpFV;
+
+
+            TBaseCell *cell = fespace->GetCollection()->GetCell(cell_no);
+            cell->GetShapeDesc()->GetFaceVertex(TmpFV, TmpLen, MaxLen);
+            TJoint *Joint = cell->GetJoint(joint_id);
+            double x1, x2, x3, y1, y2, y3, z1, z2, z3;
+
+            // Get the coordinates of the joint
+            cell->GetVertex(TmpFV[joint_id * MaxLen + 0])->GetCoords(x1, y1, z1);
+            cell->GetVertex(TmpFV[joint_id * MaxLen + 1])->GetCoords(x2, y2, z2);
+            double t11 = x2 - x1;
+            double t12 = y2 - y1;
+            double t13 = z2 - z1;
+            double len = sqrt(t11 * t11 + t12 * t12 + t13 * t13);
+            t11 /= len;
+            t12 /= len;
+            t13 /= len;
+
+            cell->GetVertex(TmpFV[joint_id * MaxLen + (TmpLen[joint_id] - 1)])->GetCoords(x2, y2, z2);
+            double t21 = x2 - x1;
+            double t22 = y2 - y1;
+            double t23 = z2 - z1;
+            len = sqrt(t21 * t21 + t22 * t22 + t23 * t23);
+            t21 /= len;
+            t22 /= len;
+            t23 /= len;
+
+            double N1 = t12 * t23 - t13 * t22;
+            double N2 = t13 * t21 - t11 * t23;
+            double N3 = t11 * t22 - t12 * t21;
+            len = sqrt(N1 * N1 + N2 * N2 + N3 * N3);
+            N1 /= len;
+            N2 /= len;
+            N3 /= len;
+
+            // Assign the joint normal 
+            joint_normal_x = N1;
+            joint_normal_y = N2;
+            joint_normal_z = N3;
+
+            // Assign joint coordinate
+            joint_coordinate_x = x1;
+            joint_coordinate_y = y1;
+            joint_coordinate_z = z1;
+
+            // save the joint normal and joint coordinate in the corresponding arrays
+            h_m_joint_normal_x[index_for_boundary_face] = joint_normal_x;
+            h_m_joint_normal_y[index_for_boundary_face] = joint_normal_y;
+            h_m_joint_normal_z[index_for_boundary_face] = joint_normal_z;
+
+            h_m_joint_coordinate_x[index_for_boundary_face] = joint_coordinate_x;
+            h_m_joint_coordinate_y[index_for_boundary_face] = joint_coordinate_y;
+            h_m_joint_coordinate_z[index_for_boundary_face] = joint_coordinate_z;
+
+            // increment the index_for_boundary_face
+            index_for_boundary_face++;
+        }
+        else
+        {
+            // if the cell no is not present in the map, then the value will be -99999
+            h_m_is_boundary_cell[cell_no] = -99999;
+        }
+    }
+
+
+    // fill the is_boundary_dof array 
+    h_m_is_boundary_dof_present = new int[N_Cells];
+
+    // get the size of the m_mapBoundaryDofIds map
+    int size_of_boundary_dof = m_BoundaryDOFsOnCell.size();
+
+    // Allocate memory for the arrays
+    h_m_boundary_dof_x = new double[size_of_boundary_dof];
+    h_m_boundary_dof_y = new double[size_of_boundary_dof];
+    h_m_boundary_dof_z = new double[size_of_boundary_dof];
+    
+    // Initialise the h_m_is_boundary_dof, h_m_joint_normal_x, h_m_joint_normal_y, h_m_joint_normal_z, h_m_joint_coordinate_x, h_m_joint_coordinate_y, h_m_joint_coordinate_z array
+    // using maps, m_mapBoundaryDofIds, and compute the joint normals and joint coordinates
+    
+    // print size of boundary dof
+    cout << "[INFORMATION] size_of_boundary_dof : " << size_of_boundary_dof << endl;
+
+    // print num of cells
+    cout << "[INFORMATION] N_Cells : " << N_Cells << endl;
+
+
+    int index_for_boundary_dof = 0;
+    
+    for (int cell_no = 0 ; cell_no < N_Cells ; cell_no ++)
+    {
+        // check if the cell no is present in the map
+        if (m_BoundaryDOFsOnCell.find(cell_no) != m_BoundaryDOFsOnCell.end())
+        {
+            // if the cell no is present in the map, then the value will be the index at which the corresponding values will be present
+            h_m_is_boundary_dof_present[cell_no] = index_for_boundary_dof;
+            
+            std::vector<double> boundary_dof = m_BoundaryDOFsOnCell[cell_no];
+            h_m_boundary_dof_x[index_for_boundary_dof] = boundary_dof[0]; // x dof
+            h_m_boundary_dof_y[index_for_boundary_dof] = boundary_dof[1]; // y dof
+            h_m_boundary_dof_z[index_for_boundary_dof] = boundary_dof[2]; // z dof
+
+            // increment the index_for_boundary_dof
+            index_for_boundary_dof++;
+        }
+        else
+        {
+            // if the cell no is not present in the map, then the value will be -99999
+            h_m_is_boundary_dof_present[cell_no] = -99999;
+        }
+    }
+
+    
+   
     // ----- ALLOCATE MEMORY IN GPU FOR ALL THE DEVICE VARIABLES -----
 
     // Allocate memory for the cell vertices
@@ -625,6 +1050,11 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace){
     checkCudaErrors(cudaMalloc((void**)&d_m_particle_previous_position_y, N_Particles * sizeof(double)));
     checkCudaErrors(cudaMalloc((void**)&d_m_particle_previous_position_z, N_Particles * sizeof(double)));
 
+    // Allocate memory for the particle previous position (for stagnancy check)
+    checkCudaErrors(cudaMalloc((void**)&d_m_particle_stagnant_position_x, N_Particles * sizeof(double)));
+    checkCudaErrors(cudaMalloc((void**)&d_m_particle_stagnant_position_y, N_Particles * sizeof(double)));
+    checkCudaErrors(cudaMalloc((void**)&d_m_particle_stagnant_position_z, N_Particles * sizeof(double)));
+
     // Allocate memory for the particle velocity
     checkCudaErrors(cudaMalloc((void**)&d_m_particle_velocity_x, N_Particles * sizeof(double)));
     checkCudaErrors(cudaMalloc((void**)&d_m_particle_velocity_y, N_Particles * sizeof(double)));
@@ -656,6 +1086,11 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace){
     checkCudaErrors(cudaMemcpy(d_m_particle_previous_position_x, position_X_old.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_m_particle_previous_position_y, position_Y_old.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_m_particle_previous_position_z, position_Z_old.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
+
+    // Copy the previous particle position (for stagnancy check)
+    checkCudaErrors(cudaMemcpy(d_m_particle_stagnant_position_x, previousPosition_X.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_m_particle_stagnant_position_y, previousPosition_Y.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_m_particle_stagnant_position_z, previousPosition_Z.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
 
 
     // Copy the particle velocity ( This will copy only zero values ), actual values will be copied in the main loop at each time step
@@ -734,14 +1169,131 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace){
     checkCudaErrors(cudaMemcpy(d_m_time_step, &h_m_time_step, sizeof(double), cudaMemcpyHostToDevice));
 
 
+    // ---- DEPOSITION PARAMETERS -- // 
+    // Allocate memory for d_m_is_boundary_cell with size N_Cells and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_is_boundary_cell, N_Cells * sizeof(int)));
+
+    // Allocate memory for d_m_corner_id with size equal to the size of the m_mapBoundaryFaceIds map and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_corner_id, size_of_boundary_face * sizeof(int)));
+
+    // Allocate memory for d_m_joint_id with size equal to the size of the m_mapBoundaryFaceIds map and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_joint_id, size_of_boundary_face * sizeof(int)));
+
+    // Allocate memory for d_m_joint_normal_x with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMalloc((void**)&d_m_joint_normal_x, size_of_boundary_face * sizeof(double)));
+
+    // Allocate memory for d_m_joint_normal_y with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMalloc((void**)&d_m_joint_normal_y, size_of_boundary_face * sizeof(double)));
+
+    // Allocate memory for d_m_joint_normal_z with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMalloc((void**)&d_m_joint_normal_z, size_of_boundary_face * sizeof(double)));
+
+    // Allocate memory for d_m_joint_coordinate_x with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMalloc((void**)&d_m_joint_coordinate_x, size_of_boundary_face * sizeof(double)));
+
+    // Allocate memory for d_m_joint_coordinate_y with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMalloc((void**)&d_m_joint_coordinate_y, size_of_boundary_face * sizeof(double)));
+
+    // Allocate memory for d_m_joint_coordinate_z with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMalloc((void**)&d_m_joint_coordinate_z, size_of_boundary_face * sizeof(double)));
+
+    // Allocate memory for d_m_is_boundary_dof_present with size N_cells and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_is_boundary_dof_present, N_Cells * sizeof(int)));
+
+    // Allocate memory for d_m_boundary_dof_x with size equal to the size of the m_mapBoundaryDofIds map and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_boundary_dof_x, size_of_boundary_dof * sizeof(int)));
+
+    // Allocate memory for d_m_boundary_dof_y with size equal to the size of the m_mapBoundaryDofIds map and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_boundary_dof_y, size_of_boundary_dof * sizeof(int)));
+
+    // Allocate memory for d_m_boundary_dof_z with size equal to the size of the m_mapBoundaryDofIds map and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_boundary_dof_z, size_of_boundary_dof * sizeof(int)));
+    
+
+    // Copy the values from host to these arrays 
+    // copy for d_m_is_boundary_cell from h_m_is_boundary_cell with size N_Cells and data type int
+    checkCudaErrors(cudaMemcpy(d_m_is_boundary_cell, h_m_is_boundary_cell, N_Cells * sizeof(int), cudaMemcpyHostToDevice));
+
+    // copy for d_m_corner_id from h_m_corner_id with size equal to the size of the m_mapBoundaryFaceIds map and data type int
+    checkCudaErrors(cudaMemcpy(d_m_corner_id, h_m_corner_id, size_of_boundary_face * sizeof(int), cudaMemcpyHostToDevice));
+
+    // copy for d_m_joint_id from h_m_joint_id with size equal to the size of the m_mapBoundaryFaceIds map and data type int
+    checkCudaErrors(cudaMemcpy(d_m_joint_id, h_m_joint_id, size_of_boundary_face * sizeof(int), cudaMemcpyHostToDevice));
+
+    // copy for d_m_joint_normal_x from h_m_joint_normal_x with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMemcpy(d_m_joint_normal_x, h_m_joint_normal_x, size_of_boundary_face * sizeof(double), cudaMemcpyHostToDevice));
+
+    // copy for d_m_joint_normal_y from h_m_joint_normal_y with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMemcpy(d_m_joint_normal_y, h_m_joint_normal_y, size_of_boundary_face * sizeof(double), cudaMemcpyHostToDevice));
+
+    // copy for d_m_joint_normal_z from h_m_joint_normal_z with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMemcpy(d_m_joint_normal_z, h_m_joint_normal_z, size_of_boundary_face * sizeof(double), cudaMemcpyHostToDevice));
+
+    // copy for d_m_joint_coordinate_x from h_m_joint_coordinate_x with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMemcpy(d_m_joint_coordinate_x, h_m_joint_coordinate_x, size_of_boundary_face * sizeof(double), cudaMemcpyHostToDevice));
+
+    // copy for d_m_joint_coordinate_y from h_m_joint_coordinate_y with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMemcpy(d_m_joint_coordinate_y, h_m_joint_coordinate_y, size_of_boundary_face * sizeof(double), cudaMemcpyHostToDevice));
+
+    // copy for d_m_joint_coordinate_z from h_m_joint_coordinate_z with size equal to the size of the m_mapBoundaryFaceIds map and data type double
+    checkCudaErrors(cudaMemcpy(d_m_joint_coordinate_z, h_m_joint_coordinate_z, size_of_boundary_face * sizeof(double), cudaMemcpyHostToDevice));
+
+    // copy for d_m_is_boundary_dof_present from h_m_is_boundary_dof_present with size N_cells and data type int
+    checkCudaErrors(cudaMemcpy(d_m_is_boundary_dof_present, h_m_is_boundary_dof_present, N_Cells * sizeof(int), cudaMemcpyHostToDevice));
+
+    // copy for d_m_boundary_dof_x from h_m_boundary_dof_x with size equal to the size of the m_mapBoundaryDofIds map and data type int
+    checkCudaErrors(cudaMemcpy(d_m_boundary_dof_x, h_m_boundary_dof_x, size_of_boundary_dof * sizeof(int), cudaMemcpyHostToDevice));
+
+    // copy for d_m_boundary_dof_y from h_m_boundary_dof_y with size equal to the size of the m_mapBoundaryDofIds map and data type int
+    checkCudaErrors(cudaMemcpy(d_m_boundary_dof_y, h_m_boundary_dof_y, size_of_boundary_dof * sizeof(int), cudaMemcpyHostToDevice));
+
+    // copy for d_m_boundary_dof_z from h_m_boundary_dof_z with size equal to the size of the m_mapBoundaryDofIds map and data type int
+    checkCudaErrors(cudaMemcpy(d_m_boundary_dof_z, h_m_boundary_dof_z, size_of_boundary_dof * sizeof(int), cudaMemcpyHostToDevice));
+
+    // --  PARTICLE LEVEL STATISTICAL VARIABLES -- //
+
+    // Allocate memory for the d_m_is_escaped_particle array, size N_Particles and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_is_escaped_particle, N_Particles * sizeof(int)));
+    
+    // Allocate memory for the d_m_is_deposited_particle array, size N_Particles and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_is_deposited_particle, N_Particles * sizeof(int)));
+
+    // Allocate memory for the d_m_is_error_particle array, size N_Particles and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_is_error_particle, N_Particles * sizeof(int)));
+
+    // Allocate memory for the d_m_is_stagnant_particle array, size N_Particles and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_is_stagnant_particle, N_Particles * sizeof(int)));
+
+    // Allocate memory for the d_m_ghost_particle array, size N_Particles and data type int
+    checkCudaErrors(cudaMalloc((void**)&d_m_is_ghost_particle, N_Particles * sizeof(int)));
+
+
+    // Copy the values from the host to the device
+
+    // copy the isParticleDeposited vector to d_m_is_deposited_particle with size N_Particles and data type int
+    checkCudaErrors(cudaMemcpy(d_m_is_deposited_particle, isParticleDeposited.data(), N_Particles * sizeof(int), cudaMemcpyHostToDevice));
+
+    // copy the isEscapedParticle vector to d_m_is_escaped_particle with size N_Particles and data type int
+    checkCudaErrors(cudaMemcpy(d_m_is_escaped_particle, isEscapedParticle.data(), N_Particles * sizeof(int), cudaMemcpyHostToDevice));
+
+    // copy the isStagnantParticle vector to d_m_is_stagnant_particle with size N_Particles and data type int
+    checkCudaErrors(cudaMemcpy(d_m_is_stagnant_particle, isStagnantParticle.data(), N_Particles * sizeof(int), cudaMemcpyHostToDevice));
+
+    // initialize the d_m_is_ghost_particle array with 0 on the device  // There is no Ghost particle array in the given CPU code
+    checkCudaErrors(cudaMemset(d_m_is_ghost_particle, 0, N_Particles * sizeof(int)));
+
+    
+
     cout << "[INFORMATION] Memory allocation and data transfer to GPU is done" << endl;
-    //
-  
+
 }
 
-
 // Setup function to transfer velocity data at every time step
-void TParticles::SetupVelocityValues(double *velocity_x_data, double *velocity_y_data, double *velocity_z_data, int N_particles_released, int N_DOF)
+void TParticles::SetupVelocityValues(double *velocity_x_data,
+																		 double *velocity_y_data,
+																		 double *velocity_z_data,
+																		 int N_particles_released,
+																		 int N_DOF)
 {
     // Copy the velocity values
     checkCudaErrors(cudaMemcpy(d_m_velocity_nodal_values_x, velocity_x_data, N_DOF * sizeof(double), cudaMemcpyHostToDevice));
@@ -749,18 +1301,16 @@ void TParticles::SetupVelocityValues(double *velocity_x_data, double *velocity_y
     checkCudaErrors(cudaMemcpy(d_m_velocity_nodal_values_z, velocity_z_data, N_DOF * sizeof(double), cudaMemcpyHostToDevice));
 }
 
-
 void TParticles::CD_CC_Cuda()
 {
     cout << "Inside CD_CC_Cuda" << endl;
     exit(0);
 }
 
-
 // Host wrapper for performing the velocity interpolation at every time step
 void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles_released,int N_DOF,int N_Cells)
 {
-    int MAX_THREAD_PER_BLOCK = 64;
+    int MAX_THREAD_PER_BLOCK = 128;
     int N_threads; 
 
     if(N_Particles_released >= MAX_THREAD_PER_BLOCK) 
@@ -774,6 +1324,11 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
 
    dim3 dimGrid(C_NUM_BLOCKS);
    dim3 dimBlock(N_threads);
+
+   // time the kernel
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventRecord(start, 0);
 
     Interpolate_Velocity_CUDA<<<dimGrid,dimBlock>>>(// cell Vertices
                                                     d_m_cell_vertices_x,
@@ -811,6 +1366,28 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
                                                     d_m_previous_cell,
                                                     d_m_global_dof_indices,
                                                     d_m_begin_indices,
+
+                                                    // FEM parameters for deposition
+                                                    d_m_is_boundary_cell,
+                                                    d_m_corner_id,
+                                                    d_m_is_boundary_dof_present,
+                                                    d_m_boundary_dof_x,
+                                                    d_m_boundary_dof_y,
+                                                    d_m_boundary_dof_z,
+                                                    d_m_joint_id,
+                                                    d_m_joint_normal_x,
+                                                    d_m_joint_normal_y,
+                                                    d_m_joint_normal_z,
+                                                    d_m_joint_coordinate_x,
+                                                    d_m_joint_coordinate_y,
+                                                    d_m_joint_coordinate_z,
+
+                                                    // STATISTICAL Parameters
+                                                    d_m_is_deposited_particle,
+                                                    d_m_is_escaped_particle,
+                                                    d_m_is_error_particle,
+                                                    d_m_is_stagnant_particle,
+                                                    d_m_is_ghost_particle,
                                                     N_Cells,
                                                     N_DOF,
                                                     N_Particles_released,
@@ -818,20 +1395,125 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
 
     cudaDeviceSynchronize();
 
+    cudaEventCreate(&stop);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    float elapsedTime;
+    cudaEventElapsedTime(&elapsedTime, start, stop);
+    cout << "[INFORMATION] Time taken for the kernel to execute : " << elapsedTime << " ms" << endl;
+
+    // record the time taken for the transfer of data from device to host
+    cudaEvent_t start1, stop1;
+    cudaEventCreate(&start1);
+    cudaEventRecord(start1, 0);
+
+
     // Lets transfer the position values back to the host
-    checkCudaErrors(cudaMemcpy(position_X.data(), d_m_particle_position_x, N_Particles_released * sizeof(double), cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(position_Y.data(), d_m_particle_position_y, N_Particles_released * sizeof(double), cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(position_Z.data(), d_m_particle_position_z, N_Particles_released * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(position_X.data(), d_m_particle_position_x, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(position_Y.data(), d_m_particle_position_y, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(position_Z.data(), d_m_particle_position_z, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+
+    // Lets transfer the previous position values back to the host
+    checkCudaErrors(cudaMemcpy(position_X_old.data(), d_m_particle_previous_position_x, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(position_Y_old.data(), d_m_particle_previous_position_y, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(position_Z_old.data(), d_m_particle_previous_position_z, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+
+    // Lets transfer the velocity values back to the host
+    checkCudaErrors(cudaMemcpy(velocityX.data(), d_m_particle_velocity_x, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(velocityY.data(), d_m_particle_velocity_y, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(velocityZ.data(), d_m_particle_velocity_z, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+
+    // transfer previous velocity values back to the host
+    checkCudaErrors(cudaMemcpy(velocityX_old.data(), d_m_particle_previous_velocity_x, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(velocityY_old.data(), d_m_particle_previous_velocity_y, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(velocityZ_old.data(), d_m_particle_previous_velocity_z, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
 
     // Transfer the current cell and previous cell back to the host
-    checkCudaErrors(cudaMemcpy(currentCell.data(), d_m_current_cell, N_Particles_released * sizeof(int), cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(previousCell.data(), d_m_previous_cell, N_Particles_released * sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(currentCell.data(), d_m_current_cell, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(previousCell.data(), d_m_previous_cell, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
 
+    // Transfer Statistical variables back to the host
+    checkCudaErrors(cudaMemcpy(isParticleDeposited.data(), d_m_is_deposited_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(isEscapedParticle.data(), d_m_is_escaped_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(isStagnantParticle.data(), d_m_is_stagnant_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(isErrorParticle.data(), d_m_is_error_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(isGhostParticle.data(), d_m_is_ghost_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
 
-    cudaDeviceSynchronize();
+    // record the time taken for the transfer of data from device to host
+    cudaEventCreate(&stop1);
+    cudaEventRecord(stop1, 0);
+    cudaEventSynchronize(stop1);
+
+    float elapsedTime1;
+    cudaEventElapsedTime(&elapsedTime1, start1, stop1);
+    cout << "[INFORMATION] Time taken for the data transfer from device to host : " << elapsedTime1 << " ms" << endl;
 
 }
 
+// Host wrapper for detecting stagnant particles
+void TParticles::DetectStagnantParticlesHostWrapper(int N_Particles_released)
+{
+    int MAX_THREAD_PER_BLOCK = 128;
+    int N_threads; 
+
+    if(N_Particles_released >= MAX_THREAD_PER_BLOCK) 
+        N_threads = MAX_THREAD_PER_BLOCK;
+    else
+        N_threads = N_Particles_released;
+    
+    int C_NUM_BLOCKS = std::ceil(double(N_Particles_released)/MAX_THREAD_PER_BLOCK);
+
+
+   dim3 dimGrid(C_NUM_BLOCKS);
+   dim3 dimBlock(N_threads);
+
+   // time the kernel
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventRecord(start, 0);
+
+    DetectStagnantParticles_CUDA<<<dimGrid,dimBlock>>>(d_m_particle_position_x,
+																											 d_m_particle_position_y,
+																											 d_m_particle_position_z,
+																											 d_m_particle_stagnant_position_x,
+																											 d_m_particle_stagnant_position_y,
+																											 d_m_particle_stagnant_position_z,
+																											 d_m_is_stagnant_particle,
+																											 d_m_is_deposited_particle);
+
+    cudaDeviceSynchronize();
+
+    cudaEventCreate(&stop);
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    float elapsedTime;
+    cudaEventElapsedTime(&elapsedTime, start, stop);
+    cout << "[INFORMATION] Time taken for the kernel to detect stagnant particles : " << elapsedTime << " ms" << endl;
+
+    // record the time taken for the transfer of data from device to host
+    cudaEvent_t start1, stop1;
+    cudaEventCreate(&start1);
+    cudaEventRecord(start1, 0);
+
+    // Lets transfer the previous position values back to the host
+    checkCudaErrors(cudaMemcpy(previousPosition_X.data(), d_m_particle_stagnant_position_x, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(previousPosition_Y.data(), d_m_particle_stagnant_position_y, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(previousPosition_Z.data(), d_m_particle_stagnant_position_z, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+
+    // Transfer Statistical variables back to the host
+    checkCudaErrors(cudaMemcpy(isParticleDeposited.data(), d_m_is_deposited_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(isStagnantParticle.data(), d_m_is_stagnant_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
+
+    // record the time taken for the transfer of data from device to host
+    cudaEventCreate(&stop1);
+    cudaEventRecord(stop1, 0);
+    cudaEventSynchronize(stop1);
+
+    float elapsedTime1;
+    cudaEventElapsedTime(&elapsedTime1, start1, stop1);
+    cout << "[INFORMATION] Time taken for the data transfer(stagnant) from device to host : " << elapsedTime1 << " ms" << endl;
+
+}
 
 
 

@@ -690,23 +690,15 @@ int main(int argc, char *argv[])
 
 	// INTIALISE THE PARTICLES 
     int numPart = std::atoi(argv[2]);
-	TParticles* particleObject =  new TParticles(numPart,0.0,0.0,0.01,Velocity_FeSpace[0]);
-	cout << " Particles Initialised " <<endl;
-
-
-
-	particleObject->OutputFile("siminhale_0000.csv");
     int StartNo = 2;
+    std::string resumeFile = (argc > 4) ? argv[4] : "";
 
-        
-		if (argc > 4)
-		{
-				// update particle details from the file
-				int time = particleObject->UpdateParticleDetailsFromFile(argv[4]);
-				StartNo = time;
-				m = StartNo ;
-				img = m + 1;
-		}
+	TParticles* particleObject =  new TParticles(numPart,0.0,0.0,0.01,Velocity_FeSpace[0], resumeFile, &StartNo);
+    cout << " Particles Initialised " <<endl;
+
+    particleObject->OutputFile("siminhale_0000.csv");
+	img = StartNo;
+    m = StartNo - 2;
 
 	// time loop starts
 	while (TDatabase::TimeDB->CURRENTTIME < end_time) // time cycle
@@ -761,16 +753,14 @@ int main(int argc, char *argv[])
 		if (rank == 0)
 #endif
             {
-
 				// Considering the simulation has saturated upto 1000 time  steps, If the particle moves more than 
-
-                int lineNo=0;
+				int lineNo=0;
 				if(StartNo >  12000)
-					StartNo = 12000;
-                cout << "Start No : " << StartNo <<endl;
-				
-                // Read from the CSV value into solution array 
-                std::string prefix(argv[3]); 
+					  StartNo = 12000;
+				cout << "Start No : " << StartNo <<endl;
+
+				// Read from the CSV value into solution array 
+				std::string prefix(argv[3]); 
                 
 				std::string baseFileName = "Solution_";
 
@@ -802,7 +792,6 @@ int main(int argc, char *argv[])
 				if (!pFile.is_open())
 					throw std::runtime_error("Could not open file " + pFileName);
 				
-
 				// Read the file into the solution array
 				u1File.read((char *)sol, sizeof(double) * N_U);
 				u2File.read((char *)sol + sizeof(double) * N_U, sizeof(double) * N_U);
@@ -863,22 +852,11 @@ int main(int argc, char *argv[])
 				// cout << "sol[3*N_U + N_P - 2]: " << sol[3*N_U + N_P - 2] << endl;
 				// cout << "sol[3*N_U + N_P - 1]: " << sol[3*N_U + N_P - 1] << endl;
 
-				// Print the norm of the solution p
+				// // Print the norm of the solution p
 				// cout << "Norm of the solution p: " << sqrt(Ddot(N_P,sol+3*N_U,sol+3*N_U)) << endl;
 
-
-				// Increment the file number
-				StartNo++;
-
-				
-
-				// cout << " Total lines read : " << lineNo <<endl;
-				// cout << " Sum : " << summm <<endl;
-				// cout << " Dot Product : " << Ddot(N_TotalDOF,sol,sol) <<endl;
-
-                for (int i=0 ; i < 3*N_U; i++)
-                    sol[i] *= 3.18;
-				
+				for (int i=0 ; i < 3*N_U; i++)
+						sol[i] *= 3.18;
 
 				if (TDatabase::ParamDB->WRITE_VTK)
 				{
@@ -895,20 +873,77 @@ int main(int argc, char *argv[])
 						os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
 					Output->WriteVtk(os.str().c_str());
 				}
-				img++;
 				
                 if (m >= 20 )  // To start the interpolation after 20 time steps ( to ensure that flow has propogated )
                 {
                     cout << " Interpolation Started" <<endl;
+
+					
                     //Compute the Particle Displacement for the FTLE values 
+
+
+										// cout << "2: StartNo -> " << StartNo << " img -> " << img << " m -> " << m << endl;
+										// for (int i = 0; i < 10; i++) {
+										// 	cout << "sol[" << i << "] -> "
+										// 			 << particleObject->position_X[i] << ", "
+										// 			 << particleObject->position_Y[i] << ", "
+										// 			 << particleObject->position_X[i]
+										// 			 << endl;
+										// 	cout << "velocity[" << i << "] -> "
+										// 			 << particleObject->velocityX[i] << ", "
+										// 			 << particleObject->velocityY[i] << ", "
+										// 			 << particleObject->velocityZ[i]
+										// 			 << endl;
+										// }
+										// // print norm of the vector position_X and position_Y and position_Z
+										// double normX = 0.0;
+										// for (int i = 0; i < particleObject->position_X.size(); i++) {
+										// 	normX += particleObject->position_X[i] * particleObject->position_X[i];
+										// }
+										// cout << "normX -> " << sqrt(normX) << endl;
+
+										// double normY = 0.0;
+										// for (int i = 0; i < particleObject->position_Y.size(); i++) {
+										// 	normY += particleObject->position_Y[i] * particleObject->position_Y[i];
+										// }
+										// cout << "normY -> " << sqrt(normY) << endl;
+
+										// double normZ = 0.0;
+										// for (int i = 0; i < particleObject->position_Z.size(); i++) {
+										// 	normZ += particleObject->position_Z[i] * particleObject->position_Z[i];
+										// }
+										// cout << "normZ -> " << sqrt(normZ) << endl;
+
+										// // print norm of the vector velocityX and velocityY and velocityZ
+										// double normVX = 0.0;
+										// for (int i = 0; i < particleObject->velocityX.size(); i++) {
+										// 	normVX += particleObject->velocityX[i] * particleObject->velocityX[i];
+										// }
+										// cout << "normVX -> " << sqrt(normVX) << endl;
+
+										// double normVY = 0.0;
+										// for (int i = 0; i < particleObject->velocityY.size(); i++) {
+										// 	normVY += particleObject->velocityY[i] * particleObject->velocityY[i];
+										// }
+										// cout << "normVY -> " << sqrt(normVY) << endl;
+
+										// double normVZ = 0.0;
+										// for (int i = 0; i < particleObject->velocityZ.size(); i++) {
+										// 	normVZ += particleObject->velocityZ[i] * particleObject->velocityZ[i];
+										// }
+										// cout << "normVZ -> " << sqrt(normVZ) << endl;
+										
+
                     particleObject->interpolateNewVelocity_Parallel(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0],Velocity_FeSpace[0]);
 
-										std::string old_str = std::to_string(img-2);
+										std::string old_str = std::to_string(StartNo);
 										size_t n_zero = 4;
 										auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
 										std::string name =  "siminhale_" + new_str + ".csv";
-										if (m % 10 == 0)
+
+										if (m % 10 == 0) {
 											particleObject->OutputFile(name.c_str());
+										}
 
 										if (m >= 5000 && m % 200 == 0)
 											particleObject->detectStagnantParticles();
@@ -928,6 +963,10 @@ int main(int argc, char *argv[])
 											break;
 										}
                 }
+
+								// Increment the file number
+								StartNo++;
+								img++;
             }
 
 

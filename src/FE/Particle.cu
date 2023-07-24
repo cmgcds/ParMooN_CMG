@@ -27,6 +27,12 @@ struct Vector3D_Cuda
     double z;
 };
 
+struct Pair_Cuda
+{
+    int first;
+    int second;
+};
+
 __device__ struct Vector3D_Cuda Obtain_velocity_at_a_point(int current_cell,
                                             int tid,
                                            double* d_m_particle_position_x,
@@ -358,6 +364,9 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                                             int* d_m_is_stagnant_particle,
                                             int* d_m_is_ghost_particle,
 
+                                            // row pointer and column indices of the adjacency matrix
+                                            int* d_m_row_pointer,
+                                            int* d_m_col_index,
                                             int n_cells,
                                             int n_dOF,
                                             int n_particles_released,
@@ -370,7 +379,7 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
 		if (d_m_is_deposited_particle[tid])
 				return;
 
-    if(tid < n_particles_released)
+    if(tid < n_particles_released )
     {
         // -- BLOCK 1 : INterpolate velocity values at given particle position 
         // -- Substep 1: Identify the cell in which the particle is present
@@ -380,6 +389,8 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
         double x0 = d_m_particle_position_x[tid];
         double y0 = d_m_particle_position_y[tid];
         double z0 = d_m_particle_position_z[tid];
+
+        int search_depth = 2;
 
         // if (tid == 0)
         // {
@@ -521,25 +532,106 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
 
         // Check the current position of the cells within the domain 
         bool inside_domain = false;
-        for (int cell_id = 0; cell_id < n_cells; cell_id++)
-        {
-            bool insideCell = Is_Point_In_Cell_CUDA(cell_id,
+
+        // Check if the particle is within the current cell
+        bool inside_current_cell = Is_Point_In_Cell_CUDA(cell_no,
                                                     d_m_cell_vertices_x,
                                                     d_m_cell_vertices_y,
                                                     d_m_cell_vertices_z,
                                                     d_m_particle_position_x[tid],
                                                     d_m_particle_position_y[tid],
                                                     d_m_particle_position_z[tid]);
-            if (insideCell)
+        if(inside_current_cell)
+        {
+            inside_domain = true;
+            // copy the current cell to previous cell
+            d_m_previous_cell[tid] = d_m_current_cell[tid];
+            d_m_current_cell[tid] = cell_no;
+        }
+        else
+        {
+            //Create a local array to store the cell for queue
+            int queue_cell_no[10200];
+            int queue_depth[10200];
+            int queue_start_cursor = 0;  // Entry Condition
+            int queue_end_cursor = -1; // Entry Condition
+
+            // Add the current cell to the queue
+            queue_end_cursor += 1;
+            queue_cell_no[0] = cell_no;
+            queue_depth[0] = 0;
+
+            int current_depth = 0;
+
+            while(queue_start_cursor <= queue_end_cursor)
             {
-                inside_domain = true;
-                // copy the current cell to previous cell
-                d_m_previous_cell[tid] = d_m_current_cell[tid];
-                d_m_current_cell[tid] = cell_id;
-                
-                break;
+                // Pop the cell from the queue
+                int current_cell = queue_cell_no[queue_start_cursor];
+                int current_depth = queue_depth[queue_start_cursor];
+                queue_start_cursor += 1;
+                // printf("GPU : tid:  %d , current_cell: %d, current_depth:  %d \n", tid, current_cell, current_depth);
+                if(current_depth == search_depth)
+                {
+                    continue;
+                }
+
+                int start_index = d_m_row_pointer[current_cell];
+                int end_index = d_m_row_pointer[current_cell+1];
+
+                // for cells in current level
+                for (int index = start_index; index < end_index; index++)
+                {
+                    // Get the neighbour cell
+                    int neighbour_cell = d_m_col_index[index];
+
+                    bool inside_neighbour_cell = Is_Point_In_Cell_CUDA(neighbour_cell,
+                                                    d_m_cell_vertices_x,
+                                                    d_m_cell_vertices_y,
+                                                    d_m_cell_vertices_z,
+                                                    d_m_particle_position_x[tid],
+                                                    d_m_particle_position_y[tid],
+                                                    d_m_particle_position_z[tid]);
+                    
+                    if(inside_neighbour_cell)
+                    {
+                        inside_domain = true;
+                        // copy the current cell to previous cell
+                        d_m_previous_cell[tid] = d_m_current_cell[tid];
+                        d_m_current_cell[tid] = neighbour_cell;
+                        break;
+                    }
+
+                    // Add the neighbour cell to the queue
+                    queue_end_cursor += 1;
+                    queue_cell_no[queue_end_cursor] = neighbour_cell;
+                    queue_depth[queue_end_cursor] = current_depth + 1;
+
+                    // 
+                    // printf("GPU : tid:  %d , neighbour_cell: %d, current_depth:  %d, queue_end_cursor: %d \n", tid, neighbour_cell, queue_depth[queue_end_cursor], queue_end_cursor);
+                }
+   
             }
         }
+
+        // for (int cell_id = 0; cell_id < n_cells; cell_id++)
+        // {
+        //     bool insideCell = Is_Point_In_Cell_CUDA(cell_id,
+        //                                             d_m_cell_vertices_x,
+        //                                             d_m_cell_vertices_y,
+        //                                             d_m_cell_vertices_z,
+        //                                             d_m_particle_position_x[tid],
+        //                                             d_m_particle_position_y[tid],
+        //                                             d_m_particle_position_z[tid]);
+        //     if (insideCell)
+        //     {
+        //         inside_domain = true;
+        //         // copy the current cell to previous cell
+        //         d_m_previous_cell[tid] = d_m_current_cell[tid];
+        //         d_m_current_cell[tid] = cell_id;
+                
+        //         break;
+        //     }
+        // }
 
         // If not inside the domain, then the particle is either escaped or deposited.
         if(!inside_domain)
@@ -1283,6 +1375,13 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace)
     checkCudaErrors(cudaMemset(d_m_is_ghost_particle, 0, N_Particles * sizeof(int)));
 
     
+    // -- Allocate memory for the row and column indices of the adjacency matrix -- //
+    checkCudaErrors(cudaMalloc((void**)&d_m_row_pointer, row_pointer.size() * sizeof(int)));
+    checkCudaErrors(cudaMalloc((void**)&d_m_col_index, col_index.size() * sizeof(int)));
+
+    // -- Copy the row and column indices of the adjacency matrix -- //
+    checkCudaErrors(cudaMemcpy(d_m_row_pointer, row_pointer.data(), row_pointer.size() * sizeof(int), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_m_col_index, col_index.data(), col_index.size() * sizeof(int), cudaMemcpyHostToDevice));
 
     cout << "[INFORMATION] Memory allocation and data transfer to GPU is done" << endl;
 
@@ -1310,7 +1409,7 @@ void TParticles::CD_CC_Cuda()
 // Host wrapper for performing the velocity interpolation at every time step
 void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles_released,int N_DOF,int N_Cells)
 {
-    int MAX_THREAD_PER_BLOCK = 128;
+    int MAX_THREAD_PER_BLOCK =32;
     int N_threads; 
 
     if(N_Particles_released >= MAX_THREAD_PER_BLOCK) 
@@ -1388,6 +1487,8 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
                                                     d_m_is_error_particle,
                                                     d_m_is_stagnant_particle,
                                                     d_m_is_ghost_particle,
+                                                    d_m_row_pointer,
+                                                    d_m_col_index,
                                                     N_Cells,
                                                     N_DOF,
                                                     N_Particles_released,

@@ -765,8 +765,7 @@ int main(int argc, char *argv[])
 				std::string baseFileName = "Solution_";
 
 				// To ensure that a single solution is read for 10 time steps
-				// int StartNo_for_reading_file = StartNo/10 + 2;    // For using same solution for 10 time steps
-				int StartNo_for_reading_file = StartNo;    // For using same solution for 10 time steps
+				int StartNo_for_reading_file = StartNo/10 + 2;
 
 				// Save the u Solution, the number of char in the img should be 6, remaing space is padded by zeros
 				int padding = 6 - std::to_string(StartNo_for_reading_file).length();
@@ -860,7 +859,7 @@ int main(int argc, char *argv[])
 				// cout << "Norm of the solution p: " << sqrt(Ddot(N_P,sol+3*N_U,sol+3*N_U)) << endl;
 
 				for (int i=0 ; i < 3*N_U; i++)
-						sol[i] *= 3.183098;
+						sol[i] *= 0.79577;
 
 				if (TDatabase::ParamDB->WRITE_VTK)
 				{

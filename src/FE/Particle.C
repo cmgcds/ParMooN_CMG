@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sstream>
 #include <cstring>
+#include <queue>
 
 
 #include <LinAlg.h>
@@ -96,6 +97,123 @@ double diff_dot_product(const std::vector<double>& v1, const std::vector<double>
     return dot_product;
 }
 
+// FUnciton to initialise particle diameters and densities based on mass fractions
+void TParticles::GenerateParticleDiameterAndDensity(std::vector<double> &particle_diameters, std::vector<double> &particle_density, \
+                                            std::vector<double> mass_fraction, std::vector<double> density_array,
+                                             double CMAD, double GSD )
+{
+    // Calculate the geometric mean and standard deviation in natural logarithm space
+    double GM_log = std::log(CMAD);
+    double GSD_log = std::log(GSD);
+    
+    // Calculate the count fraction for each density
+    std::vector<double> count_fraction(density_array.size());
+    double total_count_fraction = 0.0;
+
+    // calulate the sum of density array vector
+    double sum_of_density_array = std::accumulate(density_array.begin(), density_array.end(), 0.0);
+
+    for (int i = 0; i < density_array.size(); i++) {
+        count_fraction[i] = mass_fraction[i] * (sum_of_density_array / density_array[i]);
+        total_count_fraction += count_fraction[i];
+    }
+
+    // normalise the count fraction
+    for (int i = 0; i < count_fraction.size(); i++) {
+        count_fraction[i] /= total_count_fraction;
+    }
+
+    // Generate random numbers following normal distribution
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0.0, 1.0);
+
+    // Total particles initialised
+    int total_particles_initialised = 0;
+
+    // Generate particles for each density
+    for (int i = 0; i < density_array.size(); i++) {
+        int num_particles_i = std::round(count_fraction[i] * N_Particles);
+        for (int j = 0; j < num_particles_i; j++) {
+
+            if(total_particles_initialised == N_Particles) {
+                break;
+            }
+            // Calculate particle diameter using log-normal distribution formula
+            double Z_value = distribution(generator);
+            double particle_diameter = std::exp(GM_log + Z_value * GSD_log);
+
+            // Add particle diameter to the vector
+            particle_diameters.push_back(particle_diameter);
+
+            particle_density.push_back(density_array[i]);
+
+            total_particles_initialised ++;
+        }
+    }
+
+
+    // Fill the remaining particles with the last density
+    // Sanity check for round off error while trying to convert the count fraction to number of particles for a given density
+    while (total_particles_initialised < N_Particles) {
+        particle_diameters.push_back(particle_diameters[total_particles_initialised - 1]);
+        particle_density.push_back(particle_density[total_particles_initialised - 1]);
+        total_particles_initialised ++;
+    }
+
+    std::cout << " PARTICLE DENSITY DISTRIBUTION SUMMARY: \n";
+    std::cout << " -------------------------------------- \n";
+    // Print the summary of the particle diameters and densities
+    for (int i = 0; i < count_fraction[i]; i++) {
+        cout <<" Density : " << particle_density[i] << " Number of Particles : " << std::round(count_fraction[i] * N_Particles) << endl;
+    }
+
+    std::vector<double> mass_per_density(density_array.size(), 0.0);
+
+
+    // calculate the mass of particles per density
+    for (int i = 0; i < particle_density.size() ;i++)
+    {
+        for (int j = 0 ; j < density_array.size() ; j++)
+        {   
+            if (particle_density[i] == density_array[j])
+            {
+                mass_per_density[j] += (4.0 / 3.0) * M_PI * pow(particle_diameters[i] / 2.0, 3) * particle_density[i];
+            }
+        }
+    }
+
+    // calculate the total mass of particles
+    double total_mass = std::accumulate(mass_per_density.begin(), mass_per_density.end(), 0.0);
+
+    std::cout << " ------------------------- \n";
+    std::cout << " TOTAL MASS OF PARTICLES : " << total_mass << " kg \n";
+    std::cout << " ------------------------- \n";
+
+    // calculate the mass fraction of particles per density
+    std::vector<double> mass_fraction_per_density(density_array.size());
+
+    for (int i = 0; i < density_array.size(); i++) {
+    mass_fraction_per_density[i] = mass_per_density[i] / total_mass;
+    std::cout << std::setw(10) << "Density: " << std::setw(10) << density_array[i]
+              << std::setw(15) << "Mass Fraction: " << std::setw(10) << mass_fraction_per_density[i]
+              << std::setw(10) << "Number: " << std::setw(10) << std::round(count_fraction[i] * N_Particles) << std::endl;
+    }
+
+    // Open a csv file and write the count fraction and mass fraction of particles per density
+    std::ofstream csv_file;
+    csv_file.open("particle_density_distribution.csv");
+
+    csv_file << "density, given_mass_fraction, count_fraction, count_of_particles, mass_fraction_computed, error\n";
+
+    for (int i = 0; i < density_array.size(); i++) {
+        csv_file << density_array[i] << "," << mass_fraction[i] << "," << count_fraction[i] << "," << std::round(count_fraction[i] * N_Particles) << "," << mass_fraction_per_density[i] << "," << mass_fraction[i] - mass_fraction_per_density[i] << "\n";
+    }
+
+    // close the csv file
+    csv_file.close();
+
+}
+
 /* Constructor for Particle Class */
 TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, double radius, TFESpace3D *fespace, std::string resumeFile, int *StartNo)
 {
@@ -172,14 +290,26 @@ void TParticles::InitialiseParticleParameters(int N_Particles_)
     // Dynamic Viscosity of the fluid
     m_fluid_dynamic_viscosity = 0.00001893; // Pa.s
 
-    // resize density
-    m_particle_density.resize(N_Particles_, 914); // earlier 1266
-
     // mean free path
     m_lambda = 0.00000007; // m
 
     // resize particle diameter
     m_particle_diameter.resize(N_Particles_, 4.3e-6); // earlier 10e-6
+
+     // resize density
+    m_particle_density.resize(N_Particles_, 914); // earlier 1266
+
+    // Provide the mass fraction of the particles
+    // f propylene glycol, glycerol, nicotine and water with their mass fractions being 52.6%, 28.1%, 1.9%, and 17.4%
+    std::vector<double> mass_fraction = {.526, 0.281, 0.019, 0.174};
+
+     // Propelene Glycon : https://www.chemeo.com/cid/23-447-0/Propylene-Glycol  Temp : 293K
+     // glycerol : 1260 https://en.wikipedia.org/wiki/Glycerol
+     // nicotine : 1010 https://en.wikipedia.org/wiki/Nicotine
+    std::vector<double> density_array = {1032.56, 1261, 1010, 1000};
+
+    // Set all the particle sizes bsed on the function 
+    // TParticles::GenerateParticleDiameterAndDensity(m_particle_diameter, m_particle_density, mass_fraction, density_array,0.307 * 1e-6, 1.69);
 
     // Gravity
     m_gravity_x = 0;
@@ -234,410 +364,410 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
             }
         }
 
-        if(particleNo==0){
-position_X[particleNo]=-0.007369244;
-position_Z[particleNo]=-0.0008269974;
-}
-if(particleNo==1){
-position_X[particleNo]=-0.005620816;
-position_Z[particleNo]=0.003577294;
-}
-if(particleNo==2){
-position_X[particleNo]=0.008693858;
-position_Z[particleNo]=0.0003883274;
-}
-if(particleNo==3){
-position_X[particleNo]=-0.009308558;
-position_Z[particleNo]=0.0005940039;
-}
-if(particleNo==4){
-position_X[particleNo]=0.003735454;
-position_Z[particleNo]=0.00860873;
-}
-if(particleNo==5){
-position_X[particleNo]=0.0005385756;
-position_Z[particleNo]=0.003078379;
-}
-if(particleNo==6){
-position_X[particleNo]=0.004023812;
-position_Z[particleNo]=0.005243961;
-}
-if(particleNo==7){
-position_X[particleNo]=0.00512821;
-position_Z[particleNo]=-0.002693227;
-}
-if(particleNo==8){
-position_X[particleNo]=-0.001271772;
-position_Z[particleNo]=-0.0004453647;
-}
-if(particleNo==9){
-position_X[particleNo]=-0.004501863;
-position_Z[particleNo]=-0.006669856;
-}
-if(particleNo==10){
-position_X[particleNo]=9.04579e-05;
-position_Z[particleNo]=-0.003619341;
-}
-if(particleNo==11){
-position_X[particleNo]=-0.0001204663;
-position_Z[particleNo]=-0.008185342;
-}
-if(particleNo==12){
-position_X[particleNo]=-0.008525018;
-position_Z[particleNo]=-0.002317157;
-}
-if(particleNo==13){
-position_X[particleNo]=0.008276349;
-position_Z[particleNo]=-0.0007110835;
-}
-if(particleNo==14){
-position_X[particleNo]=-0.007492692;
-position_Z[particleNo]=0.003769106;
-}
-if(particleNo==15){
-position_X[particleNo]=0.002590868;
-position_Z[particleNo]=0.00450824;
-}
-if(particleNo==16){
-position_X[particleNo]=0.007771444;
-position_Z[particleNo]=-0.003873563;
-}
-if(particleNo==17){
-position_X[particleNo]=0.000265474;
-position_Z[particleNo]=0.006919631;
-}
-if(particleNo==18){
-position_X[particleNo]=0.006830213;
-position_Z[particleNo]=-0.001692108;
-}
-if(particleNo==19){
-position_X[particleNo]=-0.0006416526;
-position_Z[particleNo]=-0.006433446;
-}
-if(particleNo==20){
-position_X[particleNo]=0.001433096;
-position_Z[particleNo]=-0.009338925;
-}
-if(particleNo==21){
-position_X[particleNo]=-3.039762e-05;
-position_Z[particleNo]=0.004965853;
-}
-if(particleNo==22){
-position_X[particleNo]=-0.00574497;
-position_Z[particleNo]=-0.007391455;
-}
-if(particleNo==23){
-position_X[particleNo]=-0.004508237;
-position_Z[particleNo]=-0.001714135;
-}
-if(particleNo==24){
-position_X[particleNo]=0.004196392;
-position_Z[particleNo]=-0.005201784;
-}
-if(particleNo==25){
-position_X[particleNo]=-0.003649209;
-position_Z[particleNo]=0.003041174;
-}
-if(particleNo==26){
-position_X[particleNo]=0.003626924;
-position_Z[particleNo]=-0.002245493;
-}
-if(particleNo==27){
-position_X[particleNo]=-0.001824666;
-position_Z[particleNo]=0.001297974;
-}
-if(particleNo==28){
-position_X[particleNo]=-0.000229709;
-position_Z[particleNo]=0.009221903;
-}
-if(particleNo==29){
-position_X[particleNo]=-0.006004856;
-position_Z[particleNo]=0.002585383;
-}
-if(particleNo==30){
-position_X[particleNo]=0.003025075;
-position_Z[particleNo]=0.00606146;
-}
-if(particleNo==31){
-position_X[particleNo]=-0.0004713639;
-position_Z[particleNo]=-0.005934993;
-}
-if(particleNo==32){
-position_X[particleNo]=-0.001793739;
-position_Z[particleNo]=0.007712967;
-}
-if(particleNo==33){
-position_X[particleNo]=-0.006756029;
-position_Z[particleNo]=-0.002693219;
-}
-if(particleNo==34){
-position_X[particleNo]=-0.007297813;
-position_Z[particleNo]=-0.0008938543;
-}
-if(particleNo==35){
-position_X[particleNo]=-0.0009539966;
-position_Z[particleNo]=0.008633488;
-}
-if(particleNo==36){
-position_X[particleNo]=0.007217197;
-position_Z[particleNo]=0.0001191175;
-}
-if(particleNo==37){
-position_X[particleNo]=0.00635123;
-position_Z[particleNo]=-0.0007551004;
-}
-if(particleNo==38){
-position_X[particleNo]=0.002654774;
-position_Z[particleNo]=0.006493948;
-}
-if(particleNo==39){
-position_X[particleNo]=-0.004213676;
-position_Z[particleNo]=0.0002886933;
-}
-if(particleNo==40){
-position_X[particleNo]=-0.00171943;
-position_Z[particleNo]=0.007531314;
-}
-if(particleNo==41){
-position_X[particleNo]=0.004594954;
-position_Z[particleNo]=0.004312847;
-}
-if(particleNo==42){
-position_X[particleNo]=0.0004997481;
-position_Z[particleNo]=-0.008696123;
-}
-if(particleNo==43){
-position_X[particleNo]=-0.0002211368;
-position_Z[particleNo]=0.003640982;
-}
-if(particleNo==44){
-position_X[particleNo]=-0.001079531;
-position_Z[particleNo]=0.0002931892;
-}
-if(particleNo==45){
-position_X[particleNo]=-0.001205489;
-position_Z[particleNo]=0.006132998;
-}
-if(particleNo==46){
-position_X[particleNo]=-0.005769621;
-position_Z[particleNo]=-0.00692791;
-}
-if(particleNo==47){
-position_X[particleNo]=0.0045467;
-position_Z[particleNo]=-0.001645526;
-}
-if(particleNo==48){
-position_X[particleNo]=0.00361124;
-position_Z[particleNo]=0.006728398;
-}
-if(particleNo==49){
-position_X[particleNo]=0.002591437;
-position_Z[particleNo]=-0.005729064;
-}
-if(particleNo==50){
-position_X[particleNo]=-0.002223535;
-position_Z[particleNo]=0.008950901;
-}
-if(particleNo==51){
-position_X[particleNo]=-0.004615705;
-position_Z[particleNo]=-0.004319299;
-}
-if(particleNo==52){
-position_X[particleNo]=0.005677304;
-position_Z[particleNo]=-0.004356882;
-}
-if(particleNo==53){
-position_X[particleNo]=0.006394522;
-position_Z[particleNo]=-0.002037126;
-}
-if(particleNo==54){
-position_X[particleNo]=-0.006462393;
-position_Z[particleNo]=-0.006845376;
-}
-if(particleNo==55){
-position_X[particleNo]=-0.004856627;
-position_Z[particleNo]=-0.007967252;
-}
-if(particleNo==56){
-position_X[particleNo]=0.002694349;
-position_Z[particleNo]=0.005895396;
-}
-if(particleNo==57){
-position_X[particleNo]=0.005058808;
-position_Z[particleNo]=0.002668598;
-}
-if(particleNo==58){
-position_X[particleNo]=0.001964333;
-position_Z[particleNo]=-0.003624442;
-}
-if(particleNo==59){
-position_X[particleNo]=-0.007651261;
-position_Z[particleNo]=0.0005224655;
-}
-if(particleNo==60){
-position_X[particleNo]=0.001759778;
-position_Z[particleNo]=0.004059788;
-}
-if(particleNo==61){
-position_X[particleNo]=0.001136716;
-position_Z[particleNo]=-0.003679853;
-}
-if(particleNo==62){
-position_X[particleNo]=0.0005709654;
-position_Z[particleNo]=0.001762382;
-}
-if(particleNo==63){
-position_X[particleNo]=-0.001383044;
-position_Z[particleNo]=-0.002595474;
-}
-if(particleNo==64){
-position_X[particleNo]=-0.001062681;
-position_Z[particleNo]=-0.002243376;
-}
-if(particleNo==65){
-position_X[particleNo]=0.003524738;
-position_Z[particleNo]=0.004572167;
-}
-if(particleNo==66){
-position_X[particleNo]=-0.0007913165;
-position_Z[particleNo]=0.00322711;
-}
-if(particleNo==67){
-position_X[particleNo]=0.002112794;
-position_Z[particleNo]=-0.006992122;
-}
-if(particleNo==68){
-position_X[particleNo]=-0.003123649;
-position_Z[particleNo]=0.0004561543;
-}
-if(particleNo==69){
-position_X[particleNo]=0.006879507;
-position_Z[particleNo]=-0.000884968;
-}
-if(particleNo==70){
-position_X[particleNo]=-0.001267231;
-position_Z[particleNo]=0.005034202;
-}
-if(particleNo==71){
-position_X[particleNo]=0.003913583;
-position_Z[particleNo]=0.005077255;
-}
-if(particleNo==72){
-position_X[particleNo]=0.008066024;
-position_Z[particleNo]=0.004933583;
-}
-if(particleNo==73){
-position_X[particleNo]=0.0008804542;
-position_Z[particleNo]=-0.005683482;
-}
-if(particleNo==74){
-position_X[particleNo]=0.002537227;
-position_Z[particleNo]=0.004186397;
-}
-if(particleNo==75){
-position_X[particleNo]=-0.004394222;
-position_Z[particleNo]=-0.002561806;
-}
-if(particleNo==76){
-position_X[particleNo]=-0.003796621;
-position_Z[particleNo]=-0.007924054;
-}
-if(particleNo==77){
-position_X[particleNo]=-0.006794522;
-position_Z[particleNo]=-0.004059558;
-}
-if(particleNo==78){
-position_X[particleNo]=-0.0004439137;
-position_Z[particleNo]=0.0003997697;
-}
-if(particleNo==79){
-position_X[particleNo]=0.00155552;
-position_Z[particleNo]=-0.003376501;
-}
-if(particleNo==80){
-position_X[particleNo]=-0.00941289;
-position_Z[particleNo]=-0.0002069659;
-}
-if(particleNo==81){
-position_X[particleNo]=0.004779175;
-position_Z[particleNo]=0.0007253354;
-}
-if(particleNo==82){
-position_X[particleNo]=0.00228251;
-position_Z[particleNo]=-0.007481344;
-}
-if(particleNo==83){
-position_X[particleNo]=-0.004819716;
-position_Z[particleNo]=-0.001513283;
-}
-if(particleNo==84){
-position_X[particleNo]=-0.0009629754;
-position_Z[particleNo]=0.003310069;
-}
-if(particleNo==85){
-position_X[particleNo]=-0.005808754;
-position_Z[particleNo]=0.0009394967;
-}
-if(particleNo==86){
-position_X[particleNo]=-0.006480515;
-position_Z[particleNo]=-0.001361834;
-}
-if(particleNo==87){
-position_X[particleNo]=0.00374829;
-position_Z[particleNo]=0.006724131;
-}
-if(particleNo==88){
-position_X[particleNo]=0.005388748;
-position_Z[particleNo]=-0.004996895;
-}
-if(particleNo==89){
-position_X[particleNo]=0.005382281;
-position_Z[particleNo]=0.004985032;
-}
-if(particleNo==90){
-position_X[particleNo]=-0.005566654;
-position_Z[particleNo]=0.003052438;
-}
-if(particleNo==91){
-position_X[particleNo]=-0.002570685;
-position_Z[particleNo]=-0.00532617;
-}
-if(particleNo==92){
-position_X[particleNo]=0.0003834973;
-position_Z[particleNo]=-0.008692875;
-}
-if(particleNo==93){
-position_X[particleNo]=0.004865479;
-position_Z[particleNo]=-0.006572413;
-}
-if(particleNo==94){
-position_X[particleNo]=-0.007896303;
-position_Z[particleNo]=-0.002628757;
-}
-if(particleNo==95){
-position_X[particleNo]=-0.003455449;
-position_Z[particleNo]=0.001535517;
-}
-if(particleNo==96){
-position_X[particleNo]=0.005164915;
-position_Z[particleNo]=0.003995822;
-}
-if(particleNo==97){
-position_X[particleNo]=0.008704832;
-position_Z[particleNo]=-0.002758327;
-}
-if(particleNo==98){
-position_X[particleNo]=-0.0008985522;
-position_Z[particleNo]=-0.00519119;
-}
-if(particleNo==99){
-position_X[particleNo]=-0.001568427;
-position_Z[particleNo]=-0.004204671;
-}
+//         if(particleNo==0){
+// position_X[particleNo]=-0.007369244;
+// position_Z[particleNo]=-0.0008269974;
+// }
+// if(particleNo==1){
+// position_X[particleNo]=-0.005620816;
+// position_Z[particleNo]=0.003577294;
+// }
+// if(particleNo==2){
+// position_X[particleNo]=0.008693858;
+// position_Z[particleNo]=0.0003883274;
+// }
+// if(particleNo==3){
+// position_X[particleNo]=-0.009308558;
+// position_Z[particleNo]=0.0005940039;
+// }
+// if(particleNo==4){
+// position_X[particleNo]=0.003735454;
+// position_Z[particleNo]=0.00860873;
+// }
+// if(particleNo==5){
+// position_X[particleNo]=0.0005385756;
+// position_Z[particleNo]=0.003078379;
+// }
+// if(particleNo==6){
+// position_X[particleNo]=0.004023812;
+// position_Z[particleNo]=0.005243961;
+// }
+// if(particleNo==7){
+// position_X[particleNo]=0.00512821;
+// position_Z[particleNo]=-0.002693227;
+// }
+// if(particleNo==8){
+// position_X[particleNo]=-0.001271772;
+// position_Z[particleNo]=-0.0004453647;
+// }
+// if(particleNo==9){
+// position_X[particleNo]=-0.004501863;
+// position_Z[particleNo]=-0.006669856;
+// }
+// if(particleNo==10){
+// position_X[particleNo]=9.04579e-05;
+// position_Z[particleNo]=-0.003619341;
+// }
+// if(particleNo==11){
+// position_X[particleNo]=-0.0001204663;
+// position_Z[particleNo]=-0.008185342;
+// }
+// if(particleNo==12){
+// position_X[particleNo]=-0.008525018;
+// position_Z[particleNo]=-0.002317157;
+// }
+// if(particleNo==13){
+// position_X[particleNo]=0.008276349;
+// position_Z[particleNo]=-0.0007110835;
+// }
+// if(particleNo==14){
+// position_X[particleNo]=-0.007492692;
+// position_Z[particleNo]=0.003769106;
+// }
+// if(particleNo==15){
+// position_X[particleNo]=0.002590868;
+// position_Z[particleNo]=0.00450824;
+// }
+// if(particleNo==16){
+// position_X[particleNo]=0.007771444;
+// position_Z[particleNo]=-0.003873563;
+// }
+// if(particleNo==17){
+// position_X[particleNo]=0.000265474;
+// position_Z[particleNo]=0.006919631;
+// }
+// if(particleNo==18){
+// position_X[particleNo]=0.006830213;
+// position_Z[particleNo]=-0.001692108;
+// }
+// if(particleNo==19){
+// position_X[particleNo]=-0.0006416526;
+// position_Z[particleNo]=-0.006433446;
+// }
+// if(particleNo==20){
+// position_X[particleNo]=0.001433096;
+// position_Z[particleNo]=-0.009338925;
+// }
+// if(particleNo==21){
+// position_X[particleNo]=-3.039762e-05;
+// position_Z[particleNo]=0.004965853;
+// }
+// if(particleNo==22){
+// position_X[particleNo]=-0.00574497;
+// position_Z[particleNo]=-0.007391455;
+// }
+// if(particleNo==23){
+// position_X[particleNo]=-0.004508237;
+// position_Z[particleNo]=-0.001714135;
+// }
+// if(particleNo==24){
+// position_X[particleNo]=0.004196392;
+// position_Z[particleNo]=-0.005201784;
+// }
+// if(particleNo==25){
+// position_X[particleNo]=-0.003649209;
+// position_Z[particleNo]=0.003041174;
+// }
+// if(particleNo==26){
+// position_X[particleNo]=0.003626924;
+// position_Z[particleNo]=-0.002245493;
+// }
+// if(particleNo==27){
+// position_X[particleNo]=-0.001824666;
+// position_Z[particleNo]=0.001297974;
+// }
+// if(particleNo==28){
+// position_X[particleNo]=-0.000229709;
+// position_Z[particleNo]=0.009221903;
+// }
+// if(particleNo==29){
+// position_X[particleNo]=-0.006004856;
+// position_Z[particleNo]=0.002585383;
+// }
+// if(particleNo==30){
+// position_X[particleNo]=0.003025075;
+// position_Z[particleNo]=0.00606146;
+// }
+// if(particleNo==31){
+// position_X[particleNo]=-0.0004713639;
+// position_Z[particleNo]=-0.005934993;
+// }
+// if(particleNo==32){
+// position_X[particleNo]=-0.001793739;
+// position_Z[particleNo]=0.007712967;
+// }
+// if(particleNo==33){
+// position_X[particleNo]=-0.006756029;
+// position_Z[particleNo]=-0.002693219;
+// }
+// if(particleNo==34){
+// position_X[particleNo]=-0.007297813;
+// position_Z[particleNo]=-0.0008938543;
+// }
+// if(particleNo==35){
+// position_X[particleNo]=-0.0009539966;
+// position_Z[particleNo]=0.008633488;
+// }
+// if(particleNo==36){
+// position_X[particleNo]=0.007217197;
+// position_Z[particleNo]=0.0001191175;
+// }
+// if(particleNo==37){
+// position_X[particleNo]=0.00635123;
+// position_Z[particleNo]=-0.0007551004;
+// }
+// if(particleNo==38){
+// position_X[particleNo]=0.002654774;
+// position_Z[particleNo]=0.006493948;
+// }
+// if(particleNo==39){
+// position_X[particleNo]=-0.004213676;
+// position_Z[particleNo]=0.0002886933;
+// }
+// if(particleNo==40){
+// position_X[particleNo]=-0.00171943;
+// position_Z[particleNo]=0.007531314;
+// }
+// if(particleNo==41){
+// position_X[particleNo]=0.004594954;
+// position_Z[particleNo]=0.004312847;
+// }
+// if(particleNo==42){
+// position_X[particleNo]=0.0004997481;
+// position_Z[particleNo]=-0.008696123;
+// }
+// if(particleNo==43){
+// position_X[particleNo]=-0.0002211368;
+// position_Z[particleNo]=0.003640982;
+// }
+// if(particleNo==44){
+// position_X[particleNo]=-0.001079531;
+// position_Z[particleNo]=0.0002931892;
+// }
+// if(particleNo==45){
+// position_X[particleNo]=-0.001205489;
+// position_Z[particleNo]=0.006132998;
+// }
+// if(particleNo==46){
+// position_X[particleNo]=-0.005769621;
+// position_Z[particleNo]=-0.00692791;
+// }
+// if(particleNo==47){
+// position_X[particleNo]=0.0045467;
+// position_Z[particleNo]=-0.001645526;
+// }
+// if(particleNo==48){
+// position_X[particleNo]=0.00361124;
+// position_Z[particleNo]=0.006728398;
+// }
+// if(particleNo==49){
+// position_X[particleNo]=0.002591437;
+// position_Z[particleNo]=-0.005729064;
+// }
+// if(particleNo==50){
+// position_X[particleNo]=-0.002223535;
+// position_Z[particleNo]=0.008950901;
+// }
+// if(particleNo==51){
+// position_X[particleNo]=-0.004615705;
+// position_Z[particleNo]=-0.004319299;
+// }
+// if(particleNo==52){
+// position_X[particleNo]=0.005677304;
+// position_Z[particleNo]=-0.004356882;
+// }
+// if(particleNo==53){
+// position_X[particleNo]=0.006394522;
+// position_Z[particleNo]=-0.002037126;
+// }
+// if(particleNo==54){
+// position_X[particleNo]=-0.006462393;
+// position_Z[particleNo]=-0.006845376;
+// }
+// if(particleNo==55){
+// position_X[particleNo]=-0.004856627;
+// position_Z[particleNo]=-0.007967252;
+// }
+// if(particleNo==56){
+// position_X[particleNo]=0.002694349;
+// position_Z[particleNo]=0.005895396;
+// }
+// if(particleNo==57){
+// position_X[particleNo]=0.005058808;
+// position_Z[particleNo]=0.002668598;
+// }
+// if(particleNo==58){
+// position_X[particleNo]=0.001964333;
+// position_Z[particleNo]=-0.003624442;
+// }
+// if(particleNo==59){
+// position_X[particleNo]=-0.007651261;
+// position_Z[particleNo]=0.0005224655;
+// }
+// if(particleNo==60){
+// position_X[particleNo]=0.001759778;
+// position_Z[particleNo]=0.004059788;
+// }
+// if(particleNo==61){
+// position_X[particleNo]=0.001136716;
+// position_Z[particleNo]=-0.003679853;
+// }
+// if(particleNo==62){
+// position_X[particleNo]=0.0005709654;
+// position_Z[particleNo]=0.001762382;
+// }
+// if(particleNo==63){
+// position_X[particleNo]=-0.001383044;
+// position_Z[particleNo]=-0.002595474;
+// }
+// if(particleNo==64){
+// position_X[particleNo]=-0.001062681;
+// position_Z[particleNo]=-0.002243376;
+// }
+// if(particleNo==65){
+// position_X[particleNo]=0.003524738;
+// position_Z[particleNo]=0.004572167;
+// }
+// if(particleNo==66){
+// position_X[particleNo]=-0.0007913165;
+// position_Z[particleNo]=0.00322711;
+// }
+// if(particleNo==67){
+// position_X[particleNo]=0.002112794;
+// position_Z[particleNo]=-0.006992122;
+// }
+// if(particleNo==68){
+// position_X[particleNo]=-0.003123649;
+// position_Z[particleNo]=0.0004561543;
+// }
+// if(particleNo==69){
+// position_X[particleNo]=0.006879507;
+// position_Z[particleNo]=-0.000884968;
+// }
+// if(particleNo==70){
+// position_X[particleNo]=-0.001267231;
+// position_Z[particleNo]=0.005034202;
+// }
+// if(particleNo==71){
+// position_X[particleNo]=0.003913583;
+// position_Z[particleNo]=0.005077255;
+// }
+// if(particleNo==72){
+// position_X[particleNo]=0.008066024;
+// position_Z[particleNo]=0.004933583;
+// }
+// if(particleNo==73){
+// position_X[particleNo]=0.0008804542;
+// position_Z[particleNo]=-0.005683482;
+// }
+// if(particleNo==74){
+// position_X[particleNo]=0.002537227;
+// position_Z[particleNo]=0.004186397;
+// }
+// if(particleNo==75){
+// position_X[particleNo]=-0.004394222;
+// position_Z[particleNo]=-0.002561806;
+// }
+// if(particleNo==76){
+// position_X[particleNo]=-0.003796621;
+// position_Z[particleNo]=-0.007924054;
+// }
+// if(particleNo==77){
+// position_X[particleNo]=-0.006794522;
+// position_Z[particleNo]=-0.004059558;
+// }
+// if(particleNo==78){
+// position_X[particleNo]=-0.0004439137;
+// position_Z[particleNo]=0.0003997697;
+// }
+// if(particleNo==79){
+// position_X[particleNo]=0.00155552;
+// position_Z[particleNo]=-0.003376501;
+// }
+// if(particleNo==80){
+// position_X[particleNo]=-0.00941289;
+// position_Z[particleNo]=-0.0002069659;
+// }
+// if(particleNo==81){
+// position_X[particleNo]=0.004779175;
+// position_Z[particleNo]=0.0007253354;
+// }
+// if(particleNo==82){
+// position_X[particleNo]=0.00228251;
+// position_Z[particleNo]=-0.007481344;
+// }
+// if(particleNo==83){
+// position_X[particleNo]=-0.004819716;
+// position_Z[particleNo]=-0.001513283;
+// }
+// if(particleNo==84){
+// position_X[particleNo]=-0.0009629754;
+// position_Z[particleNo]=0.003310069;
+// }
+// if(particleNo==85){
+// position_X[particleNo]=-0.005808754;
+// position_Z[particleNo]=0.0009394967;
+// }
+// if(particleNo==86){
+// position_X[particleNo]=-0.006480515;
+// position_Z[particleNo]=-0.001361834;
+// }
+// if(particleNo==87){
+// position_X[particleNo]=0.00374829;
+// position_Z[particleNo]=0.006724131;
+// }
+// if(particleNo==88){
+// position_X[particleNo]=0.005388748;
+// position_Z[particleNo]=-0.004996895;
+// }
+// if(particleNo==89){
+// position_X[particleNo]=0.005382281;
+// position_Z[particleNo]=0.004985032;
+// }
+// if(particleNo==90){
+// position_X[particleNo]=-0.005566654;
+// position_Z[particleNo]=0.003052438;
+// }
+// if(particleNo==91){
+// position_X[particleNo]=-0.002570685;
+// position_Z[particleNo]=-0.00532617;
+// }
+// if(particleNo==92){
+// position_X[particleNo]=0.0003834973;
+// position_Z[particleNo]=-0.008692875;
+// }
+// if(particleNo==93){
+// position_X[particleNo]=0.004865479;
+// position_Z[particleNo]=-0.006572413;
+// }
+// if(particleNo==94){
+// position_X[particleNo]=-0.007896303;
+// position_Z[particleNo]=-0.002628757;
+// }
+// if(particleNo==95){
+// position_X[particleNo]=-0.003455449;
+// position_Z[particleNo]=0.001535517;
+// }
+// if(particleNo==96){
+// position_X[particleNo]=0.005164915;
+// position_Z[particleNo]=0.003995822;
+// }
+// if(particleNo==97){
+// position_X[particleNo]=0.008704832;
+// position_Z[particleNo]=-0.002758327;
+// }
+// if(particleNo==98){
+// position_X[particleNo]=-0.0008985522;
+// position_Z[particleNo]=-0.00519119;
+// }
+// if(particleNo==99){
+// position_X[particleNo]=-0.001568427;
+// position_Z[particleNo]=-0.004204671;
+// }
 
-        // position_X[particleNo] = y;
+        position_X[particleNo] = y;
         position_Y[particleNo] = 0.001;
-        // position_Z[particleNo] = z;
+        position_Z[particleNo] = z;
 
         
        
@@ -899,9 +1029,219 @@ position_Z[particleNo]=-0.004204671;
 
     // cout << " No ofBoundary faces Identified : " << Face_id_cellsOnBoundary.size() << endl;
 
+    // Read the adjacency values of the current mesh
+    ReadAdjacencyValues("adjacency_matrix_for_siminhale_reflevel_1.txt",true,row_pointer,col_index,fespace);
+}
 
+/* Function to read the adjacency values of the current mesh*/
+        // If the Parameter isAdjacencyFile is true, then the function reads the adjacency values from the file
+        // else the function reads the adjacency values from the mesh file and generates the adjacency values
+void TParticles::ReadAdjacencyValues(std::string filename, bool isAdjacencyFile, std::vector<int> &row_ptr, std::vector<int> &col_ind, TFESpace3D* fespace)
+{   
+    // If the Given File is an adjacency file, then read the values from the file
+    if(isAdjacencyFile)
+    {
+        // read the adjacency matrix file
+        // First line contains the Size of rowPtr and colInd
+        std::ifstream file(filename);
 
- 
+        // Check if object is valid
+        if(!file)
+        {
+            std::cerr << "Cannot open the File : "<<filename<<std::endl;
+            std::cout << "Error on file: " << __FILE__ << " on line: " << __LINE__ << std::endl;
+            exit(0);
+        }
+
+        std::string str;
+        int line_count = 0;
+
+        int num_cells = fespace->GetCollection()->GetN_Cells();
+
+        // Read the first line
+        while (std::getline(file, str) ) {
+            line_count++;
+            // std::cout  << str << '\n';
+            // Check if the line contains the word "Tetrahedra"
+            if (line_count == 1) {
+                // convert the string to integer
+                std::istringstream iss(str);
+                
+                int row_ptr_size;
+                int col_ind_size;
+                iss >> row_ptr_size >> col_ind_size;  // Add the number of cells to the variable num_cells
+
+                std::cout << "row_ptr size: " << row_ptr_size << '\n';
+                std::cout << "col_ind size: " << col_ind_size << '\n';
+                
+
+                // Resize the row_ptr vector
+                row_ptr.resize(row_ptr_size);
+
+                // Resize the col_ind vector
+                col_ind.resize(col_ind_size);
+            }
+            // Read the row pointer Array
+            if(line_count == 2)
+            {
+                std::istringstream iss(str);
+                for(int i = 0; i < row_ptr.size(); ++i)
+                {
+                    iss >> row_ptr[i];
+                }
+            }
+
+            // Read the col_ind Array
+            if(line_count == 3)
+            {
+                std::istringstream iss(str);
+                for(int i = 0; i < col_ind.size(); ++i)
+                {
+                    iss >> col_ind[i];
+                }
+            }
+        }
+
+        // Sanity check
+        if (num_cells != row_ptr.size() - 1)
+        {
+            std::cout << "Error on file: " << __FILE__ << " on line: " << __LINE__ << std::endl;
+            std::cout << "Number of cells and row_ptr size mismatch" << std::endl;
+            exit(0);
+        }
+
+        // Sanity check, Check the last element of row_ptr with size of col_ind
+        if (row_ptr[row_ptr.size() - 1] != col_ind.size())
+        {
+            std::cout << "Error on file: " << __FILE__ << " on line: " << __LINE__ << std::endl;
+            std::cout << "Last element of row_ptr " << row_ptr[row_ptr.size() - 1] << "  and col_ind " << col_ind.size()   <<" size mismatch" << std::endl;
+            exit(0);
+        }
+    }
+
+    else
+    {
+        std::string output_filename = "adjacency_matrix_for_siminhale_reflevel_1.txt";
+
+        //read mesh file
+        std::ifstream file(filename);
+
+        // Check if object is valid
+        if(!file)
+        {
+            std::cerr << "Cannot open the File : "<<filename<<std::endl;
+            std::cout << "Error on file: " << __FILE__ << " on line: " << __LINE__ << std::endl;
+            exit(0);
+        }
+
+        std::string str;
+        int line_count = 0;
+        int num_cells = 0;
+        // read untill you reach the word "Tetrahedra"
+        // THis will translate the pointer untill the word "Tetrahedra" is reached
+        while (std::getline(file, str) ) {
+            ++line_count;
+            // Check if the line contains the word "Tetrahedra"
+            if (str.find("Tetrahedra") != std::string::npos) {
+                ++line_count; 
+                // read the next line
+                std::getline(file, str);
+                // convert the string to integer
+                std::istringstream iss(str);
+                iss >> num_cells;  // Add the number of cells to the variable num_cells
+                break;
+            }
+            
+        }
+
+        // std::cout << "Line count: " << line_count << '\n';
+        std::cout << "[Adjacency: INFO] Number of cells: " << num_cells << '\n';
+
+        // Read the next num_cells lines and store the vertices of each cell
+        std::vector<std::vector<int>> vertices_in_cells(num_cells, std::vector<int>(4));
+
+        for (int i = 0; i < num_cells; ++i) {
+            std::getline(file, str);
+            std::istringstream iss(str);
+            iss >> vertices_in_cells[i][0] >> vertices_in_cells[i][1] >> vertices_in_cells[i][2] >> vertices_in_cells[i][3];
+        }
+
+        // Create an adjacency matrix in a CSR format, where each row represents a cell and each column represents a cell that shares a face with the cell in the row
+
+        // resize the row_ptr vector
+        row_ptr.resize(num_cells+1);
+
+        std::vector<std::vector<int>> col_ind_for_each_cell(num_cells);
+
+        //initialize row_ptr
+        row_ptr[0] = 0;
+
+        // get the total number of omp threads
+        int num_threads = omp_get_max_threads();
+
+        // get 90% of the number of threads
+        int num_threads_for_calc = (int) (0.9 * num_threads);
+
+        // Loop over all cells
+        #pragma omp parallel for num_threads(num_threads_for_calc) schedule(dynamic, 1) \
+        shared(row_ptr, col_ind_for_each_cell, vertices_in_cells, num_cells) 
+        for (int i = 0; i < num_cells; i++) {
+            std::vector<int> col_ind_local;
+
+            if(i%10000 == 0)
+                std::cout << "[Adjacency: INFO] Reading Adjacency values from cell: " << i << '\n';
+
+        // Loop over the vertices of the cell
+        for (int j = 0; j < 4; j++) {
+            // Loop over all cells again
+            for (int k = 0; k < num_cells; k++) {
+                // Loop over the vertices of the cell
+                for (int l = 0; l < 4; l++) {
+                    // Check if the cell k shares a face with cell i
+                    if (vertices_in_cells[i][j] == vertices_in_cells[k][l] && i != k) {
+                        // Check if the cell k is already in the adjacency matrix
+                        if (std::find(col_ind_local.begin(), col_ind_local.end(), k) == col_ind_local.end()) {
+                            // If not, add it to the adjacency matrix
+                            col_ind_local.push_back(k);
+                        }
+                    }
+                }
+            }
+        }
+            row_ptr[i+1] = col_ind_local.size();  // Append the size of the col_ind_local vector to the row_ptr vector
+            // Sort the col_ind_local vector
+            // std::sort(col_ind_local.begin(), col_ind_local.end());
+            // Add the col_ind_local vector to the col_ind vector
+            col_ind_for_each_cell[i] = col_ind_local;
+        }
+
+        // Loop over the row_ptr vector and add the previous element to the current element to perform a prefix sum
+        for (int i = 1; i < row_ptr.size(); ++i) {
+            row_ptr[i] += row_ptr[i-1];
+        }
+
+        // Loop over the col_ind_for_each_cell vector and add the elements to the col_ind vector
+        for (int i = 0; i < col_ind_for_each_cell.size(); ++i) {
+            col_ind.insert(col_ind.end(), col_ind_for_each_cell[i].begin(), col_ind_for_each_cell[i].end());
+        }
+        
+        // lets write this to a file 
+        std::ofstream outfile;
+        outfile.open(output_filename);
+
+        // write the size of the row_ptr and col_ind vectors to the file
+        outfile << row_ptr.size() << " " << col_ind.size() << '\n';
+
+        // write the row_ptr vector to the file
+        for (int i = 0; i < row_ptr.size(); ++i) {
+            outfile << row_ptr[i] << " ";
+        }
+        outfile << '\n';
+        //Write the col_ind vector to the file
+        for (int i = 0; i < col_ind.size(); ++i) {
+            outfile << col_ind[i] << " ";
+        }
+    }
 }
 
 // Generates output file for Visualisation
@@ -1500,7 +1840,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 {
 
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
-    int numParticlesReleasedPerTimeStep = 50000;
+    int numParticlesReleasedPerTimeStep = 2000;
     int timeStepCounter = 0;
     int timeStepInterval = 10;   // Release particles every n steps
     
@@ -1526,7 +1866,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     TFEFunction3D *FEFuncVelocityZ = VelocityFEVectFunction->GetComponent(2);
 
 
-    cout << "PART RELEASED : " << m_ParticlesReleased <<endl;
+    cout << "PARTICLES CURRENTLY IN DOMAIN : " << m_ParticlesReleased <<endl;
     
 
     // Call the host wrapper function to call the device kernel
@@ -1542,7 +1882,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     
     // Call the kernel function wrapper to perform the interpolation
     // This function will be called for every time step
-    
+    std::cout << "Calling the Interpolate Velocity Host Wrapper" << std::endl;
     InterpolateVelocityHostWrapper(timeStep, m_ParticlesReleased,n_dof,n_cells); 
 
     double x_difference_position =  diff_dot_product(position_X,position_X_old);
@@ -1582,6 +1922,15 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     double g_z = 9.81;
     double dynamicViscosityFluid = 0.00001893;
     double lambda = 0.00000007;
+    // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
+    int numParticlesReleasedPerTimeStep = 50000;
+    int timeStepCounter = 0;
+    int timeStepInterval = 10;   // Release particles every n steps
+
+    // Search Depth
+    int searchDepth = 3;
+
+
 
 		auto inertialConstant = [&](double densityParticle, double particleDiameter)
 		{ return (3. / 4.) * (densityFluid / densityParticle) * (1 / particleDiameter); };
@@ -1611,10 +1960,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         // return 1;
     };
 
-    // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
-    int numParticlesReleasedPerTimeStep = 50000;
-    int timeStepCounter = 0;
-    int timeStepInterval = 10;   // Release particles every n steps
+
     
     int actualTimeStep = (int) (TDatabase::TimeDB->CURRENTTIME / TDatabase::TimeDB->TIMESTEPLENGTH);
 
@@ -1744,46 +2090,60 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         //   {
         //     myfile << i << "," << CellNo << "," << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << fluidVelocityX << "," << fluidVelocityY << "," << fluidVelocityZ << ", " << cdcc_x << ", " << cdcc_y << ", " << cdcc_z << ", " << rhs_x << ", " << rhs_y << ", " << rhs_z << ", " << velocityX[i] << ", " << velocityY[i] << ", " << velocityZ[i] << ", " << position_X[i] << ", " << position_Y[i] << ", " << position_Z[i] << endl;
         //   }
-        
-
-   
 
         // Update the current position of cell.
         // Check if the particle Exists in the current Domain
         int N_Cells = fespace->GetN_Cells();
         bool insideDomain = false;
-        for (int cellId = 0; cellId < N_Cells; cellId++)
+
+
+        bool insideCurrentCell = cell->PointInCell_Parallel(position_X[i], position_Y[i], position_Z[i]);
+        if(insideCurrentCell)
         {
-            TBaseCell* cell = fespace->GetCollection()->GetCell(cellId);
-            bool insideCell = cell->PointInCell_Parallel(position_X[i], position_Y[i], position_Z[i]);
-            if (insideCell)
+            insideDomain = true;
+            previousCell[i] = currentCell[i];
+            currentCell[i] = CellNo;     // Assign Same cell no
+            continue;
+        }
+        else
+        {
+            // generate a current queue of cells to search
+            std::queue<std::pair<int, int>> cell_queue;
+            cell_queue.push({CellNo, 0});   // Push the queue with current cell no and search depth 0
+            while(!cell_queue.empty())
             {
-                // #pragma omp critical
-                // {
-                //     cout << "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " , PrevCell " << previousCell[i] << " , Curr cell " << currentCell[i] << " Cell iD : " << cellId <<endl;
-                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << position_X[i] << " , " << position_Y[i] << " , " << position_Z[i] <<endl;
-                //     double x0,y0,z0;
-                //     cell->GetVertex(0)->GetCoords(x0, y0, z0);
-                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x0: " << x0 << " , y0: " << y0 << " , z0: " << z0 <<endl;
-                //     double x1,y1,z1;
-                //     cell->GetVertex(1)->GetCoords(x1, y1, z1);
-                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x1: " << x1 << " , y1: " << y1 << " , z1: " << z1 <<endl;
-                //     double x2,y2,z2;
-                //     cell->GetVertex(2)->GetCoords(x2, y2, z2);
-                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x2: " << x2 << " , y2: " << y2 << " , z2: " << z2 <<endl;
-                //     double x3,y3,z3;
-                //     cell->GetVertex(3)->GetCoords(x3, y3, z3);
-                //     cout <<  "--" <<" For particle : " << i <<" Thread : " << omp_get_thread_num() << " x3: " << x3 << " , y3: " << y3 << " , z3: " << z3 <<endl;
-                // }
-                
-                insideDomain = true;
-                previousCell[i] = currentCell[i];
-                currentCell[i] = cellId;
-                
-                break;
+                int current_cell = cell_queue.front().first;
+                int current_depth = cell_queue.front().second;
+                cell_queue.pop();
+
+                if (current_depth == searchDepth) {
+                    continue;
+                }
+                // Get the current levels neighbours of the cell 
+                int start_index = row_pointer[current_cell];
+                int end_index = row_pointer[current_cell+1];
+
+                // For cells in the current level
+                for(int index = start_index; index < end_index; index++)
+                {
+                    int neighbourCellNo = col_index[index];
+                    TBaseCell* neighbourCell = fespace->GetCollection()->GetCell(neighbourCellNo);
+                    bool insideNeighbourCell = neighbourCell->PointInCell_Parallel(position_X[i], position_Y[i], position_Z[i]);
+                    if(insideNeighbourCell)
+                    {
+                        insideDomain = true;
+
+                        previousCell[i] = currentCell[i];
+                        currentCell[i] = neighbourCellNo;
+
+                        break;
+                    }
+                    // add the neighbour cell to the queue
+                    cell_queue.push({neighbourCellNo, current_depth+1});
+                }
             }
         }
-        
+
         // #pragma omp critical
         // {
         //     cout << "Particle " << i << " is in cell " << currentCell[i] << " and was in cell " << previousCell[i] << endl;

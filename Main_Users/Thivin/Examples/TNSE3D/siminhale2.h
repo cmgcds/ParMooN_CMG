@@ -17,7 +17,7 @@ void ExampleFile()
 	if (rank == TDatabase::ParamDB->Par_P0)
 #endif
 	{
-		OutPut("Example: Siminhale.h " << endl);
+		OutPut("Example: Siminhale2.h " << endl);
 	}
 }
 
@@ -196,4 +196,3 @@ void LinCoeffs(int n_points, double *X, double *Y, double *Z,
 		coeff[3] = 1.0 / 51.5414; // f3
 	}
 }
-

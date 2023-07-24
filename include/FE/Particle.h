@@ -82,6 +82,9 @@ class TParticles
         std::vector<double> velocityY;
         std::vector<double> velocityZ;
 
+        // Vectors to store the row pointer and column index of the adjacency matrix
+        std::vector<int> row_pointer;
+        std::vector<int> col_index;
 
         //Error Particles Count
         int m_ErrorParticlesCount = 0;
@@ -124,6 +127,14 @@ class TParticles
 				void printUpdatedParticleDetailStats();
 
 				void detectStagnantParticles();
+
+        void GenerateParticleDiameterAndDensity(std::vector<double> &particle_diameters, std::vector<double> &particle_density, \
+                                               std::vector<double> mass_fraction, std::vector<double> density,\
+                                               double CMAD, double GSD);
+        /* Function to read the adjacency values of the current mesh*/
+        // If the Parameter isAdjacencyFile is true, then the function reads the adjacency values from the file
+        // else the function reads the adjacency values from the mesh file and generates the adjacency values
+        void ReadAdjacencyValues(std::string filename, bool isAdjacencyFile, std::vector<int> &row_pointer, std::vector<int> &col_index, TFESpace3D* fespace);
 
         #ifdef _CUDA
 
@@ -331,6 +342,11 @@ class TParticles
 
           // deposited particles status
           int* d_m_is_deposited_particle;
+
+
+          // Allocate memory for Column Index and Row Pointer for the adjacency matrix
+          int* d_m_row_pointer;
+          int* d_m_col_index;
 
 
           // --- CUDA RELATED FUNCTIONS -- //

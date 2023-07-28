@@ -337,11 +337,85 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
     std::default_random_engine generator;
     std::uniform_real_distribution<double> distribution(circle_x - radius, circle_y + radius);
 
+    // Define a vector to store the cells on the boundary
+    std::vector<int> cells_on_inlet_boundary;
+    int inlet_boundary_id = 0;
+
+    // Lets pick up all the cells, which are at the inlet boundary and store them in a vector
+    for(int i = 0 ; i < N_Cells ; i++)
+    {
+       TBaseCell *cell = fespace->GetCollection()->GetCell(i);
+
+        // NOw Obtain the faces of the cell.
+        FE3D elementId = fespace->GetFE3D(i, cell);
+        TFE3D *element = TFEDatabase3D::GetFE3D(elementId);
+        TFEDesc3D *fedesc = element->GetFEDesc3D();
+        // cell->GetShapeDesc()->GetFaceVertex(TmpFV, TmpLen, MaxLen);
+        TBoundFace *Bdface; // Pointer to Boundary Face in 3D Cell
+        TBoundComp *BoundComp;
+        int N_Joints = cell->GetN_Joints();
+        bool BoundaryJointFound = false;
+
+        for (int jointId = 0; jointId < N_Joints; jointId++)
+        {
+            TJoint *Joint = cell->GetJoint(jointId);
+
+            // Pick the cells with Boundary Surfaces and Ignore Inlet Boundary faces.
+            if (Joint->GetType() == BoundaryFace)
+            {
+                Bdface = (TBoundFace *)Joint;
+                BoundComp = Bdface->GetBoundComp();
+                int bdid = BoundComp->GetID();
+                if(bdid == inlet_boundary_id)
+                {
+                    cells_on_inlet_boundary.push_back(i);
+                    continue;
+                }
+            }
+        }
+
+        // get the centroid of the cell and check if it lies within 0.01 from the point (0,0,0)
+        double centroid[3];
+        double x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3;
+
+        // get the cell vertices
+        cell->GetVertex(0)->GetCoords(x0, y0, z0);
+        cell->GetVertex(1)->GetCoords(x1, y1, z1);
+        cell->GetVertex(2)->GetCoords(x2, y2, z2);
+        cell->GetVertex(3)->GetCoords(x3, y3, z3);
+
+        // calculate the centroid
+        centroid[0] = (x0 + x1 + x2 + x3) / 4.0;
+        centroid[1] = (y0 + y1 + y2 + y3) / 4.0;
+        centroid[2] = (z0 + z1 + z2 + z3) / 4.0;
+
+        // check if the centroid lies within 0.01 from the point (0,0,0)
+        if (std::sqrt(centroid[0] * centroid[0] + centroid[1] * centroid[1] + centroid[2] * centroid[2]) < 0.01)
+        {
+            // if the cell lies within 0.01 from the point (0,0,0), then set the cell number as the starting cell
+            cells_on_inlet_boundary.push_back(i);
+            continue;
+        }
+    }
+
+    // Print the number of cells on the inlet boundary
+    cout << "[INFO] Number of cells on the inlet boundary : " << cells_on_inlet_boundary.size() << endl;
+
+    // write the cells on the inlet boundary to a file
+    std::ofstream cells_on_inlet_boundary_file;
+    cells_on_inlet_boundary_file.open("cells_on_inlet_boundary.txt");
+    
+    for (int i = 0; i < cells_on_inlet_boundary.size(); i++) {
+        cells_on_inlet_boundary_file << cells_on_inlet_boundary[i] << "\n";
+    }
+
+    cells_on_inlet_boundary_file.close();
+
     // For the siminhale, the inlet in in k0
 
     for (int particleNo = 0; particleNo < N_Particles; particleNo++)
     {
-        if(particleNo % 1000 == 0)
+        if(particleNo % 10000 == 0)
             cout << "Particle : " << particleNo <<endl;
         // Use rejection Sampling for points inside circle
         double y = distribution(generator);
@@ -769,15 +843,16 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
         position_Y[particleNo] = 0.001;
         position_Z[particleNo] = z;
 
-        
-       
+
+    //    cout << "Size : " << cells_on_inlet_boundary.size() << endl;
 
         // Identify, which cell the particle Belongs to.
         int N_Cells = fespace->GetCollection()->GetN_Cells();
-				int num_threads = (int) ceil(0.9 * omp_get_max_threads());
-        #pragma omp parallel for num_threads(num_threads) schedule(static,1)  shared(N_Cells, fespace, particleNo,currentCell) 
-        for (int cellId = 0; cellId < N_Cells; cellId++)
+        int num_threads = (int) ceil(0.9 * omp_get_max_threads());
+        #pragma omp parallel for num_threads(num_threads) schedule(dynamic,1)  shared(cells_on_inlet_boundary, fespace, particleNo,currentCell) 
+        for (int index = 0; index < cells_on_inlet_boundary.size(); index++)
         {
+            int cellId = cells_on_inlet_boundary[index];  // Added to not to change any further variables within the code
             TBaseCell *cell = fespace->GetCollection()->GetCell(cellId);
             bool insideDomain = false;
             if (cell->PointInCell_Parallel(position_X[particleNo], position_Y[particleNo], position_Z[particleNo]))
@@ -802,6 +877,12 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
     //     cout << "Particle : " << setw(3) << i << " x : " << setw(12) << position_X[i] << " y : " << setw(12) << position_Y[i] << " z : " << setw(12) << position_Z[i] << " Cell : " << setw(3) << currentCell[i] << endl;
     // }
 
+    std::ofstream file("ParticlePositions.txt");
+    for(int i = 0; i < N_Particles; i++)
+    {
+        file << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << currentCell[i] << endl;
+    }
+    exit(0);
 
     // ----- READ  PARTICLE ----------------- //
 
@@ -1840,7 +1921,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 {
 
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
-    int numParticlesReleasedPerTimeStep = 2000;
+    int numParticlesReleasedPerTimeStep = 50000;
     int timeStepCounter = 0;
     int timeStepInterval = 10;   // Release particles every n steps
     
@@ -2110,15 +2191,12 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
             // generate a current queue of cells to search
             std::queue<std::pair<int, int>> cell_queue;
             cell_queue.push({CellNo, 0});   // Push the queue with current cell no and search depth 0
-            while(!cell_queue.empty())
+            while(!cell_queue.empty() && !insideDomain)
             {
                 int current_cell = cell_queue.front().first;
                 int current_depth = cell_queue.front().second;
                 cell_queue.pop();
 
-                if (current_depth == searchDepth) {
-                    continue;
-                }
                 // Get the current levels neighbours of the cell 
                 int start_index = row_pointer[current_cell];
                 int end_index = row_pointer[current_cell+1];
@@ -2138,8 +2216,9 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 
                         break;
                     }
-                    // add the neighbour cell to the queue
-                    cell_queue.push({neighbourCellNo, current_depth+1});
+                    if(current_depth + 1 < searchDepth)
+                        // add the neighbour cell to the queue
+                        cell_queue.push({neighbourCellNo, current_depth+1});
                 }
             }
         }

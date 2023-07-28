@@ -20,17 +20,79 @@
 #include "Particle.h"
 #include <cmath>
 
-struct Vector3D_Cuda
+struct __device__ Vector3D_Cuda
 {
     double x;
     double y;
     double z;
 };
 
-struct Pair_Cuda
+struct __device__ Pair_Cuda
 {
     int first;
     int second;
+};
+
+// Struct to store the value inside BFS queue
+struct __device__ value {
+    int cell_no;
+    int current_depth;
+};
+
+// struct to store the BFS queue
+struct __device__ Node {
+    value data;
+    Node* next;
+};
+
+// A simple queue implementation for performing BFS
+class Queue_CUDA {
+public:
+    __device__ Queue_CUDA() : head(nullptr), size(0) {}
+
+    __device__ void push(int cell_no, int current_depth) {
+        Node* newNode = new Node{{cell_no, current_depth}, nullptr};
+        if (head == nullptr) {
+            head = newNode;
+        } else {
+            Node* current = head;
+            while (current->next != nullptr) {
+                current = current->next;
+            }
+            current->next = newNode;
+        }
+        size++;
+    }
+
+    __device__ struct value pop_front() {
+        if (head == nullptr) {
+            return {};
+        }
+        Node* temp = head;
+        // get the value of the current head
+        struct value val = head->data;
+        head = head->next;
+        delete temp;
+        size--;
+
+        return val;
+    }
+
+    __device__ int getSize() const {
+        return size;
+    }
+
+    __device__ void print() const {
+        Node* current = head;
+        while (current != nullptr) {
+            printf("%d %d\n", current->data.cell_no, current->data.current_depth);
+            current = current->next;
+        }
+    }
+
+private:
+    __device__ Node* head;
+    __device__ int size;
 };
 
 __device__ struct Vector3D_Cuda Obtain_velocity_at_a_point(int current_cell,
@@ -379,7 +441,7 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
 		if (d_m_is_deposited_particle[tid])
 				return;
 
-    if(tid < n_particles_released )
+    if(tid < n_particles_released)
     {
         // -- BLOCK 1 : INterpolate velocity values at given particle position 
         // -- Substep 1: Identify the cell in which the particle is present
@@ -563,13 +625,14 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
 
             int current_depth = 0;
 
-            while(queue_start_cursor <= queue_end_cursor)
+            while(queue_start_cursor <= queue_end_cursor && !inside_domain)
             {
                 // Pop the cell from the queue
                 int current_cell = queue_cell_no[queue_start_cursor];
                 int current_depth = queue_depth[queue_start_cursor];
                 queue_start_cursor += 1;
                 // printf("GPU : tid:  %d , current_cell: %d, current_depth:  %d \n", tid, current_cell, current_depth);
+
                 if(current_depth == search_depth)
                 {
                     continue;
@@ -577,13 +640,13 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
 
                 int start_index = d_m_row_pointer[current_cell];
                 int end_index = d_m_row_pointer[current_cell+1];
-
+ 
                 // for cells in current level
                 for (int index = start_index; index < end_index; index++)
                 {
                     // Get the neighbour cell
                     int neighbour_cell = d_m_col_index[index];
-
+ 
                     bool inside_neighbour_cell = Is_Point_In_Cell_CUDA(neighbour_cell,
                                                     d_m_cell_vertices_x,
                                                     d_m_cell_vertices_y,
@@ -606,11 +669,9 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                     queue_cell_no[queue_end_cursor] = neighbour_cell;
                     queue_depth[queue_end_cursor] = current_depth + 1;
 
-                    // 
                     // printf("GPU : tid:  %d , neighbour_cell: %d, current_depth:  %d, queue_end_cursor: %d \n", tid, neighbour_cell, queue_depth[queue_end_cursor], queue_end_cursor);
+
                 }
-   
-            }
         }
 
         // for (int cell_id = 0; cell_id < n_cells; cell_id++)
@@ -647,14 +708,14 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
             int joint_id;
             
             if(is_boundary_cell < 0) // non positive value, preferably -99999, which is used as place holder
-						{
+            {
                 is_boundary_cell = 0;
-						}
+            }
             else
-						{
+            {
                 index_boundary_cell = is_boundary_cell; // assign the index
-								corner_id = d_m_corner_id[index_boundary_cell];
-						}
+                corner_id           = d_m_corner_id[index_boundary_cell];
+            }
 
             // Check if boundary DOF is present
             int is_boundary_dof_present = d_m_is_boundary_dof_present[tid];
@@ -822,9 +883,7 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                     d_m_is_deposited_particle[tid] = 1; // Mark the Particle as deposited
                     d_m_is_escaped_particle[tid] = 1;   // Mark the particle as escaped
                 }
-
                 // mark them as deposited 
-
                 d_m_is_deposited_particle[tid] = 1;
 
                 // Ghost particle, make the vertex position as deposition position

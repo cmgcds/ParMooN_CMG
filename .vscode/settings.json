@@ -171,6 +171,10 @@
         "NSE3D_Siminhale.C": "cpp",
         "SiminhaleParticleTracking_MPI.C": "cpp",
         "HexaAffin.C": "cpp",
-        "SiminhaleParticleTracking_MPI_15LPM.C": "cpp"
-    }
+        "SiminhaleParticleTracking_MPI_15LPM.C": "cpp",
+        "HiPC_Paper.C": "cpp",
+        "Ajdacency_Matrix.C": "cpp",
+        "Output3D.C": "cpp"
+    },
+    "cmake.configureOnOpen": false
 }

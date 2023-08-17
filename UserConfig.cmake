@@ -21,8 +21,10 @@ set(AParMooN_GEO "3D" CACHE STRING "Change AParMooN_GEO, to select the Dimension
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/CD3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/TCD3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/NSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
+# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/3D_Programs/SiminhaleParticleTracking_MPI_15LPM.C" CACHE STRING "Enter to select the Main file of the model")
 set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/3D_Programs/SiminhaleParticleTracking_MPI.C" CACHE STRING "Enter to select the Main file of the model")
- # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/TNSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
+# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Main_Users/Thivin/HiPC_Paper.C" CACHE STRING "Enter to select the Main file of the model")
+# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/TNSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 #  set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/3D_Programs/NSE3D_Siminhale.C" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/FTLE_Computation.cpp" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/FTLE_COMPUTATION_withData.cpp" CACHE STRING "Enter to select the Main file of the model")
@@ -35,7 +37,7 @@ set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/3D_Programs/Siminhal
 set(AParMooN_ARCH "INTEL64" CACHE STRING "select the machine type")
 
 #  selection of program type (SEQUENTIAL SMPI MPI OMPONLY HYBRID SCUDA)
-set(AParMooN_PARALLEL_TYPE "SEQUENTIAL" CACHE STRING "select the parallel type")
+set(AParMooN_PARALLEL_TYPE "SCUDA" CACHE STRING "select the parallel type")
 
 #  selection of program type (MPICH OPENMPI INTELMPI CRAYMPI MACMPI)
 set(AParMooN_MPI_IMPLEMENTATION "INTELMPI" CACHE STRING "select the MPI Implementation type")
@@ -52,7 +54,10 @@ set(AParMooN_MPI_IMPLEMENTATION "INTELMPI" CACHE STRING "select the MPI Implemen
 # set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Fluid_Solutions_refined/" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Fluid_1LPM/" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Particle_Solutions_l_inf/" CACHE STRING "select the model")
-set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Particle_Test_OpenMP/" CACHE STRING "select the model")
+# set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Particle_PolyDisperse_15LPM/" CACHE STRING "select the model")
+# set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/HiPC_Paper/" CACHE STRING "select the model")
+set(AParMooN_OUTPUT_DIR_PATH "/home/thivin/ITC_Output/8_100k_final" CACHE STRING "select the model")
+
 # set(AParMooN_OUTPUT_DIR_PATH "" CACHE STRING "select the model")
 # set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/thivin3d" CACHE STRING "select the model")
 #set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/burger" CACHE STRING "select the model")

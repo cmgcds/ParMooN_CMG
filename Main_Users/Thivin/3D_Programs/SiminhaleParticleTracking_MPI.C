@@ -739,9 +739,13 @@ int main(int argc, char *argv[])
 				if (rank == 0)
 #endif
 				{
-					OutPut(endl
+					if(StartNo % 100 == 0)
+					{
+						OutPut(endl
 						   << "CURRENT TIME: ");
 					OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
+					}
+					
 				}
 
 
@@ -755,18 +759,20 @@ int main(int argc, char *argv[])
             {
 				// Considering the simulation has saturated upto 1000 time  steps, If the particle moves more than 
 				int lineNo=0;
-				if(StartNo >  12000)
-					  StartNo = 12000;
-				cout << "Start No : " << StartNo <<endl;
+				if(StartNo >  24000)
+					  StartNo =24000 ;
+				
+				if(StartNo % 100 == 0)
+					cout << "Start No : " << StartNo <<endl;
 
 				// Read from the CSV value into solution array 
 				std::string prefix(argv[3]); 
                 
 				std::string baseFileName = "Solution_";
 
-				// To ensure that a single solution is read for 10 time steps
-				// int StartNo_for_reading_file = StartNo/10 + 2;    // For using same solution for 10 time steps
-				int StartNo_for_reading_file = StartNo;    // For using same solution for 10 time steps
+				// To ensure that a single solution is read for 2 time steps
+				int StartNo_for_reading_file = StartNo/2 + 2;    // For using same solution for 10 time steps
+				// int StartNo_for_reading_file = StartNo;    // For using same solution for 10 time steps
 
 				// Save the u Solution, the number of char in the img should be 6, remaing space is padded by zeros
 				int padding = 6 - std::to_string(StartNo_for_reading_file).length();
@@ -778,7 +784,8 @@ int main(int argc, char *argv[])
 				std::string pFileName = prefix + baseFileName + "p_"+ std::string(padding, '0') + std::to_string(StartNo_for_reading_file) + ".bin";
 
 				std::string filename = prefix + std::to_string(StartNo) + ".bin";
-				std::cout << "Reading from file: " << u1FileName << std::endl;
+				if(StartNo % 100 == 0)
+					std::cout << "Reading from file: " << u1FileName << std::endl;
 
 				// Read the file into the solution array
 				std::ifstream u1File(u1FileName, std::ios::in | std::ios::binary);
@@ -880,7 +887,7 @@ int main(int argc, char *argv[])
 				
                 if (m >= 20 )  // To start the interpolation after 20 time steps ( to ensure that flow has propogated )
                 {
-                    cout << " Interpolation Started" <<endl;
+                    // cout << " Interpolation Started" <<endl;
 
                     //Compute the Particle Displacement for the FTLE values 
 
@@ -944,18 +951,18 @@ int main(int argc, char *argv[])
 										auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
 										std::string name =  "siminhale_" + new_str + ".csv";
 
-										if (m % 10 == 0) {
+										if (m % 100 == 0) {
 											particleObject->OutputFile(name.c_str());
 										}
 
-										if (m >= 5000 && m % 200 == 0)
+										if (m >= 5000 && m % 4000 == 0)
 											particleObject->detectStagnantParticles();
 
 										int depositedCount = 0;
 										for (int i = 0; i < particleObject->isParticleDeposited.size(); i++) {
 											if (particleObject->isParticleDeposited[i]) depositedCount++;
 										}
-										if (depositedCount == numPart) {
+										if (depositedCount >= 0.995 * numPart) {
 											cout << "All particles deposited/escaped" << endl;
 											cout << "Total particles: " << depositedCount << endl;
 											cout << "Particles deposited: " << depositedCount - particleObject->m_EscapedParticlesCount << endl;

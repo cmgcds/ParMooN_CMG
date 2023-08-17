@@ -294,10 +294,10 @@ void TParticles::InitialiseParticleParameters(int N_Particles_)
     m_lambda = 0.00000007; // m
 
     // resize particle diameter
-    m_particle_diameter.resize(N_Particles_, 4.3e-6); // earlier 10e-6
+    m_particle_diameter.resize(N_Particles_, 4.3e-6); // earlier 10e-6   // [IMPORTANT] THE VALUE NEEDS TO BE CHANGED BELOW
 
      // resize density
-    m_particle_density.resize(N_Particles_, 914); // earlier 1266
+    m_particle_density.resize(N_Particles_, 914); // earlier 1266        // [IMPORTANT] THE VALUE NEEDS TO BE CHANGED BELOW
 
     // Provide the mass fraction of the particles
     // f propylene glycol, glycerol, nicotine and water with their mass fractions being 52.6%, 28.1%, 1.9%, and 17.4%
@@ -309,7 +309,64 @@ void TParticles::InitialiseParticleParameters(int N_Particles_)
     std::vector<double> density_array = {1032.56, 1261, 1010, 1000};
 
     // Set all the particle sizes bsed on the function 
-    // TParticles::GenerateParticleDiameterAndDensity(m_particle_diameter, m_particle_density, mass_fraction, density_array,0.307 * 1e-6, 1.69);
+    std::string particle_size_distribution = "polydisperse";  // or "monodisperse"
+
+    // Set the polydisperse type
+    // Fused will generate all particles with same density equivalent to the density difference of all particles. 
+    // Seperate will generate particles with different densities
+    std::string polydisperse_type = "seperate"; // or "fused"
+
+    // check if the string equals to polydisperse
+    if(particle_size_distribution == "polydisperse")
+    {
+        TParticles::GenerateParticleDiameterAndDensity(m_particle_diameter, m_particle_density, mass_fraction, density_array, 0.307 * 1e-6, 1.69);
+
+        if (polydisperse_type == "fused") {
+            double density_sum = 0.0;
+            for (int i = 0; i < mass_fraction.size(); i++) {
+                density_sum += mass_fraction[i] * density_array[i];
+            }
+
+            for (int i = 0; i < m_particle_density.size(); i++) {
+                m_particle_density[i] = density_sum;
+            }
+        }
+    }
+    else
+    {
+        // HARDCODED_THIVIN For mono disperse particle with single density 
+        double density_mono = 914; // DEHS from sininhale paper
+        for (int i = 0; i < m_particle_density.size(); i++) {
+            m_particle_density[i] = density_mono;
+        }
+
+        // HARDCODED_THIVIN particle size
+        double particle_size = 8e-6;
+        for (int i = 0; i < m_particle_diameter.size(); i++) {
+            m_particle_diameter[i] = particle_size;
+        }
+    }
+
+    
+    
+    // --- FOr Polydisperse Fused particle ---- //
+    // rewrite all particle density to mass_fraction * density
+    
+
+    // // HARDCODED_THIVIN For mono disperse particle with single density 
+    // // double density_mono = 1261; // glycerol
+    // // for (int i = 0; i < m_particle_density.size(); i++) {
+    // //     m_particle_density[i] = density_mono;
+    // // }
+
+    // // HARDCODED_THIVIN particle size
+    // // double particle_size = 8;
+    // for (int i = 0; i < m_particle_diameter.size(); i++) {
+    //     m_particle_diameter[i] = particle_size;
+    // }
+
+
+    cout << " INFO : Particle Density has been updated to accumulated value of all densities based on the mass fraction \n";
 
     // Gravity
     m_gravity_x = 0;
@@ -844,7 +901,7 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
         position_Z[particleNo] = z;
 
 
-    //    cout << "Size : " << cells_on_inlet_boundary.size() << endl;
+        //    cout << "Size : " << cells_on_inlet_boundary.size() << endl;
 
         // Identify, which cell the particle Belongs to.
         int N_Cells = fespace->GetCollection()->GetN_Cells();
@@ -882,7 +939,7 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
     {
         file << position_X[i] << "," << position_Y[i] << "," << position_Z[i] << "," << currentCell[i] << endl;
     }
-    exit(0);
+    
 
     // ----- READ  PARTICLE ----------------- //
 
@@ -1397,10 +1454,10 @@ void TParticles::OutputFile(const char *filename)
 int TParticles::UpdateParticleDetailsFromFile(std::string filename)
 {
 		std::ifstream file(filename);
-    if (!file) {
-        std::cerr << "Failed to open the file." << std::endl;
-        return 1;
-    }
+        if (!file) {
+            std::cerr << "Failed to open the file." << std::endl;
+            return 1;
+        }
 
 		std::string line;
 		int counter = -1;
@@ -1921,15 +1978,15 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 {
 
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
-    int numParticlesReleasedPerTimeStep = 50000;
+    int numParticlesReleasedPerTimeStep = 5000;
     int timeStepCounter = 0;
-    int timeStepInterval = 10;   // Release particles every n steps
+    int timeStepInterval = 100;   // Release particles every n steps
     
     int actualTimeStep = (int) (TDatabase::TimeDB->CURRENTTIME / TDatabase::TimeDB->TIMESTEPLENGTH);
 
 
-    // release at first time step and at every 10th time step
-    if(actualTimeStep % timeStepInterval == 0  || (m_ParticlesReleased ==0))
+    // release at first time step and at every nth time step
+    if( (actualTimeStep % timeStepInterval == 0  || (m_ParticlesReleased ==0) ) &&  (m_ParticlesReleased < N_Particles))
     {
         m_ParticlesReleased += numParticlesReleasedPerTimeStep;
         cout << " Addional Particles Released : " << numParticlesReleasedPerTimeStep << " Total Particles Released : " << m_ParticlesReleased <<endl;
@@ -1946,8 +2003,10 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     TFEFunction3D *FEFuncVelocityY = VelocityFEVectFunction->GetComponent(1);
     TFEFunction3D *FEFuncVelocityZ = VelocityFEVectFunction->GetComponent(2);
 
-
-    cout << "PARTICLES CURRENTLY IN DOMAIN : " << m_ParticlesReleased <<endl;
+    if((actualTimeStep+1) % 100 ==0)
+    {
+        cout << "PARTICLES CURRENTLY IN DOMAIN : " << m_ParticlesReleased <<endl;
+    }
     
 
     // Call the host wrapper function to call the device kernel
@@ -1963,26 +2022,33 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     
     // Call the kernel function wrapper to perform the interpolation
     // This function will be called for every time step
-    std::cout << "Calling the Interpolate Velocity Host Wrapper" << std::endl;
+    // std::cout << "Calling the Interpolate Velocity Host Wrapper" << std::endl;
     InterpolateVelocityHostWrapper(timeStep, m_ParticlesReleased,n_dof,n_cells); 
 
-    double x_difference_position =  diff_dot_product(position_X,position_X_old);
-    double y_difference_position =  diff_dot_product(position_Y,position_Y_old);
-    double z_difference_position =  diff_dot_product(position_Z,position_Z_old);
-    cout << " Difference in position X : " << x_difference_position<< "\n";
-    cout << " Difference in position Y : " << y_difference_position<< "\n";
-    cout << " Difference in position Z : " << z_difference_position<< "\n";
+    
 
     int depositedCount = std::count(isParticleDeposited.begin(), isParticleDeposited.end(), 1);
     m_ErrorParticlesCount = std::count(isErrorParticle.begin(), isErrorParticle.end(), 1);
     m_ghostParticlesCount = std::count(isGhostParticle.begin(), isGhostParticle.end(), 1);
     m_StagnantParticlesCount = std::count(isStagnantParticle.begin(), isStagnantParticle.end(), 1);
 
-    std::cout << std::setw(50) << std::left << "Number of Particles deposited or Escaped" << " : " << std::setw(10) << std::right << depositedCount << std::endl;
-    std::cout << std::setw(50) << std::left << "Percentage of Particles Not Deposited" << " : " << std::setw(10) << std::right << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << std::endl;
-    std::cout << std::setw(50) << std::left << "Error particles Accumulated" << " : " << std::setw(10) << std::right << m_ErrorParticlesCount << std::endl;
-    std::cout << std::setw(50) << std::left << "Ghost particles Accumulated" << " : " << std::setw(10) << std::right << m_ghostParticlesCount << std::endl;
-    std::cout << std::setw(50) << std::left << "Stagnant particles Accumulated" << " : " << std::setw(10) << std::right << m_StagnantParticlesCount << std::endl;
+    // Enable printing for the Output console once every 100 timesteps
+    if((actualTimeStep+1) % 100 ==0)
+    {
+        double x_difference_position =  diff_dot_product(position_X,position_X_old);
+        double y_difference_position =  diff_dot_product(position_Y,position_Y_old);
+        double z_difference_position =  diff_dot_product(position_Z,position_Z_old);
+        cout << " Difference in position X : " << x_difference_position<< "\n";
+        cout << " Difference in position Y : " << y_difference_position<< "\n";
+        cout << " Difference in position Z : " << z_difference_position<< "\n";
+
+        std::cout << std::setw(50) << std::left << "Number of Particles deposited or Escaped" << " : " << std::setw(10) << std::right << depositedCount << std::endl;
+        std::cout << std::setw(50) << std::left << "Percentage of Particles Not Deposited" << " : " << std::setw(10) << std::right << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << std::endl;
+        std::cout << std::setw(50) << std::left << "Error particles Accumulated" << " : " << std::setw(10) << std::right << m_ErrorParticlesCount << std::endl;
+        std::cout << std::setw(50) << std::left << "Ghost particles Accumulated" << " : " << std::setw(10) << std::right << m_ghostParticlesCount << std::endl;
+        std::cout << std::setw(50) << std::left << "Stagnant particles Accumulated" << " : " << std::setw(10) << std::right << m_StagnantParticlesCount << std::endl;
+    }
+    
 
 
     // cout << "No of particles Deposited or Escaped: " << depositedCount << endl;

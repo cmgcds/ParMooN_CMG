@@ -503,6 +503,7 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
         double fluid_velocity_y = interpolated_velocities.y;
         double fluid_velocity_z = interpolated_velocities.z;
 
+        printf("%f",d_m_particle_diameter[tid]);
 
         cd_cc_x = cd_cc_cuda(fluid_density,
                             d_m_particle_diameter[tid],
@@ -615,6 +616,7 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
             //Create a local array to store the cell for queue
             int queue_cell_no[10200];
             int queue_depth[10200];
+            int searched_cells[10200];
             int queue_start_cursor = 0;  // Entry Condition
             int queue_end_cursor = -1; // Entry Condition
 
@@ -625,18 +627,20 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
 
             int current_depth = 0;
 
+            int searched_cells_counter = 0;
+
             while(queue_start_cursor <= queue_end_cursor && !inside_domain)
             {
                 // Pop the cell from the queue
                 int current_cell = queue_cell_no[queue_start_cursor];
                 int current_depth = queue_depth[queue_start_cursor];
                 queue_start_cursor += 1;
-                // printf("GPU : tid:  %d , current_cell: %d, current_depth:  %d \n", tid, current_cell, current_depth);
-
-                if(current_depth == search_depth)
+                if(queue_start_cursor >= 10200)
                 {
-                    continue;
+                    printf("GPU : ERROR : Queue start cursor exceeded the limit\n");
+                    return;
                 }
+                // printf("GPU : tid:  %d , current_cell: %d, current_depth:  %d \n", tid, current_cell, current_depth);
 
                 int start_index = d_m_row_pointer[current_cell];
                 int end_index = d_m_row_pointer[current_cell+1];
@@ -646,6 +650,18 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                 {
                     // Get the neighbour cell
                     int neighbour_cell = d_m_col_index[index];
+
+                    bool is_searched = false;
+                    for(int k=0; k<searched_cells_counter; k++)
+                    {
+                        if(neighbour_cell == searched_cells[k])
+                        {
+                            is_searched = true;
+                        }
+                    }
+
+                    if(is_searched)
+                        continue;
  
                     bool inside_neighbour_cell = Is_Point_In_Cell_CUDA(neighbour_cell,
                                                     d_m_cell_vertices_x,
@@ -654,7 +670,8 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                                                     d_m_particle_position_x[tid],
                                                     d_m_particle_position_y[tid],
                                                     d_m_particle_position_z[tid]);
-                    
+                    searched_cells_counter ++;
+                    searched_cells[searched_cells_counter] = neighbour_cell; // Add the cell to the searched cells list
                     if(inside_neighbour_cell)
                     {
                         inside_domain = true;
@@ -664,14 +681,20 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                         break;
                     }
 
-                    // Add the neighbour cell to the queue
-                    queue_end_cursor += 1;
-                    queue_cell_no[queue_end_cursor] = neighbour_cell;
-                    queue_depth[queue_end_cursor] = current_depth + 1;
+                    if(current_depth+1 < search_depth)
+                    {
+                        
 
-                    // printf("GPU : tid:  %d , neighbour_cell: %d, current_depth:  %d, queue_end_cursor: %d \n", tid, neighbour_cell, queue_depth[queue_end_cursor], queue_end_cursor);
+                        // Add the neighbour cell to the queue
+                        queue_end_cursor += 1;
+                        queue_cell_no[queue_end_cursor] = neighbour_cell;
+                        queue_depth[queue_end_cursor] = current_depth + 1;
+
+                        // printf("GPU : tid:  %d , neighbour_cell: %d, current_depth:  %d, queue_end_cursor: %d \n", tid, neighbour_cell, queue_depth[queue_end_cursor], queue_end_cursor);
+                    }
 
                 }
+            }
         }
 
         // for (int cell_id = 0; cell_id < n_cells; cell_id++)
@@ -748,11 +771,11 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                 // FUTURE TODO : May be add a check to see if the neighbouring cells have boundary DOF's or boundary faces
                 else  // Does not have a Boundary face nor a boundary DOF
                 {
-										// Mark the particle as deposited , for book keeping purposes
-										d_m_is_deposited_particle[tid] = 1;
+                    // Mark the particle as deposited , for book keeping purposes
+                    d_m_is_deposited_particle[tid] = 1;
 
-										// Mark the particle as error 
-										d_m_is_error_particle[tid] = 1;
+                    // Mark the particle as error 
+                    d_m_is_error_particle[tid] = 1;
                     return;
                 }
             }
@@ -901,6 +924,8 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
 
 }
 
+
+
 __global__ void DetectStagnantParticles_CUDA(double* d_m_particle_position_x,
                                              double* d_m_particle_position_y,
                                              double* d_m_particle_position_z,
@@ -908,24 +933,38 @@ __global__ void DetectStagnantParticles_CUDA(double* d_m_particle_position_x,
                                              double* d_m_particle_stagnant_position_y,
                                              double* d_m_particle_stagnant_position_z,
                                              int* d_m_is_stagnant_particle,
-                                             int* d_m_is_deposited_particle)
+                                             int* d_m_is_deposited_particle,
+                                             int* d_m_is_error_particle,
+                                             int* d_m_is_boundary_cell,
+                                             int n_ParticlesReleased)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
-		if (d_m_is_deposited_particle[tid])
-				return;
+    if(tid >= n_ParticlesReleased)     // Thread id check for checking if the threads spanned are more than the number of particles released
+        return;
+    
+    if (d_m_is_deposited_particle[tid] || d_m_is_stagnant_particle[tid])  // Return if the particle is already deposited or stagnant
+        return;
 
-		double distance = sqrt(pow(d_m_particle_position_x[tid] - d_m_particle_stagnant_position_x[tid], 2) +
-													 pow(d_m_particle_position_y[tid] - d_m_particle_stagnant_position_y[tid], 2) +
-													 pow(d_m_particle_position_z[tid] - d_m_particle_stagnant_position_z[tid], 2));
+    double distance = sqrt(pow(d_m_particle_position_x[tid] - d_m_particle_stagnant_position_x[tid], 2) +
+                            pow(d_m_particle_position_y[tid] - d_m_particle_stagnant_position_y[tid], 2) +
+                            pow(d_m_particle_position_z[tid] - d_m_particle_stagnant_position_z[tid], 2));
 		d_m_particle_stagnant_position_x[tid] = d_m_particle_position_x[tid];
 		d_m_particle_stagnant_position_y[tid] = d_m_particle_position_y[tid];
 		d_m_particle_stagnant_position_z[tid] = d_m_particle_position_z[tid];
 
-		if (distance >= 0.0001) 
+		if (distance >= 0.00001) // Non Stagnant - Return the Particle
 			return;
+        else
+        {
+            // Mark the particle as deposited and stagnant
+            d_m_is_deposited_particle[tid] = 1;
+            d_m_is_stagnant_particle[tid] = 1;
 
-		d_m_is_stagnant_particle[tid] = 1;
-		d_m_is_deposited_particle[tid] = 1;
+            if(d_m_is_boundary_cell[tid] < 0) // Then the particle is stagnant within non bound cell, Mark as error
+            {
+                d_m_is_error_particle[tid] = 1;
+            }
+        }
 }
 
 void TParticles::SetupCudaDataStructures(TFESpace3D* fespace)
@@ -1448,10 +1487,10 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace)
 
 // Setup function to transfer velocity data at every time step
 void TParticles::SetupVelocityValues(double *velocity_x_data,
-																		 double *velocity_y_data,
-																		 double *velocity_z_data,
-																		 int N_particles_released,
-																		 int N_DOF)
+                                    double *velocity_y_data,
+                                    double *velocity_z_data,
+                                    int N_particles_released,
+                                    int N_DOF)
 {
     // Copy the velocity values
     checkCudaErrors(cudaMemcpy(d_m_velocity_nodal_values_x, velocity_x_data, N_DOF * sizeof(double), cudaMemcpyHostToDevice));
@@ -1468,7 +1507,7 @@ void TParticles::CD_CC_Cuda()
 // Host wrapper for performing the velocity interpolation at every time step
 void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles_released,int N_DOF,int N_Cells)
 {
-    int MAX_THREAD_PER_BLOCK =32;
+    int MAX_THREAD_PER_BLOCK = 128;
     int N_threads; 
 
     if(N_Particles_released >= MAX_THREAD_PER_BLOCK) 
@@ -1560,7 +1599,8 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
     cudaEventSynchronize(stop);
     float elapsedTime;
     cudaEventElapsedTime(&elapsedTime, start, stop);
-    cout << "[INFORMATION] Time taken for the kernel to execute : " << elapsedTime << " ms" << endl;
+
+    // cout << "[INFORMATION] Time taken for the kernel to execute : " << elapsedTime << " ms" << endl;
 
     // record the time taken for the transfer of data from device to host
     cudaEvent_t start1, stop1;
@@ -1606,14 +1646,14 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
 
     float elapsedTime1;
     cudaEventElapsedTime(&elapsedTime1, start1, stop1);
-    cout << "[INFORMATION] Time taken for the data transfer from device to host : " << elapsedTime1 << " ms" << endl;
+    // cout << "[INFORMATION] Time taken for the data transfer from device to host : " << elapsedTime1 << " ms" << endl;
 
 }
 
 // Host wrapper for detecting stagnant particles
 void TParticles::DetectStagnantParticlesHostWrapper(int N_Particles_released)
 {
-    int MAX_THREAD_PER_BLOCK = 128;
+    int MAX_THREAD_PER_BLOCK = 32;
     int N_threads; 
 
     if(N_Particles_released >= MAX_THREAD_PER_BLOCK) 
@@ -1633,13 +1673,16 @@ void TParticles::DetectStagnantParticlesHostWrapper(int N_Particles_released)
     cudaEventRecord(start, 0);
 
     DetectStagnantParticles_CUDA<<<dimGrid,dimBlock>>>(d_m_particle_position_x,
-																											 d_m_particle_position_y,
-																											 d_m_particle_position_z,
-																											 d_m_particle_stagnant_position_x,
-																											 d_m_particle_stagnant_position_y,
-																											 d_m_particle_stagnant_position_z,
-																											 d_m_is_stagnant_particle,
-																											 d_m_is_deposited_particle);
+                                                    d_m_particle_position_y,
+                                                    d_m_particle_position_z,
+                                                    d_m_particle_stagnant_position_x,
+                                                    d_m_particle_stagnant_position_y,
+                                                    d_m_particle_stagnant_position_z,
+                                                    d_m_is_stagnant_particle,
+                                                    d_m_is_deposited_particle,
+                                                    d_m_is_error_particle,
+                                                    d_m_is_boundary_cell,
+                                                    m_ParticlesReleased);
 
     cudaDeviceSynchronize();
 

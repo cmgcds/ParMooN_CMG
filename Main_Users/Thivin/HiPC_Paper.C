@@ -739,11 +739,9 @@ int main(int argc, char *argv[])
 				if (rank == 0)
 #endif
 				{
-					if(StartNo % 100 == 0)
-					{
-						OutPut(endl << "CURRENT TIME: ");
-						OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
-					}
+					OutPut(endl
+						   << "CURRENT TIME: ");
+					OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
 				}
 
 
@@ -757,10 +755,9 @@ int main(int argc, char *argv[])
             {
 				// Considering the simulation has saturated upto 1000 time  steps, If the particle moves more than 
 				int lineNo=0;
-				if(StartNo >  16000)
-					  StartNo = 16000;
-				if(StartNo % 100 == 0)
-					cout << "Start No : " << StartNo <<endl;
+				if(StartNo >  12000)
+					  StartNo = 12000;
+				cout << "Start No : " << StartNo <<endl;
 
 				// Read from the CSV value into solution array 
 				std::string prefix(argv[3]); 
@@ -768,7 +765,8 @@ int main(int argc, char *argv[])
 				std::string baseFileName = "Solution_";
 
 				// To ensure that a single solution is read for 10 time steps
-				int StartNo_for_reading_file = StartNo/10 + 2;
+				// int StartNo_for_reading_file = StartNo/10 + 2;    // For using same solution for 10 time steps
+				int StartNo_for_reading_file = StartNo;    // For using same solution for 10 time steps
 
 				// Save the u Solution, the number of char in the img should be 6, remaing space is padded by zeros
 				int padding = 6 - std::to_string(StartNo_for_reading_file).length();
@@ -780,8 +778,7 @@ int main(int argc, char *argv[])
 				std::string pFileName = prefix + baseFileName + "p_"+ std::string(padding, '0') + std::to_string(StartNo_for_reading_file) + ".bin";
 
 				std::string filename = prefix + std::to_string(StartNo) + ".bin";
-				if(StartNo % 100 == 0)
-					std::cout << "Reading from file: " << u1FileName << std::endl;
+				std::cout << "Reading from file: " << u1FileName << std::endl;
 
 				// Read the file into the solution array
 				std::ifstream u1File(u1FileName, std::ios::in | std::ios::binary);
@@ -811,59 +808,9 @@ int main(int argc, char *argv[])
 				u3File.close();
 				pFile.close();
 
-				// // print the first three and last three values of the solution
-				// cout << "u1FileName: " << u1FileName << endl;
-				// cout << "sol[0]: " << sol[0] << endl;
-				// cout << "sol[1]: " << sol[1] << endl;
-				// cout << "sol[2]: " << sol[2] << endl;
-				// cout << "sol[N_U-3]: " << sol[N_U-3] << endl;
-				// cout << "sol[N_U-2]: " << sol[N_U-2] << endl;
-				// cout << "sol[N_U-1]: " << sol[N_U-1] << endl;
-
-				// // Print the norm of the solution
-				// cout << "Norm of the solution: " << sqrt(Ddot(N_U,sol,sol)) << endl;
-
-
-				// // print the first three and last three values of the solution u2
-				// cout <<"u2FileName: "  << endl;
-				// cout << "sol[N_U]: " << sol[N_U] << endl;
-				// cout << "sol[N_U+1]: " << sol[N_U+1] << endl;
-				// cout << "sol[N_U+2]: " << sol[N_U+2] << endl;
-				// cout << "sol[2*N_U-3]: " << sol[2*N_U-3] << endl;
-				// cout << "sol[2*N_U-2]: " << sol[2*N_U-2] << endl;
-				// cout << "sol[2*N_U-1]: " << sol[2*N_U-1] << endl;
-
-				// // Print the norm of the solution u2
-				// cout << "Norm of the solution u2: " << sqrt(Ddot(N_U,sol+N_U,sol+N_U)) << endl;
-
-
-				// // print the first three and last three values of the solution u3
-				// cout <<"u3FileName: "  << endl;
-				// cout << "sol[2*N_U]: " << sol[2*N_U] << endl;
-				// cout << "sol[2*N_U+1]: " << sol[2*N_U+1] << endl;
-				// cout << "sol[2*N_U+2]: " << sol[2*N_U+2] << endl;
-				// cout << "sol[3*N_U-3]: " << sol[3*N_U-3] << endl;
-				// cout << "sol[3*N_U-2]: " << sol[3*N_U-2] << endl;
-				// cout << "sol[3*N_U-1]: " << sol[3*N_U-1] << endl;
-
-				// // Print the norm of the solution u3
-				// cout << "Norm of the solution u3: " << sqrt(Ddot(N_U,sol+2*N_U,sol+2*N_U)) << endl;
-
-
-				// // print the first three and last three values of the solution p
-				// cout <<"pFileName: " << pFileName << endl;
-				// cout << "sol[3*N_U]: " << sol[3*N_U] << endl;
-				// cout << "sol[3*N_U+1]: " << sol[3*N_U+1] << endl;
-				// cout << "sol[3*N_U+2]: " << sol[3*N_U+2] << endl;
-				// cout << "sol[3*N_U + N_P - 3]: " << sol[3*N_U + N_P - 3] << endl;
-				// cout << "sol[3*N_U + N_P - 2]: " << sol[3*N_U + N_P - 2] << endl;
-				// cout << "sol[3*N_U + N_P - 1]: " << sol[3*N_U + N_P - 1] << endl;
-
-				// // Print the norm of the solution p
-				// cout << "Norm of the solution p: " << sqrt(Ddot(N_P,sol+3*N_U,sol+3*N_U)) << endl;
 
 				for (int i=0 ; i < 3*N_U; i++)
-						sol[i] *= 0.79577;
+						sol[i] *= 3.183098;
 
 				if (TDatabase::ParamDB->WRITE_VTK)
 				{
@@ -887,59 +834,6 @@ int main(int argc, char *argv[])
 
                     //Compute the Particle Displacement for the FTLE values 
 
-
-										// cout << "2: StartNo -> " << StartNo << " img -> " << img << " m -> " << m << endl;
-										// for (int i = 0; i < 10; i++) {
-										// 	cout << "sol[" << i << "] -> "
-										// 			 << particleObject->position_X[i] << ", "
-										// 			 << particleObject->position_Y[i] << ", "
-										// 			 << particleObject->position_X[i]
-										// 			 << endl;
-										// 	cout << "velocity[" << i << "] -> "
-										// 			 << particleObject->velocityX[i] << ", "
-										// 			 << particleObject->velocityY[i] << ", "
-										// 			 << particleObject->velocityZ[i]
-										// 			 << endl;
-										// }
-										// // print norm of the vector position_X and position_Y and position_Z
-										// double normX = 0.0;
-										// for (int i = 0; i < particleObject->position_X.size(); i++) {
-										// 	normX += particleObject->position_X[i] * particleObject->position_X[i];
-										// }
-										// cout << "normX -> " << sqrt(normX) << endl;
-
-										// double normY = 0.0;
-										// for (int i = 0; i < particleObject->position_Y.size(); i++) {
-										// 	normY += particleObject->position_Y[i] * particleObject->position_Y[i];
-										// }
-										// cout << "normY -> " << sqrt(normY) << endl;
-
-										// double normZ = 0.0;
-										// for (int i = 0; i < particleObject->position_Z.size(); i++) {
-										// 	normZ += particleObject->position_Z[i] * particleObject->position_Z[i];
-										// }
-										// cout << "normZ -> " << sqrt(normZ) << endl;
-
-										// // print norm of the vector velocityX and velocityY and velocityZ
-										// double normVX = 0.0;
-										// for (int i = 0; i < particleObject->velocityX.size(); i++) {
-										// 	normVX += particleObject->velocityX[i] * particleObject->velocityX[i];
-										// }
-										// cout << "normVX -> " << sqrt(normVX) << endl;
-
-										// double normVY = 0.0;
-										// for (int i = 0; i < particleObject->velocityY.size(); i++) {
-										// 	normVY += particleObject->velocityY[i] * particleObject->velocityY[i];
-										// }
-										// cout << "normVY -> " << sqrt(normVY) << endl;
-
-										// double normVZ = 0.0;
-										// for (int i = 0; i < particleObject->velocityZ.size(); i++) {
-										// 	normVZ += particleObject->velocityZ[i] * particleObject->velocityZ[i];
-										// }
-										// cout << "normVZ -> " << sqrt(normVZ) << endl;
-										
-
                     particleObject->interpolateNewVelocity_Parallel(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0],Velocity_FeSpace[0]);
 
 										std::string old_str = std::to_string(StartNo);
@@ -947,19 +841,18 @@ int main(int argc, char *argv[])
 										auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
 										std::string name =  "siminhale_" + new_str + ".csv";
 
-										if (m % 100 == 0) {
+										if (m % 10 == 0) {
 											particleObject->OutputFile(name.c_str());
 										}
 
-										if (m >= 5000 && m % 4000 == 0)
+										if (m >= 5000 && m % 200 == 0)
 											particleObject->detectStagnantParticles();
 
 										int depositedCount = 0;
 										for (int i = 0; i < particleObject->isParticleDeposited.size(); i++) {
 											if (particleObject->isParticleDeposited[i]) depositedCount++;
 										}
-
-										if (depositedCount >= 0.995 * numPart) {
+										if (depositedCount == numPart) {
 											cout << "All particles deposited/escaped" << endl;
 											cout << "Total particles: " << depositedCount << endl;
 											cout << "Particles deposited: " << depositedCount - particleObject->m_EscapedParticlesCount << endl;
@@ -967,9 +860,6 @@ int main(int argc, char *argv[])
 											cout << "Error particles: " << particleObject->m_ErrorParticlesCount << endl;
 											cout << "Ghost particles: " << particleObject->m_ghostParticlesCount << endl;
 											cout << "Stagnant particles: " << particleObject->m_StagnantParticlesCount << endl;
-
-											particleObject->OutputFile(name.c_str());
-
 											break;
 										}
                 }

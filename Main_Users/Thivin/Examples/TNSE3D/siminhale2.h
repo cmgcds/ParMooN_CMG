@@ -184,6 +184,9 @@ void LinCoeffs(int n_points, double *X, double *Y, double *Z,
 			   double **parameters, double **coeffs)
 {
 	static double eps = 1. / TDatabase::ParamDB->RE_NR;
+	double velocityScale = TDatabase::ParamDB->VELOCITY_SCALE;
+	double lengthScale = TDatabase::ParamDB->LENGTH_SCALE;
+	double froudeNo = (velocityScale * velocityScale) / (9.81 * lengthScale);
 	int i;
 	double *coeff, x, y, z;
 	for (i = 0; i < n_points; i++)
@@ -191,8 +194,8 @@ void LinCoeffs(int n_points, double *X, double *Y, double *Z,
 		coeff = coeffs[i];
 
 		coeff[0] = eps;
-		coeff[1] = 0;						 // f1
-		coeff[2] = 0;						 // -49050000; // ;  // f2:
-		coeff[3] = 1.0 / 3.22761; // f3
+		coeff[1] = 0;						   // f1
+		coeff[2] = 0;						   // f2
+		coeff[3] = 1.0 / froudeNo; // f3
 	}
 }

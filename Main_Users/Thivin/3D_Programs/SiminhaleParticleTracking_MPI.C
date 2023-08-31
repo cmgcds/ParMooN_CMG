@@ -54,23 +54,7 @@ double timeC = 0;
 // =======================================================================
 // include current example
 // =======================================================================
-//  #include "../Examples/TNSE_3D/DrivenCavity3D.h"
-//  #include "../Examples/TNSE_3D/Aerofoil_3D.h"
-//   #include "../Examples/TNSE_3D/Aerofoil_3D_slip.h"
-//   #include "../Examples/TNSE_3D/Aerofoil_3D_ALE_slip.h"
-//   #include "../Examples/TNSE_3D/Hole3D.h"
-//  #include "../Examples/TNSE_3D/AnsatzLinConst.h"
-//  #include "../Examples/TNSE_3D/Bsp3.h"
  #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
-// #include "/home/sashi/ParMooN_Thivin/ParMooN_CMG/MainUsers/Thivin/SIMINHALE/siminhale.h"
-
-//  #include "../Examples/TNSE_3D/Channel3D_volker.h"
-// #include "../Examples/TNSE_3D/Channel3D_slip.h"
-// #include "../Examples/TNSE_3D/test_slip.h"
-// #include "../Examples/TNSE_3D/ChannelObstacle3D.h"
-// #include "../Examples/TNSE_3D/ChannelObstacle3D_slip.h"
-//#include "../Examples/TNSE_3D/ChannelObstacle3D_slip_volker.h"
-// #include "../Examples/TNSE_3D/ChannelObstacle3D_freeslip.h"
 
 void printall_array(double *Arr1, double *Arr2, int SizeOfArr)
 {
@@ -197,9 +181,7 @@ int main(int argc, char *argv[])
 		Domain = new TDomain(argv[1]);
 
 		profiling = TDatabase::ParamDB->timeprofiling;
-        profiling = 0;
-
-		// omp_set_num_threads(42);
+		profiling = 0;
 
 		if (profiling)
 		{
@@ -581,15 +563,9 @@ int main(int argc, char *argv[])
 		}
 
 		// interpolate initial solution
-		//  interpolate the initial solution
 		u1->Interpolate(InitialU1);
 		u2->Interpolate(InitialU2);
 		u3->Interpolate(InitialU3);
-
-		
-
-
-
 
 		// assemble M, A, rhs matrices at time t=0 with initia sol and rhs
 		//     cout<<"start printing"<<endl;
@@ -697,7 +673,7 @@ int main(int argc, char *argv[])
     cout << " Particles Initialised " <<endl;
 
     particleObject->OutputFile("siminhale_0000.csv");
-	img = StartNo;
+	  img = StartNo;
     m = StartNo - 2;
 
 	// time loop starts
@@ -734,64 +710,48 @@ int main(int argc, char *argv[])
 				}
 				tau = TDatabase::TimeDB->CURRENTTIMESTEPLENGTH;
 				TDatabase::TimeDB->CURRENTTIME += tau;
-
-#ifdef _MPI
-				if (rank == 0)
-#endif
-				{
-					if(StartNo % 100 == 0)
-					{
-						OutPut(endl
-						   << "CURRENT TIME: ");
-					OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
-					}
-					
-				}
-
-
-
 			}
+		}
 
-        }
 #ifdef _SMPI
 		if (rank == 0)
 #endif
-            {
+		{
 				// Considering the simulation has saturated upto 1000 time  steps, If the particle moves more than 
-				int lineNo=0;
-				if(StartNo >  24000)
-					  StartNo =24000 ;
-				
-				if(StartNo % 100 == 0)
-					cout << "Start No : " << StartNo <<endl;
+			  int timeSplit = TDatabase::TimeDB->TIMESTEPSPLIT;
 
 				// Read from the CSV value into solution array 
 				std::string prefix(argv[3]); 
-                
 				std::string baseFileName = "Solution_";
 
-				// To ensure that a single solution is read for 2 time steps
-				int StartNo_for_reading_file = StartNo/2 + 2;    // For using same solution for 10 time steps
-				// int StartNo_for_reading_file = StartNo;    // For using same solution for 10 time steps
+				int effectiveStartNo = StartNo/timeSplit + 2;
+				if(effectiveStartNo > 12000)
+					  effectiveStartNo = 12000;
 
 				// Save the u Solution, the number of char in the img should be 6, remaing space is padded by zeros
-				int padding = 6 - std::to_string(StartNo_for_reading_file).length();
+				int padding = 6 - std::to_string(effectiveStartNo).length();
 
 				// create the file name
-				std::string u1FileName = prefix + baseFileName + "u_" + std::string(padding, '0') + std::to_string(StartNo_for_reading_file) + ".bin";
-				std::string u2FileName = prefix + baseFileName + "v_"+ std::string(padding, '0') + std::to_string(StartNo_for_reading_file) + ".bin";
-				std::string u3FileName = prefix + baseFileName + "w_"+ std::string(padding, '0') + std::to_string(StartNo_for_reading_file) + ".bin";
-				std::string pFileName = prefix + baseFileName + "p_"+ std::string(padding, '0') + std::to_string(StartNo_for_reading_file) + ".bin";
+				std::string u1FileName = prefix + baseFileName + "u_" + std::string(padding, '0') + std::to_string(effectiveStartNo) + ".bin";
+				std::string u2FileName = prefix + baseFileName + "v_" + std::string(padding, '0') + std::to_string(effectiveStartNo) + ".bin";
+				std::string u3FileName = prefix + baseFileName + "w_" + std::string(padding, '0') + std::to_string(effectiveStartNo) + ".bin";
+				std::string pFileName  = prefix + baseFileName + "p_" + std::string(padding, '0') + std::to_string(effectiveStartNo) + ".bin";
+				std::string filename   = prefix + std::to_string(effectiveStartNo) + ".bin";
 
-				std::string filename = prefix + std::to_string(StartNo) + ".bin";
-				if(StartNo % 100 == 0)
+				
+				if(StartNo % (10 * timeSplit) == 0)
+				{
+					OutPut(endl << "CURRENT TIME: ");
+					OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
+					cout << "Start No : " << StartNo <<endl;
 					std::cout << "Reading from file: " << u1FileName << std::endl;
+				}
 
 				// Read the file into the solution array
 				std::ifstream u1File(u1FileName, std::ios::in | std::ios::binary);
 				std::ifstream u2File(u2FileName, std::ios::in | std::ios::binary);
 				std::ifstream u3File(u3FileName, std::ios::in | std::ios::binary);
-				std::ifstream pFile(pFileName, std::ios::in | std::ios::binary);
+				std::ifstream  pFile( pFileName, std::ios::in | std::ios::binary);
 
 				// throw an error if the file is not found
 				if (!u1File.is_open())
@@ -807,7 +767,7 @@ int main(int argc, char *argv[])
 				u1File.read((char *)sol, sizeof(double) * N_U);
 				u2File.read((char *)sol + sizeof(double) * N_U, sizeof(double) * N_U);
 				u3File.read((char *)sol + sizeof(double) * 2 * N_U, sizeof(double) * N_U);
-				pFile.read((char *)sol + sizeof(double) * 3 * N_U, sizeof(double) * N_P);
+				 pFile.read((char *)sol + sizeof(double) * 3 * N_U, sizeof(double) * N_P);
 
 				// Close the file
 				u1File.close();
@@ -866,8 +826,9 @@ int main(int argc, char *argv[])
 				// // Print the norm of the solution p
 				// cout << "Norm of the solution p: " << sqrt(Ddot(N_P,sol+3*N_U,sol+3*N_U)) << endl;
 
+				// double velocityScale = (2e-4 * TDatabase::ParamDB->FLUID_VOLUME_VELOCITY) / (3 * 3.14159265359 * TDatabase::ParamDB->LENGTH_SCALE * TDatabse::ParamDB->LENGTH_SCALE)
 				for (int i=0 ; i < 3*N_U; i++)
-						sol[i] *= 3.183098;
+					sol[i] *= TDatabase::ParamDB->VELOCITY_SCALE;
 
 				if (TDatabase::ParamDB->WRITE_VTK)
 				{
@@ -885,13 +846,8 @@ int main(int argc, char *argv[])
 					Output->WriteVtk(os.str().c_str());
 				}
 				
-                if (m >= 20 )  // To start the interpolation after 20 time steps ( to ensure that flow has propogated )
-                {
-                    // cout << " Interpolation Started" <<endl;
-
-                    //Compute the Particle Displacement for the FTLE values 
-
-
+				if (m >= 20 * timeSplit )  // To start the interpolation after 20 time steps ( to ensure that flow has propogated )
+				{
 					// cout << "2: StartNo -> " << StartNo << " img -> " << img << " m -> " << m << endl;
 					// for (int i = 0; i < 10; i++) {
 					// 	cout << "sol[" << i << "] -> "
@@ -943,19 +899,18 @@ int main(int argc, char *argv[])
 					// }
 					// cout << "normVZ -> " << sqrt(normVZ) << endl;
 					
-
 					particleObject->interpolateNewVelocity_Parallel(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0],Velocity_FeSpace[0]);
 
-					std::string old_str = std::to_string(StartNo);
+					std::string old_str = std::to_string(img);
 					size_t n_zero = 6;
 					auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
 					std::string name =  "siminhale_" + new_str + ".csv";
 
-					if (m % 100 == 0) {
+					if (m % (10 * timeSplit) == 0) {
 						particleObject->OutputFile(name.c_str());
 					}
 
-					if (m >= 5000 && m % 4000 == 0)
+					if (m >= 5000 * timeSplit && m % (2000 * timeSplit) == 0)
 						particleObject->detectStagnantParticles();
 
 					int depositedCount = 0;
@@ -972,18 +927,11 @@ int main(int argc, char *argv[])
 						cout << "Stagnant particles: " << particleObject->m_StagnantParticlesCount << endl;
 						break;
 					}
-                }
-
-								// Increment the file number
-								StartNo++;
-								img++;
-            }
-
-
-		
-
-	} // while(TDatabase::TimeDB->CURRENTTIME< e
-
+				}
+				StartNo++;
+				img++;
+		}
+	}
 	CloseFiles();
 #ifdef _MPI
 	MPI_Finalize();

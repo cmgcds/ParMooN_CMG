@@ -293,19 +293,19 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
 void TParticles::InitialiseParticleParameters(int N_Particles_)
 {
     // Density of the fluid
-    m_fluid_density = 1.1385; // kg/m^3
+		m_fluid_density = TDatabase::ParamDB->FLUID_DENSITY; // kg/m^3
 
     // Dynamic Viscosity of the fluid
-    m_fluid_dynamic_viscosity = 0.00001893; // Pa.s
+    m_fluid_dynamic_viscosity = TDatabase::ParamDB->FLUID_VISCOSITY; // Pa.s
 
     // mean free path
     m_lambda = 0.00000007; // m
 
     // resize particle diameter
-    m_particle_diameter.resize(N_Particles_, 4.3e-6); // earlier 10e-6   // [IMPORTANT] THE VALUE NEEDS TO BE CHANGED BELOW
+    m_particle_diameter.resize(N_Particles_, TDatabase::ParamDB->PARTICLE_DIAMETER);
 
      // resize density
-    m_particle_density.resize(N_Particles_, 914); // earlier 1266        // [IMPORTANT] THE VALUE NEEDS TO BE CHANGED BELOW
+    m_particle_density.resize(N_Particles_, TDatabase::ParamDB->PARTICLE_DENSITY);
 
     // Provide the mass fraction of the particles
     // f propylene glycol, glycerol, nicotine and water with their mass fractions being 52.6%, 28.1%, 1.9%, and 17.4%
@@ -317,26 +317,23 @@ void TParticles::InitialiseParticleParameters(int N_Particles_)
     std::vector<double> density_array = {1032.56, 1261, 1010, 1000};
 
     // Set all the particle sizes bsed on the function 
-    std::string particle_size_distribution = "monodisperse";  // or "monodisperse"
+    std::string particle_size_distribution = TDatabase::ParamDB->IS_PARTICLE_MONODISPERSE ? "monodisperse" : "polydisperse";
 
     // Set the polydisperse type
     // Fused will generate all particles with same density equivalent to the density difference of all particles. 
     // Seperate will generate particles with different densities
-    std::string polydisperse_type = "fused"; // or "fused"
+    std::string polydisperse_type = TDatabase::ParamDB->IS_PARTICLE_FUSED ? "fused" : "seperate";
 
     // check if the string equals to polydisperse
     if(particle_size_distribution == "polydisperse")
     {
         TParticles::GenerateParticleDiameterAndDensity(m_particle_diameter, m_particle_density, mass_fraction, density_array, 0.307 * 1e-6, 1.69* 1e-6);
 
-        
-
         if (polydisperse_type == "fused") {
             double density_sum = 0.0;
             for (int i = 0; i < mass_fraction.size(); i++) {
                 density_sum += mass_fraction[i] * density_array[i];
             }
-
             for (int i = 0; i < m_particle_density.size(); i++) {
                 m_particle_density[i] = density_sum;
             }
@@ -345,20 +342,16 @@ void TParticles::InitialiseParticleParameters(int N_Particles_)
     else
     {
         // HARDCODED_THIVIN For mono disperse particle with single density 
-        double density_mono = 1096; // DEHS from sininhale paper
+			double density_mono = TDatabase::ParamDB->PARTICLE_DENSITY;
         for (int i = 0; i < m_particle_density.size(); i++) {
             m_particle_density[i] = density_mono;
         }
-
         // HARDCODED_THIVIN particle size
-        double particle_size = 0.4e-6;
+        double particle_size = TDatabase::ParamDB->PARTICLE_DIAMETER;
         for (int i = 0; i < m_particle_diameter.size(); i++) {
             m_particle_diameter[i] = particle_size;
-            
         }
     }
-
-    
     
     // --- FOr Polydisperse Fused particle ---- //
     // rewrite all particle density to mass_fraction * density
@@ -1603,18 +1596,16 @@ void TParticles::detectStagnantParticles() {
 void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *VelocityFEVectFunction, TFESpace3D* fespace)
 {
     // Constants required for computation
-    double densityFluid = 1.1385;
-    double densityParticle = 914; // earlier 1266
+		double densityFluid = TDatabase::ParamDB->FLUID_DENSITY;
+    double densityParticle = TDatabase::ParamDB->PARTICLE_DENSITY;
     double g_x = 0;
     double g_y = 0;
-    // double g_z = 1.0 / 51.6414;
     double g_z = 9.81;
 
-    double dynamicViscosityFluid = 0.00001893;
+    double dynamicViscosityFluid = TDatabase::ParamDB->FLUID_VISCOSITY;
     double lambda = 0.00000007;
 
-    // Particle Diameter = 8 Micrometers
-    double particleDiameter = 2.5e-6; // earlier 4e-6
+    double particleDiameter = TDatabase::ParamDB->PARTICLE_DIAMETER;
 
     double mass_particle = (Pi * pow(particleDiameter, 3) * densityParticle) / 6;
     double mass_div_dia = mass_particle / particleDiameter;
@@ -1647,9 +1638,9 @@ void TParticles::interpolateNewVelocity(double timeStep, TFEVectFunct3D *Velocit
     };
 
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
-    int numParticlesReleasedPerTimeStep = 500;
+    int numParticlesReleasedPerTimeStep = TDatabase::ParamDB->PARTICLE_RELEASE_NO;
     int timeStepCounter = 0;
-    int timeStepInterval = 10;   // Release particles every n steps
+    int timeStepInterval = TDatabase::ParamDB->PARTICLE_RELEASE_INTERVAL;
     
     int actualTimeStep = (int) (TDatabase::TimeDB->CURRENTTIME / TDatabase::TimeDB->TIMESTEPLENGTH);
 
@@ -1989,9 +1980,9 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 {
 
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
-    int numParticlesReleasedPerTimeStep = 5000;
+    int numParticlesReleasedPerTimeStep = TDatabase::ParamDB->PARTICLE_RELEASE_NO;
     int timeStepCounter = 0;
-    int timeStepInterval = 100;   // Release particles every n steps
+    int timeStepInterval = TDatabase::ParamDB->PARTICLE_RELEASE_INTERVAL;
     
     int actualTimeStep = (int) (TDatabase::TimeDB->CURRENTTIME / TDatabase::TimeDB->TIMESTEPLENGTH);
 
@@ -2044,7 +2035,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     m_StagnantParticlesCount = std::count(isStagnantParticle.begin(), isStagnantParticle.end(), 1);
 
     // Enable printing for the Output console once every 100 timesteps
-    if((actualTimeStep+1) % 100 ==0)
+    if((actualTimeStep+1) % (10 * TDatabase::TimeDB->TIMESTEPSPLIT) == 0)
     {
         double x_difference_position =  diff_dot_product(position_X,position_X_old);
         double y_difference_position =  diff_dot_product(position_Y,position_Y_old);
@@ -2059,37 +2050,27 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         std::cout << std::setw(50) << std::left << "Ghost particles Accumulated" << " : " << std::setw(10) << std::right << m_ghostParticlesCount << std::endl;
         std::cout << std::setw(50) << std::left << "Stagnant particles Accumulated" << " : " << std::setw(10) << std::right << m_StagnantParticlesCount << std::endl;
     }
-    
-
-
-    // cout << "No of particles Deposited or Escaped: " << depositedCount << endl;
-    // cout << "percentage of particles Not Deposited : " << (double(N_Particles - depositedCount) / (double)N_Particles) * 100 << " % " << endl;
-    // cout << "Error particles Accumulaated : " << m_ErrorParticlesCount << endl;
 }
 #else
 void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D *VelocityFEVectFunction, TFESpace3D* fespace)
 {
-
     // time the function
     auto start = std::chrono::high_resolution_clock::now();
 
     // Constants required for computation
-    double densityFluid = 1.1385;
+    double densityFluid = TDatabase::ParamDB->FLUID_DENSITY;
     double g_x = 0;
     double g_y = 0;
     double g_z = 9.81;
-    double dynamicViscosityFluid = 0.00001893;
+    double dynamicViscosityFluid = TDatabase::ParamDB->FLUID_VISCOSITY;
     double lambda = 0.00000007;
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
-    int numParticlesReleasedPerTimeStep = 50000;
+    int numParticlesReleasedPerTimeStep = TDatabase::ParamDB->PARTICLE_RELEASE_NO;
     int timeStepCounter = 0;
-    int timeStepInterval = 10;   // Release particles every n steps
+    int timeStepInterval = TDatabase::ParamDB->PARTICLE_RELEASE_INTERVAL;
 
     // Search Depth
     int searchDepth = 3;
-
-
-
 		auto inertialConstant = [&](double densityParticle, double particleDiameter)
 		{ return (3. / 4.) * (densityFluid / densityParticle) * (1 / particleDiameter); };
 
@@ -2113,15 +2094,10 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
         double Re_Particle = densityFluid * particleDiameter * fabs(fluidVel - particleVel) / dynamicViscosityFluid;
         double CD = (24 / Re_Particle) * (1 + 0.15 * pow(Re_Particle, 0.687));
         double CC = 1.0 + ((2 * lambda) / particleDiameter) * (1.257 + 0.4 * exp(-1.0 * ((1.1 * particleDiameter) / (2 * lambda))));
-        // CC = 1.0;
         return CD/CC;
-        // return 1;
     };
-
-
     
     int actualTimeStep = (int) (TDatabase::TimeDB->CURRENTTIME / TDatabase::TimeDB->TIMESTEPLENGTH);
-
 
     // release at first time step and at every 10th time step
     if(actualTimeStep % timeStepInterval == 0  || (m_ParticlesReleased ==0))
@@ -2141,9 +2117,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
     TFEFunction3D *FEFuncVelocityY = VelocityFEVectFunction->GetComponent(1);
     TFEFunction3D *FEFuncVelocityZ = VelocityFEVectFunction->GetComponent(2);
 
-
     cout << "PART RELEASED : " << m_ParticlesReleased <<endl;
-
     
     // Open a file to write the data based on the actual time step
     // std::string filename = "Debug_ParticleData_" + std::to_string(actualTimeStep) + ".csv";

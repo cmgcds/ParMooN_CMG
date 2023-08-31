@@ -700,6 +700,8 @@ int main(int argc, char *argv[])
 	img = StartNo;
     m = StartNo - 2;
 
+
+
 	// time loop starts
 	while (TDatabase::TimeDB->CURRENTTIME < end_time) // time cycle
 	{
@@ -757,8 +759,8 @@ int main(int argc, char *argv[])
             {
 				// Considering the simulation has saturated upto 1000 time  steps, If the particle moves more than 
 				int lineNo=0;
-				if(StartNo >  16000)
-					  StartNo = 16000;
+				if(StartNo >  16000*20)
+					  StartNo = 16000*20;
 				if(StartNo % 100 == 0)
 					cout << "Start No : " << StartNo <<endl;
 
@@ -768,7 +770,7 @@ int main(int argc, char *argv[])
 				std::string baseFileName = "Solution_";
 
 				// To ensure that a single solution is read for 10 time steps
-				int StartNo_for_reading_file = StartNo/10 + 2;
+				int StartNo_for_reading_file = StartNo/20 + 100;
 
 				// Save the u Solution, the number of char in the img should be 6, remaing space is padded by zeros
 				int padding = 6 - std::to_string(StartNo_for_reading_file).length();
@@ -863,7 +865,7 @@ int main(int argc, char *argv[])
 				// cout << "Norm of the solution p: " << sqrt(Ddot(N_P,sol+3*N_U,sol+3*N_U)) << endl;
 
 				for (int i=0 ; i < 3*N_U; i++)
-						sol[i] *= 0.79577;
+						sol[i] *= 0.7957;
 
 				if (TDatabase::ParamDB->WRITE_VTK)
 				{
@@ -881,9 +883,9 @@ int main(int argc, char *argv[])
 					Output->WriteVtk(os.str().c_str());
 				}
 				
-                if (m >= 20 )  // To start the interpolation after 20 time steps ( to ensure that flow has propogated )
+                if (m >= 100 )  // To start the interpolation after 20 time steps ( to ensure that flow has propogated )
                 {
-                    cout << " Interpolation Started" <<endl;
+                    // cout << " Interpolation Started" <<endl;
 
                     //Compute the Particle Displacement for the FTLE values 
 
@@ -942,7 +944,7 @@ int main(int argc, char *argv[])
 
                     particleObject->interpolateNewVelocity_Parallel(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0],Velocity_FeSpace[0]);
 
-										std::string old_str = std::to_string(StartNo);
+										std::string old_str = std::to_string(img);
 										size_t n_zero = 6;
 										auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
 										std::string name =  "siminhale_" + new_str + ".csv";

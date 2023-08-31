@@ -892,86 +892,86 @@ int main(int argc, char *argv[])
                     //Compute the Particle Displacement for the FTLE values 
 
 
-										// cout << "2: StartNo -> " << StartNo << " img -> " << img << " m -> " << m << endl;
-										// for (int i = 0; i < 10; i++) {
-										// 	cout << "sol[" << i << "] -> "
-										// 			 << particleObject->position_X[i] << ", "
-										// 			 << particleObject->position_Y[i] << ", "
-										// 			 << particleObject->position_X[i]
-										// 			 << endl;
-										// 	cout << "velocity[" << i << "] -> "
-										// 			 << particleObject->velocityX[i] << ", "
-										// 			 << particleObject->velocityY[i] << ", "
-										// 			 << particleObject->velocityZ[i]
-										// 			 << endl;
-										// }
-										// // print norm of the vector position_X and position_Y and position_Z
-										// double normX = 0.0;
-										// for (int i = 0; i < particleObject->position_X.size(); i++) {
-										// 	normX += particleObject->position_X[i] * particleObject->position_X[i];
-										// }
-										// cout << "normX -> " << sqrt(normX) << endl;
+					// cout << "2: StartNo -> " << StartNo << " img -> " << img << " m -> " << m << endl;
+					// for (int i = 0; i < 10; i++) {
+					// 	cout << "sol[" << i << "] -> "
+					// 			 << particleObject->position_X[i] << ", "
+					// 			 << particleObject->position_Y[i] << ", "
+					// 			 << particleObject->position_X[i]
+					// 			 << endl;
+					// 	cout << "velocity[" << i << "] -> "
+					// 			 << particleObject->velocityX[i] << ", "
+					// 			 << particleObject->velocityY[i] << ", "
+					// 			 << particleObject->velocityZ[i]
+					// 			 << endl;
+					// }
+					// // print norm of the vector position_X and position_Y and position_Z
+					// double normX = 0.0;
+					// for (int i = 0; i < particleObject->position_X.size(); i++) {
+					// 	normX += particleObject->position_X[i] * particleObject->position_X[i];
+					// }
+					// cout << "normX -> " << sqrt(normX) << endl;
 
-										// double normY = 0.0;
-										// for (int i = 0; i < particleObject->position_Y.size(); i++) {
-										// 	normY += particleObject->position_Y[i] * particleObject->position_Y[i];
-										// }
-										// cout << "normY -> " << sqrt(normY) << endl;
+					// double normY = 0.0;
+					// for (int i = 0; i < particleObject->position_Y.size(); i++) {
+					// 	normY += particleObject->position_Y[i] * particleObject->position_Y[i];
+					// }
+					// cout << "normY -> " << sqrt(normY) << endl;
 
-										// double normZ = 0.0;
-										// for (int i = 0; i < particleObject->position_Z.size(); i++) {
-										// 	normZ += particleObject->position_Z[i] * particleObject->position_Z[i];
-										// }
-										// cout << "normZ -> " << sqrt(normZ) << endl;
+					// double normZ = 0.0;
+					// for (int i = 0; i < particleObject->position_Z.size(); i++) {
+					// 	normZ += particleObject->position_Z[i] * particleObject->position_Z[i];
+					// }
+					// cout << "normZ -> " << sqrt(normZ) << endl;
 
-										// // print norm of the vector velocityX and velocityY and velocityZ
-										// double normVX = 0.0;
-										// for (int i = 0; i < particleObject->velocityX.size(); i++) {
-										// 	normVX += particleObject->velocityX[i] * particleObject->velocityX[i];
-										// }
-										// cout << "normVX -> " << sqrt(normVX) << endl;
+					// // print norm of the vector velocityX and velocityY and velocityZ
+					// double normVX = 0.0;
+					// for (int i = 0; i < particleObject->velocityX.size(); i++) {
+					// 	normVX += particleObject->velocityX[i] * particleObject->velocityX[i];
+					// }
+					// cout << "normVX -> " << sqrt(normVX) << endl;
 
-										// double normVY = 0.0;
-										// for (int i = 0; i < particleObject->velocityY.size(); i++) {
-										// 	normVY += particleObject->velocityY[i] * particleObject->velocityY[i];
-										// }
-										// cout << "normVY -> " << sqrt(normVY) << endl;
+					// double normVY = 0.0;
+					// for (int i = 0; i < particleObject->velocityY.size(); i++) {
+					// 	normVY += particleObject->velocityY[i] * particleObject->velocityY[i];
+					// }
+					// cout << "normVY -> " << sqrt(normVY) << endl;
 
-										// double normVZ = 0.0;
-										// for (int i = 0; i < particleObject->velocityZ.size(); i++) {
-										// 	normVZ += particleObject->velocityZ[i] * particleObject->velocityZ[i];
-										// }
-										// cout << "normVZ -> " << sqrt(normVZ) << endl;
-										
+					// double normVZ = 0.0;
+					// for (int i = 0; i < particleObject->velocityZ.size(); i++) {
+					// 	normVZ += particleObject->velocityZ[i] * particleObject->velocityZ[i];
+					// }
+					// cout << "normVZ -> " << sqrt(normVZ) << endl;
+					
 
-                    particleObject->interpolateNewVelocity_Parallel(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0],Velocity_FeSpace[0]);
+					particleObject->interpolateNewVelocity_Parallel(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0],Velocity_FeSpace[0]);
 
-										std::string old_str = std::to_string(StartNo);
-										size_t n_zero = 6;
-										auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
-										std::string name =  "siminhale_" + new_str + ".csv";
+					std::string old_str = std::to_string(StartNo);
+					size_t n_zero = 6;
+					auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
+					std::string name =  "siminhale_" + new_str + ".csv";
 
-										if (m % 100 == 0) {
-											particleObject->OutputFile(name.c_str());
-										}
+					if (m % 100 == 0) {
+						particleObject->OutputFile(name.c_str());
+					}
 
-										if (m >= 5000 && m % 4000 == 0)
-											particleObject->detectStagnantParticles();
+					if (m >= 5000 && m % 4000 == 0)
+						particleObject->detectStagnantParticles();
 
-										int depositedCount = 0;
-										for (int i = 0; i < particleObject->isParticleDeposited.size(); i++) {
-											if (particleObject->isParticleDeposited[i]) depositedCount++;
-										}
-										if (depositedCount >= 0.995 * numPart) {
-											cout << "All particles deposited/escaped" << endl;
-											cout << "Total particles: " << depositedCount << endl;
-											cout << "Particles deposited: " << depositedCount - particleObject->m_EscapedParticlesCount << endl;
-											cout << "Particles escaped: " << particleObject->m_EscapedParticlesCount << endl;
-											cout << "Error particles: " << particleObject->m_ErrorParticlesCount << endl;
-											cout << "Ghost particles: " << particleObject->m_ghostParticlesCount << endl;
-											cout << "Stagnant particles: " << particleObject->m_StagnantParticlesCount << endl;
-											break;
-										}
+					int depositedCount = 0;
+					for (int i = 0; i < particleObject->isParticleDeposited.size(); i++) {
+						if (particleObject->isParticleDeposited[i]) depositedCount++;
+					}
+					if (depositedCount >= 0.995 * numPart) {
+						cout << "All particles deposited/escaped" << endl;
+						cout << "Total particles: " << depositedCount << endl;
+						cout << "Particles deposited: " << depositedCount - particleObject->m_EscapedParticlesCount << endl;
+						cout << "Particles escaped: " << particleObject->m_EscapedParticlesCount << endl;
+						cout << "Error particles: " << particleObject->m_ErrorParticlesCount << endl;
+						cout << "Ghost particles: " << particleObject->m_ghostParticlesCount << endl;
+						cout << "Stagnant particles: " << particleObject->m_StagnantParticlesCount << endl;
+						break;
+					}
                 }
 
 								// Increment the file number

@@ -435,6 +435,7 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                                             double time_step
                                             )
 {
+    // printf("GPU : Interpolate Velocity CUDA\n");
     // Kernel code goes here
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
@@ -503,7 +504,7 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
         double fluid_velocity_y = interpolated_velocities.y;
         double fluid_velocity_z = interpolated_velocities.z;
 
-        printf("%f",d_m_particle_diameter[tid]);
+        
 
         cd_cc_x = cd_cc_cuda(fluid_density,
                             d_m_particle_diameter[tid],
@@ -1073,8 +1074,8 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace)
             h_m_is_boundary_cell[cell_no] = index_for_boundary_face;
 
             // get the joint id and corner id from the map
-            int joint_id = m_jointidOfBoundCells[cell_no];
-            int corner_id = m_cornerTypeOfBoundCells[cell_no];
+            int joint_id    = m_jointidOfBoundCells[cell_no];
+            int corner_id   = m_cornerTypeOfBoundCells[cell_no];
 
             // save the joint id and corner id in the corresponding arrays
             h_m_joint_id[index_for_boundary_face] = joint_id;
@@ -1329,6 +1330,8 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace)
     // d_m_ is the device variable with dtype as double* and m_ is the host variable with dtype as std::vector<double> 
     checkCudaErrors(cudaMemcpy(d_m_particle_density, m_particle_density.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
 
+
+
     // Send the particle diameter
     checkCudaErrors(cudaMemcpy(d_m_particle_diameter, m_particle_diameter.data(), N_Particles * sizeof(double), cudaMemcpyHostToDevice));
 
@@ -1526,7 +1529,6 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventRecord(start, 0);
-
     Interpolate_Velocity_CUDA<<<dimGrid,dimBlock>>>(// cell Vertices
                                                     d_m_cell_vertices_x,
                                                     d_m_cell_vertices_y,
@@ -1638,6 +1640,11 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
     checkCudaErrors(cudaMemcpy(isStagnantParticle.data(), d_m_is_stagnant_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaMemcpy(isErrorParticle.data(), d_m_is_error_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaMemcpy(isGhostParticle.data(), d_m_is_ghost_particle, N_Particles * sizeof(int), cudaMemcpyDeviceToHost));
+    
+    std::vector<double> temp(N_Particles);
+    checkCudaErrors(cudaMemcpy(temp.data(), d_m_particle_diameter, N_Particles * sizeof(double), cudaMemcpyDeviceToHost));
+
+
 
     // record the time taken for the transfer of data from device to host
     cudaEventCreate(&stop1);

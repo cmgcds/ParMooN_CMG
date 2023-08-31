@@ -123,10 +123,18 @@ void TParticles::GenerateParticleDiameterAndDensity(std::vector<double> &particl
         count_fraction[i] /= total_count_fraction;
     }
 
-    // Generate random numbers following normal distribution
-    std::default_random_engine generator;
-    std::normal_distribution<double> distribution(0.0, 1.0);
 
+    // Read the file and obtain log-normal distribution parameters
+    std::ifstream log_normal_file("lognormal.csv");
+
+    std::vector<double> log_normal_values;
+
+    double temp_val;
+
+    while (log_normal_file >> temp_val) {
+        log_normal_values.push_back(temp_val);
+    }
+   
     // Total particles initialised
     int total_particles_initialised = 0;
 
@@ -139,15 +147,15 @@ void TParticles::GenerateParticleDiameterAndDensity(std::vector<double> &particl
                 break;
             }
             // Calculate particle diameter using log-normal distribution formula
-            double Z_value = distribution(generator);
-            double particle_diameter = std::exp(GM_log + Z_value * GSD_log);
+            double particle_diameter = log_normal_values[total_particles_initialised] * 1e-6;
 
             // Add particle diameter to the vector
-            particle_diameters.push_back(particle_diameter);
+            particle_diameters[total_particles_initialised] = particle_diameter;
 
-            particle_density.push_back(density_array[i]);
+            particle_density[total_particles_initialised] = density_array[i];
 
             total_particles_initialised ++;
+        
         }
     }
 
@@ -155,8 +163,8 @@ void TParticles::GenerateParticleDiameterAndDensity(std::vector<double> &particl
     // Fill the remaining particles with the last density
     // Sanity check for round off error while trying to convert the count fraction to number of particles for a given density
     while (total_particles_initialised < N_Particles) {
-        particle_diameters.push_back(particle_diameters[total_particles_initialised - 1]);
-        particle_density.push_back(particle_density[total_particles_initialised - 1]);
+        particle_diameters[total_particles_initialised] = particle_diameters[total_particles_initialised - 1];
+        particle_density[total_particles_initialised] = particle_density[total_particles_initialised - 1];
         total_particles_initialised ++;
     }
 
@@ -263,9 +271,9 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
     // INitialise particle and fluid Parameters required for the simulation
     InitialiseParticleParameters(N_Particles_);
 
-		if (resumeFile != "") {
-			*StartNo = UpdateParticleDetailsFromFile(resumeFile);
-		}
+		// if (resumeFile != "") {
+		// 	*StartNo = UpdateParticleDetailsFromFile(resumeFile);
+		// }
 
     #ifdef _CUDA
 
@@ -309,17 +317,19 @@ void TParticles::InitialiseParticleParameters(int N_Particles_)
     std::vector<double> density_array = {1032.56, 1261, 1010, 1000};
 
     // Set all the particle sizes bsed on the function 
-    std::string particle_size_distribution = "polydisperse";  // or "monodisperse"
+    std::string particle_size_distribution = "monodisperse";  // or "monodisperse"
 
     // Set the polydisperse type
     // Fused will generate all particles with same density equivalent to the density difference of all particles. 
     // Seperate will generate particles with different densities
-    std::string polydisperse_type = "seperate"; // or "fused"
+    std::string polydisperse_type = "fused"; // or "fused"
 
     // check if the string equals to polydisperse
     if(particle_size_distribution == "polydisperse")
     {
-        TParticles::GenerateParticleDiameterAndDensity(m_particle_diameter, m_particle_density, mass_fraction, density_array, 0.307 * 1e-6, 1.69);
+        TParticles::GenerateParticleDiameterAndDensity(m_particle_diameter, m_particle_density, mass_fraction, density_array, 0.307 * 1e-6, 1.69* 1e-6);
+
+        
 
         if (polydisperse_type == "fused") {
             double density_sum = 0.0;
@@ -335,15 +345,16 @@ void TParticles::InitialiseParticleParameters(int N_Particles_)
     else
     {
         // HARDCODED_THIVIN For mono disperse particle with single density 
-        double density_mono = 914; // DEHS from sininhale paper
+        double density_mono = 1096; // DEHS from sininhale paper
         for (int i = 0; i < m_particle_density.size(); i++) {
             m_particle_density[i] = density_mono;
         }
 
         // HARDCODED_THIVIN particle size
-        double particle_size = 8e-6;
+        double particle_size = 0.4e-6;
         for (int i = 0; i < m_particle_diameter.size(); i++) {
             m_particle_diameter[i] = particle_size;
+            
         }
     }
 
@@ -897,7 +908,7 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
 // }
 
         position_X[particleNo] = y;
-        position_Y[particleNo] = 0.001;
+        position_Y[particleNo] = 0.003;
         position_Z[particleNo] = z;
 
 

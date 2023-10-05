@@ -293,10 +293,13 @@ TParticles::TParticles(int N_Particles_, double circle_x, double circle_y, doubl
 void TParticles::InitialiseParticleParameters(int N_Particles_)
 {
     // Density of the fluid
-    m_fluid_density = 1.1385; // kg/m^3
+    // m_fluid_density = 1.1385; // kg/m^3    
+    m_fluid_density = 1.195;
+
 
     // Dynamic Viscosity of the fluid
-    m_fluid_dynamic_viscosity = 0.00001893; // Pa.s
+    // m_fluid_dynamic_viscosity = 0.00001893; // Pa.s
+    m_fluid_dynamic_viscosity = 0.0000147 * 1.195;
 
     // mean free path
     m_lambda = 0.00000007; // m
@@ -322,7 +325,7 @@ void TParticles::InitialiseParticleParameters(int N_Particles_)
     // Set the polydisperse type
     // Fused will generate all particles with same density equivalent to the density difference of all particles. 
     // Seperate will generate particles with different densities
-    std::string polydisperse_type = "fused"; // or "fused"
+    std::string polydisperse_type = "seperate"; // or "fused"
 
     // check if the string equals to polydisperse
     if(particle_size_distribution == "polydisperse")
@@ -344,18 +347,26 @@ void TParticles::InitialiseParticleParameters(int N_Particles_)
     }
     else
     {
+        cout << " INFO : Particle Size Distribution is set to monodisperse \n";
+        // Wait for user to press a  key
+        
         // HARDCODED_THIVIN For mono disperse particle with single density 
-        double density_mono = 1096; // DEHS from sininhale paper
+        double density_mono = 905; // DEHS from sininhale paper
         for (int i = 0; i < m_particle_density.size(); i++) {
             m_particle_density[i] = density_mono;
         }
 
         // HARDCODED_THIVIN particle size
-        double particle_size = 0.4e-6;
-        for (int i = 0; i < m_particle_diameter.size(); i++) {
-            m_particle_diameter[i] = particle_size;
-            
+        std::vector<double> particle_size_array = {5,7,10,20,25,28,30,33,35,36,37,39,40,41,42,43,44,45,46};
+        int count = 0;
+        for (double particle_size : particle_size_array) {
+            for (int i = 0; i < 20000; i++) {
+                m_particle_diameter[count] = particle_size * 1e-6;
+                count++;
+            }
         }
+
+        cout << " INFO : count : " << count << endl;
     }
 
     
@@ -407,7 +418,7 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
 
     // Define a vector to store the cells on the boundary
     std::vector<int> cells_on_inlet_boundary;
-    int inlet_boundary_id = 0;
+    int inlet_boundary_id = 0;  // HARDCODED_THIVIN
 
     // Lets pick up all the cells, which are at the inlet boundary and store them in a vector
     for(int i = 0 ; i < N_Cells ; i++)
@@ -1179,7 +1190,7 @@ void TParticles::Initialiseparticles(int N_Particles, double circle_x, double ci
     // cout << " No ofBoundary faces Identified : " << Face_id_cellsOnBoundary.size() << endl;
 
     // Read the adjacency values of the current mesh
-    ReadAdjacencyValues("adjacency_matrix_for_siminhale_reflevel_1.txt",true,row_pointer,col_index,fespace);
+    ReadAdjacencyValues("adjacency_matrix_for_siminhale_reflevel_1.txt",TRUE,row_pointer,col_index,fespace);
 }
 
 /* Function to read the adjacency values of the current mesh*/
@@ -1273,7 +1284,7 @@ void TParticles::ReadAdjacencyValues(std::string filename, bool isAdjacencyFile,
         std::string output_filename = "adjacency_matrix_for_siminhale_reflevel_1.txt";
 
         //read mesh file
-        std::ifstream file(filename);
+        std::ifstream file("pipe_new_ref.mesh");  // CHECKLIST
 
         // Check if object is valid
         if(!file)
@@ -1286,10 +1297,13 @@ void TParticles::ReadAdjacencyValues(std::string filename, bool isAdjacencyFile,
         std::string str;
         int line_count = 0;
         int num_cells = 0;
+
         // read untill you reach the word "Tetrahedra"
         // THis will translate the pointer untill the word "Tetrahedra" is reached
         while (std::getline(file, str) ) {
             ++line_count;
+            if(line_count%100000 == 0)
+                std::cout << "[Adjacency: INFO] Reading Mesh file line: " << line_count << '\n';
             // Check if the line contains the word "Tetrahedra"
             if (str.find("Tetrahedra") != std::string::npos) {
                 ++line_count; 
@@ -1302,7 +1316,6 @@ void TParticles::ReadAdjacencyValues(std::string filename, bool isAdjacencyFile,
             }
             
         }
-
         // std::cout << "Line count: " << line_count << '\n';
         std::cout << "[Adjacency: INFO] Number of cells: " << num_cells << '\n';
 
@@ -1989,7 +2002,7 @@ void TParticles::interpolateNewVelocity_Parallel(double timeStep, TFEVectFunct3D
 {
 
     // Here We ensure that the Particles are released in timely manner , in batches of 2000, every 10 time steps
-    int numParticlesReleasedPerTimeStep = 5000;
+    int numParticlesReleasedPerTimeStep = 380000;
     int timeStepCounter = 0;
     int timeStepInterval = 100;   // Release particles every n steps
     

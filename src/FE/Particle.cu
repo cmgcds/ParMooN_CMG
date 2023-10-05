@@ -1510,7 +1510,7 @@ void TParticles::CD_CC_Cuda()
 // Host wrapper for performing the velocity interpolation at every time step
 void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles_released,int N_DOF,int N_Cells)
 {
-    int MAX_THREAD_PER_BLOCK = 128;
+    int MAX_THREAD_PER_BLOCK = 512;
     int N_threads; 
 
     if(N_Particles_released >= MAX_THREAD_PER_BLOCK) 

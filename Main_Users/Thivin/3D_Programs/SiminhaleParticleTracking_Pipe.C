@@ -1,11 +1,6 @@
 // =======================================================================
 //
-// Purpose:     main program for solving a stationary TNSE equation in ParMooN
-//
-// Author:      Sashikumaar Ganesan
-//
-// History:     Implementation started on 17.12.2015
-
+// Purpose:    Run the siminhale particle deposition using the loaded data file. 
 // =======================================================================
 #include <Domain.h>
 #include <Database.h>
@@ -28,6 +23,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/stat.h>
+#include <cstdlib>
 #include <sys/types.h>
 
 #ifdef _SMPI
@@ -65,8 +61,9 @@ double timeC = 0;
 //   #include "../Examples/TNSE_3D/Hole3D.h"
 //  #include "../Examples/TNSE_3D/AnsatzLinConst.h"
 //  #include "../Examples/TNSE_3D/Bsp3.h"
- #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale_pipe_bend.h"
-// #include "../Main_Users/Thivin/Examples/TNSE3D/Channel.h"
+ #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale2.h"
+// #include "/home/sashi/ParMooN_Thivin/ParMooN_CMG/MainUsers/Thivin/SIMINHALE/siminhale.h"
+
 //  #include "../Examples/TNSE_3D/Channel3D_volker.h"
 // #include "../Examples/TNSE_3D/Channel3D_slip.h"
 // #include "../Examples/TNSE_3D/test_slip.h"
@@ -185,6 +182,13 @@ int main(int argc, char *argv[])
 		os << " ";
 
 		mkdir(vtkdir, 0777);
+		
+		//exit based on the number of arguments
+		if (argc < 4)
+		{
+			cout << "Usage: " << argv[0] << " <parameter file>  <number of particles> <path to csv>" << endl;
+			exit(1);
+		}
 
 		// ======================================================================
 		// set the database values and generate mesh
@@ -193,8 +197,9 @@ int main(int argc, char *argv[])
 		Domain = new TDomain(argv[1]);
 
 		profiling = TDatabase::ParamDB->timeprofiling;
+        profiling = 0;
 
-		omp_set_num_threads(42);
+		// omp_set_num_threads(42);
 
 		if (profiling)
 		{
@@ -238,10 +243,10 @@ int main(int argc, char *argv[])
 			Domain->GmshGen(TDatabase::ParamDB->GEOFILE);
 		} // gmsh mesh
 
-		else if (TDatabase::ParamDB->MESH_TYPE == 2)
-		{
-			// Domain->TetrameshGen(TDatabase::ParamDB->GEOFILE);
-		} // tetgen mesh
+		// else if (TDatabase::ParamDB->MESH_TYPE == 2)
+		// {
+		// 	Domain->TetrameshGen(TDatabase::ParamDB->GEOFILE);
+		// } // tetgen mesh
 		else
 		{
 			OutPut("Mesh Type not known, set MESH_TYPE correctly!!!" << endl);
@@ -254,9 +259,10 @@ int main(int argc, char *argv[])
 			TDatabase::ParamDB->UNIFORM_STEPS += (LEVELS - 1);
 			LEVELS = 1;
 		}
-		// refine grid up to the coarsest level
-		for (i = 0; i < TDatabase::ParamDB->UNIFORM_STEPS; i++)
-			Domain->RegRefineAll();
+		// refine grid up to the coarsest level  for Normal Mesh
+		if(TDatabase::ParamDB->MESH_TYPE == 0)
+			for (i = 0; i < TDatabase::ParamDB->UNIFORM_STEPS; i++)
+				Domain->RegRefineAll();
 
 			// #ifdef __Cylinder__
 			//    TetrameshGen(Domain);
@@ -591,7 +597,7 @@ int main(int argc, char *argv[])
 		//     cout<<"end printing"<<endl;
 		//     exit(0);
 
-		SystemMatrix->Assemble();
+		// SystemMatrix->Assemble();
 
 		//     SystemMatrix->CheckAllMat();
 		//     SystemMatrix->RHS_stats();
@@ -683,9 +689,18 @@ int main(int argc, char *argv[])
 #endif
 
 	// INTIALISE THE PARTICLES 
-	// TParticles* particleObject =  new TParticles(1000,0.0,0.0,0.5,Velocity_FeSpace[0]);
-	// cout << " Particles Initialised " <<endl;
-	// particleObject->OutputFile("positionBend_0000.csv");
+    int numPart = std::atoi(argv[2]);
+    int StartNo = 2;
+    std::string resumeFile = (argc > 4) ? argv[4] : "";
+
+	TParticles* particleObject =  new TParticles(numPart,0.0,0.0,0.01,Velocity_FeSpace[0], resumeFile, &StartNo);
+    cout << " Particles Initialised " <<endl;
+
+    particleObject->OutputFile("siminhale_0000.csv");
+	img = StartNo;
+    m = StartNo - 2;
+
+
 
 	// time loop starts
 	while (TDatabase::TimeDB->CURRENTTIME < end_time) // time cycle
@@ -697,7 +712,7 @@ int main(int argc, char *argv[])
 			m++;
 			TDatabase::TimeDB->INTERNAL_STARTTIME = TDatabase::TimeDB->CURRENTTIME;
 		}
-
+        
 		for (l = 0; l < N_SubSteps; l++) // sub steps of fractional step theta
 		{
 
@@ -726,219 +741,79 @@ int main(int argc, char *argv[])
 				if (rank == 0)
 #endif
 				{
-					OutPut(endl
-						   << "CURRENT TIME: ");
-					OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
-				}
-				// copy rhs to oldrhs
-				memcpy(oldrhs, rhs, N_TotalDOF * SizeOfDouble);
-
-				// assemble only rhs, nonlinear matrix for NSE will be assemble in fixed point iteration
-				// not needed if rhs is not time-dependent
-				if (m != 1)
-				{
-					SystemMatrix->AssembleRhs();
-				}
-				else
-				{
-					SystemMatrix->Assemble();
-				}
-
-				//        cout<<"start printing"<<endl;
-				//     printall_array(sol,rhs,N_TotalDOF);
-				//     cout<<"end printing"<<endl;
-				//     exit(0);
-
-				// scale B matices and assemble NSE-rhs based on the \theta time stepping scheme
-				SystemMatrix->AssembleSystMat(tau / oldtau, oldrhs, rhs, sol);
-				oldtau = tau;
-
-				// calculate the residual
-				SystemMatrix->GetResidual(sol, impuls_residual, residual);
-
-#ifdef _MPI
-				if (rank == 0)
-#endif
-				{
-					OutPut(" nonlinear iteration step   0");
-					OutPut(setw(14) << impuls_residual);
-					OutPut(setw(14) << residual - impuls_residual);
-					OutPut(setw(14) << sqrt(residual) << endl);
-				}
-			}
-
-#ifdef _SMPI
-
-			if (rank == 0)
-			{
-				stime = TDatabase::TimeDB->CURRENTTIME;
-			}
-
-			MPI_Bcast(&stime, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-			TDatabase::TimeDB->CURRENTTIME = stime;
-
-#endif
-
-			//======================================================================
-			// Solve the system
-			// Nonlinear iteration of fixed point type
-			//======================================================================
-			for (j = 1; j <= Max_It; j++)
-			{
-				checker = 0;
-#ifdef _SMPI
-				if (rank == 0)
-#endif
-				{
-					SystemMatrix->Solve(sol);
-				}
-
-#ifdef _SMPI
-				else
-				{
-					solmumps->FactorizeAndSolve(NULL, NULL);
-				}
-#endif
-
-#ifdef _SMPI
-				if (rank == 0)
-#endif
-				{
-
-					if (TDatabase::ParamDB->INTERNAL_PROJECT_PRESSURE)
-						IntoL20FEFunction3D(sol + 3 * N_U, N_P, Pressure_FeSpace[mg_level - 1]);
-
-					// no nonlinear iteration for Stokes problem
-					if (TDatabase::ParamDB->FLOW_PROBLEM_TYPE == STOKES)
-						break;
-
-					// restore the mass matrix for the next nonlinear iteration
-					SystemMatrix->RestoreMassMatNonLinear();
-					//  cout << " crossesd mass matrix restore " <<endl;
-
-					// assemble the system matrix with given aux, sol and rhs
-					SystemMatrix->AssembleNonLinear();
-					//  cout << " crossed asseble non linear " <<endl;
-					// 	if(j==1){
-					//       SystemMatrix->CheckAllMat();
-					//        SystemMatrix->RHS_stats();
-					//
-					//       exit(0);
-					// 	}
-
-					// assemble system mat, S = M + dt\theta_1*A
-					SystemMatrix->AssembleSystMatNonLinear();
-					// cout << " crossed asseble sys mat non linear " <<endl;
-
-					// get the residual
-					SystemMatrix->GetResidual(sol, impuls_residual, residual);
-					// cout << "crossed  get residual " <<endl;
-#ifdef _MPI
-					if (rank == 0)
-#endif
+					if(StartNo % 100 == 0)
 					{
-						OutPut(" nonlinear iteration step " << setw(3) << j);
-						OutPut(setw(14) << impuls_residual);
-						OutPut(setw(14) << residual - impuls_residual);
-						OutPut(setw(14) << sqrt(residual) << endl);
-					}
-					if (sqrt(residual) <= limit)
-					{
-#ifdef _SMPI
-						checker = -1;
-#else
-						break;
-#endif
+						OutPut(endl << "CURRENT TIME: ");
+						OutPut(TDatabase::TimeDB->CURRENTTIME << endl);
 					}
 				}
 
-#ifdef _SMPI
-				MPI_Bcast(&checker, 1, MPI_INT, 0, MPI_COMM_WORLD);
-				if (checker == -1)
-					break;
-#endif
 
-			} // for(j=1;j<=Max_It;j++)
 
-#ifdef _SMPI
-			if (rank == 0)
-#endif
-			{
-				// restore the mass matrix for the next time step
-				SystemMatrix->RestoreMassMat();
 			}
 
-		} // for(l=0;l<N_SubSteps;
-
-		//======================================================================
-		// measure errors to known solution
-		//======================================================================
-
+        }
 #ifdef _SMPI
 		if (rank == 0)
 #endif
-		{
-			if (TDatabase::ParamDB->MEASURE_ERRORS)
-			{
-				SystemMatrix->MeasureTNSEErrors(ExactU1, ExactU2, ExactU3, ExactP, AllErrors);
+            {
+				// Considering the simulation has saturated upto 1000 time  steps, If the particle moves more than 
+				int lineNo=0;
+				if(StartNo >  16000*20)
+					  StartNo = 16000*20;
+				if(StartNo % 100 == 0)
+					cout << "Start No : " << StartNo <<endl;
 
-#ifdef _MPI
-				if (rank == 0)
-#endif
-				{
-					OutPut("L2(u): " << AllErrors[0] << endl);
-					OutPut("H1-semi(u): " << AllErrors[1] << endl);
-					OutPut("L2(p): " << AllErrors[2] << endl);
-					OutPut("H1-semi(p): " << AllErrors[3] << endl);
-					OutPut(AllErrors[4] << " l_infty(L2(u)) " << AllErrors[5] << endl);
-					OutPut(TDatabase::TimeDB->CURRENTTIME << " L2(0,t,L2)(u) : " << sqrt(AllErrors[6]) << endl);
-				}
-			} // if(TDatabase::ParamDB->MEASURE_ERRORS)
-
-			//          GetCdCl(u1,u2,u3,p,Cd,Cl);
-			//      cout<<"drag::"<<Cd<<" lift::"<<Cl<<endl;
-
-			//======================================================================
-			// produce outout
-			//======================================================================
-			if (m == 1 || m % TDatabase::TimeDB->STEPS_PER_IMAGE == 0)
-
-#ifdef _MPI
-				if (TDatabase::ParamDB->WRITE_VTK)
-					Output->Write_ParVTK(MPI_COMM_WORLD, img, SubID);
-			img++;
-#else
-				if (TDatabase::ParamDB->WRITE_VTK)
-				{
-					os.seekp(std::ios::beg);
-					if (img < 10)
-						os << "VTK/" << VtkBaseName << ".0000" << img << ".vtk" << ends;
-					else if (img < 100)
-						os << "VTK/" << VtkBaseName << ".000" << img << ".vtk" << ends;
-					else if (img < 1000)
-						os << "VTK/" << VtkBaseName << ".00" << img << ".vtk" << ends;
-					else if (img < 10000)
-						os << "VTK/" << VtkBaseName << ".0" << img << ".vtk" << ends;
-					else
-						os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
-					Output->WriteVtk(os.str().c_str());
-					img++;
-				}
-				cout << " Interpolation Started" <<endl;
-
-				// Write the output to a file in binary format
+				// Read from the CSV value into solution array 
+				std::string prefix(argv[3]); 
+                
 				std::string baseFileName = "Solution_";
 
+				// To ensure that a single solution is read for 10 time steps
+				int StartNo_for_reading_file = StartNo/20 + 100;
+
 				// Save the u Solution, the number of char in the img should be 6, remaing space is padded by zeros
-				int padding = 6 - std::to_string(img - 1).length();
+				int padding = 6 - std::to_string(StartNo_for_reading_file).length();
 
 				// create the file name
-				std::string u1FileName = baseFileName + "u_" + std::string(padding, '0') + std::to_string(img - 1) + ".bin";
-				std::string u2FileName = baseFileName + "v_"+ std::string(padding, '0') + std::to_string(img - 1) + ".bin";
-				std::string u3FileName = baseFileName + "w_"+ std::string(padding, '0') + std::to_string(img - 1) + ".bin";
-				std::string pFileName = baseFileName + "p_"+ std::string(padding, '0') + std::to_string(img - 1) + ".bin";
+				std::string u1FileName = prefix + baseFileName + "u_" + std::string(padding, '0') + std::to_string(StartNo_for_reading_file) + ".bin";
+				std::string u2FileName = prefix + baseFileName + "v_"+ std::string(padding, '0') + std::to_string(StartNo_for_reading_file) + ".bin";
+				std::string u3FileName = prefix + baseFileName + "w_"+ std::string(padding, '0') + std::to_string(StartNo_for_reading_file) + ".bin";
+				std::string pFileName = prefix + baseFileName + "p_"+ std::string(padding, '0') + std::to_string(StartNo_for_reading_file) + ".bin";
 
-				// print the first three and last three values of the solution
+				std::string filename = prefix + std::to_string(StartNo) + ".bin";
+				if(StartNo % 100 == 0)
+					std::cout << "Reading from file: " << u1FileName << std::endl;
+
+				// Read the file into the solution array
+				std::ifstream u1File(u1FileName, std::ios::in | std::ios::binary);
+				std::ifstream u2File(u2FileName, std::ios::in | std::ios::binary);
+				std::ifstream u3File(u3FileName, std::ios::in | std::ios::binary);
+				std::ifstream pFile(pFileName, std::ios::in | std::ios::binary);
+
+				// throw an error if the file is not found
+				if (!u1File.is_open())
+					throw std::runtime_error("Could not open file " + u1FileName);
+				if (!u2File.is_open())
+					throw std::runtime_error("Could not open file " + u2FileName);
+				if (!u3File.is_open())
+					throw std::runtime_error("Could not open file " + u3FileName);
+				if (!pFile.is_open())
+					throw std::runtime_error("Could not open file " + pFileName);
+				
+				// Read the file into the solution array
+				u1File.read((char *)sol, sizeof(double) * N_U);
+				u2File.read((char *)sol + sizeof(double) * N_U, sizeof(double) * N_U);
+				u3File.read((char *)sol + sizeof(double) * 2 * N_U, sizeof(double) * N_U);
+				pFile.read((char *)sol + sizeof(double) * 3 * N_U, sizeof(double) * N_P);
+
+				// Close the file
+				u1File.close();
+				u2File.close();
+				u3File.close();
+				pFile.close();
+
+				// // print the first three and last three values of the solution
 				// cout << "u1FileName: " << u1FileName << endl;
 				// cout << "sol[0]: " << sol[0] << endl;
 				// cout << "sol[1]: " << sol[1] << endl;
@@ -947,7 +822,7 @@ int main(int argc, char *argv[])
 				// cout << "sol[N_U-2]: " << sol[N_U-2] << endl;
 				// cout << "sol[N_U-1]: " << sol[N_U-1] << endl;
 
-				// Print the norm of the solution
+				// // Print the norm of the solution
 				// cout << "Norm of the solution: " << sqrt(Ddot(N_U,sol,sol)) << endl;
 
 
@@ -989,49 +864,125 @@ int main(int argc, char *argv[])
 				// // Print the norm of the solution p
 				// cout << "Norm of the solution p: " << sqrt(Ddot(N_P,sol+3*N_U,sol+3*N_U)) << endl;
 
+				for (int i=0 ; i < 3*N_U; i++)
+						sol[i] *= 0.7957;
+
+				if (TDatabase::ParamDB->WRITE_VTK)
+				{
+					os.seekp(std::ios::beg);
+					if (img < 10)
+						os << "VTK/" << VtkBaseName << ".0000" << img << ".vtk" << ends;
+					else if (img < 100)
+						os << "VTK/" << VtkBaseName << ".000" << img << ".vtk" << ends;
+					else if (img < 1000)
+						os << "VTK/" << VtkBaseName << ".00" << img << ".vtk" << ends;
+					else if (img < 10000)
+						os << "VTK/" << VtkBaseName << ".0" << img << ".vtk" << ends;
+					else
+						os << "VTK/" << VtkBaseName << "." << img << ".vtk" << ends;
+					Output->WriteVtk(os.str().c_str());
+				}
+				
+                if (m >= 100 )  // To start the interpolation after 20 time steps ( to ensure that flow has propogated )
+                {
+                    // cout << " Interpolation Started" <<endl;
+
+                    //Compute the Particle Displacement for the FTLE values 
 
 
-				// Save the u Solution into the u1FIlename using ofstream and set precision to 16
-				std::ofstream u1File(u1FileName, std::ios::out | std::ios::binary);
-				u1File.precision(16);
+										// cout << "2: StartNo -> " << StartNo << " img -> " << img << " m -> " << m << endl;
+										// for (int i = 0; i < 10; i++) {
+										// 	cout << "sol[" << i << "] -> "
+										// 			 << particleObject->position_X[i] << ", "
+										// 			 << particleObject->position_Y[i] << ", "
+										// 			 << particleObject->position_X[i]
+										// 			 << endl;
+										// 	cout << "velocity[" << i << "] -> "
+										// 			 << particleObject->velocityX[i] << ", "
+										// 			 << particleObject->velocityY[i] << ", "
+										// 			 << particleObject->velocityZ[i]
+										// 			 << endl;
+										// }
+										// // print norm of the vector position_X and position_Y and position_Z
+										// double normX = 0.0;
+										// for (int i = 0; i < particleObject->position_X.size(); i++) {
+										// 	normX += particleObject->position_X[i] * particleObject->position_X[i];
+										// }
+										// cout << "normX -> " << sqrt(normX) << endl;
 
-				// Write the double pointer array sol[0] to sol[N_U] into the file u1File
-				u1File.write(reinterpret_cast<const char *>(sol), N_U * sizeof(double));
+										// double normY = 0.0;
+										// for (int i = 0; i < particleObject->position_Y.size(); i++) {
+										// 	normY += particleObject->position_Y[i] * particleObject->position_Y[i];
+										// }
+										// cout << "normY -> " << sqrt(normY) << endl;
 
-				// Close the file u1File
-				u1File.close();
+										// double normZ = 0.0;
+										// for (int i = 0; i < particleObject->position_Z.size(); i++) {
+										// 	normZ += particleObject->position_Z[i] * particleObject->position_Z[i];
+										// }
+										// cout << "normZ -> " << sqrt(normZ) << endl;
 
-				// Save the u Solution into the u2FIlename using ofstream and set precision to 16
-				std::ofstream u2File(u2FileName, std::ios::out | std::ios::binary);
-				u2File.precision(16);
+										// // print norm of the vector velocityX and velocityY and velocityZ
+										// double normVX = 0.0;
+										// for (int i = 0; i < particleObject->velocityX.size(); i++) {
+										// 	normVX += particleObject->velocityX[i] * particleObject->velocityX[i];
+										// }
+										// cout << "normVX -> " << sqrt(normVX) << endl;
 
-				// Write the double pointer array sol[N_U] to sol[2*N_U] into the file u2File
-				u2File.write(reinterpret_cast<const char *>(sol +N_U ), N_U * sizeof(double));
+										// double normVY = 0.0;
+										// for (int i = 0; i < particleObject->velocityY.size(); i++) {
+										// 	normVY += particleObject->velocityY[i] * particleObject->velocityY[i];
+										// }
+										// cout << "normVY -> " << sqrt(normVY) << endl;
 
-				// Close the file u2File
-				u2File.close();
+										// double normVZ = 0.0;
+										// for (int i = 0; i < particleObject->velocityZ.size(); i++) {
+										// 	normVZ += particleObject->velocityZ[i] * particleObject->velocityZ[i];
+										// }
+										// cout << "normVZ -> " << sqrt(normVZ) << endl;
+										
 
-				// Save the u Solution into the u3FIlename using ofstream and set precision to 16
-				std::ofstream u3File(u3FileName, std::ios::out | std::ios::binary);
-				u3File.precision(16);
+                    particleObject->interpolateNewVelocity_Parallel(TDatabase::TimeDB->TIMESTEPLENGTH,Velocity[0],Velocity_FeSpace[0]);
 
-				// Write the double pointer array sol[2*N_U] to sol[3*N_U] into the file u3File
-				u3File.write(reinterpret_cast<const char *>(sol + (2 * N_U)), N_U * sizeof(double));
+										std::string old_str = std::to_string(img);
+										size_t n_zero = 6;
+										auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
+										std::string name =  "siminhale_" + new_str + ".csv";
 
-				// Close the file u3File
-				u3File.close();
+										if (m % 100 == 0) {
+											particleObject->OutputFile(name.c_str());
+										}
 
-				// Save the p Solution into the pFIlename using ofstream and set precision to 16
-				std::ofstream pFile(pFileName, std::ios::out | std::ios::binary);
-				pFile.precision(16);
+										if (m >= 5000 && m % 4000 == 0)
+											particleObject->detectStagnantParticles();
 
-				// write the double pointer array sol[3*N_U] to sol[3*N_U + N_P] into the file pFile
-				pFile.write(reinterpret_cast<const char *>(sol+ (3 * N_U)), N_P * sizeof(double));
+										int depositedCount = 0;
+										for (int i = 0; i < particleObject->isParticleDeposited.size(); i++) {
+											if (particleObject->isParticleDeposited[i]) depositedCount++;
+										}
 
-				// close pfile
-				pFile.close();	
-#endif		
-		}
+										if (depositedCount >= 0.995 * numPart) {
+											cout << "All particles deposited/escaped" << endl;
+											cout << "Total particles: " << depositedCount << endl;
+											cout << "Particles deposited: " << depositedCount - particleObject->m_EscapedParticlesCount << endl;
+											cout << "Particles escaped: " << particleObject->m_EscapedParticlesCount << endl;
+											cout << "Error particles: " << particleObject->m_ErrorParticlesCount << endl;
+											cout << "Ghost particles: " << particleObject->m_ghostParticlesCount << endl;
+											cout << "Stagnant particles: " << particleObject->m_StagnantParticlesCount << endl;
+
+											particleObject->OutputFile(name.c_str());
+
+											break;
+										}
+                }
+
+								// Increment the file number
+								StartNo++;
+								img++;
+            }
+
+
+		
 
 	} // while(TDatabase::TimeDB->CURRENTTIME< e
 

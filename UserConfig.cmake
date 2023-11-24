@@ -21,11 +21,13 @@ set(AParMooN_PARALLEL_TYPE "SCUDA" CACHE STRING "select the parallel type")
 set(AParMooN_MPI_IMPLEMENTATION "INTELMPI" CACHE STRING "select the MPI Implementation type")
 
 # select this line accordingly to include your main program
+# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/NSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 # set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/TNSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
 set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/3D_Programs/SiminhaleParticleTracking_MPI" CACHE STRING "Enter to select the Main file of the model")
  
 # set the path to save the exe file
 set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/Output/Particle/" CACHE STRING "select the model")
+# set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Pipe_Bend_Stationary/" CACHE STRING "select the model")
 
 set(USE_PARMOON_DEFINE -D__PRIVATE__)
 

@@ -174,7 +174,13 @@
         "SiminhaleParticleTracking_MPI_15LPM.C": "cpp",
         "HiPC_Paper.C": "cpp",
         "Ajdacency_Matrix.C": "cpp",
-        "Output3D.C": "cpp"
+        "Output3D.C": "cpp",
+        "AuxParam2D.C": "cpp",
+        "QuadFormula2D.C": "cpp",
+        "QuadFormulaQuad.C": "cpp",
+        "QuadFormulaTria.C": "cpp",
+        "Siminhale_Pipe_Bend.C": "cpp",
+        "SiminhaleParticleTracking_Pipe.C": "cpp"
     },
     "cmake.configureOnOpen": false
 }

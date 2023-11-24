@@ -50,7 +50,7 @@ double timeC = 0;
 // =======================================================================
 //  #include "../Examples/NSE_3D/BSExample.h" // smooth sol in unit square
 // #include "../Examples/NSE_3D/AnsatzLinConst.h"
-  #include "../Main_Users/Thivin/Examples/TNSE3D/Siminhale_1lpa.h"
+  #include "../Main_Users/Thivin/Examples/TNSE3D/siminhale_pipe_bend.h"
   // #include "../Main_Users/Thivin/Examples/TNSE3D/Channel.h"
 // #include "../Examples/NSE_3D/StaticBubble.h"
 // #include "../Examples/NSE_3D/DrivenCavity3D.h"
@@ -165,8 +165,8 @@ int main(int argc, char* argv[])
       Domain->Init(TDatabase::ParamDB->BNDFILE, TDatabase::ParamDB->GEOFILE); } // ParMooN  build-in Geo mesh
   else if(TDatabase::ParamDB->MESH_TYPE==1)  
      {Domain->GmshGen(TDatabase::ParamDB->GEOFILE); }//gmsh mesh
-  else if(TDatabase::ParamDB->MESH_TYPE==2)   
-    {Domain->TetrameshGen(TDatabase::ParamDB->GEOFILE); } //tetgen mesh
+  // else if(TDatabase::ParamDB->MESH_TYPE==2)   
+  //   {Domain->TetrameshGen(TDatabase::ParamDB->GEOFILE); } //tetgen mesh
     else
      {  
       OutPut("Mesh Type not known, set MESH_TYPE correctly!!!" << endl);
@@ -572,10 +572,10 @@ int main(int argc, char* argv[])
      }   
  
   // INTIALISE THE PARTICLES 
-  cout << " Begin Particle Initialisation " <<endl;
-	TParticles* particleObject =  new TParticles(1000,0.0,0.0,0.485,Velocity_FeSpace[0]);
-	cout << " Particles Initialised " <<endl;
-	particleObject->OutputFile("positionSimInhale_0000.csv");
+  // cout << " Begin Particle Initialisation " <<endl;
+	// TParticles* particleObject =  new TParticles(1000,0.0,0.0,0.485,Velocity_FeSpace[0]);
+	// cout << " Particles Initialised " <<endl;
+	// particleObject->OutputFile("positionSimInhale_0000.csv");
     
 //====================================================================== 
 // Solve the system
@@ -654,19 +654,57 @@ int main(int argc, char* argv[])
       Output->WriteVtk(os.str().c_str());
       img++;
      }   
+  // Write the output to a file in binary format
+      std::string baseFileName = "Solution_";
 
-    for ( int time = 0 ; time < 400 ; time++ )
-    {
-      cout << " Interpolation Started" <<endl;
-				//Compute the Particle Displacement for the FTLE values 
-				particleObject->interpolateNewVelocity(0.002,Velocity[0]);
-				std::string old_str = std::to_string(time+1);
-				size_t n_zero = 4;
-				auto new_str = std::string(n_zero - std::min(n_zero, old_str.length()), '0') + old_str;
-				std::string name =  "positionSimInhale_" + new_str + ".csv";
-				particleObject->OutputFile(name.c_str());
-    }
+      // Save the u Solution, the number of char in the img should be 6, remaing space is padded by zeros
+      int padding = 6 - std::to_string(img - 1).length();
 
+      // create the file name
+      std::string u1FileName = baseFileName + "u_" + std::string(padding, '0') + std::to_string(img - 1) + ".bin";
+      std::string u2FileName = baseFileName + "v_"+ std::string(padding, '0') + std::to_string(img - 1) + ".bin";
+      std::string u3FileName = baseFileName + "w_"+ std::string(padding, '0') + std::to_string(img - 1) + ".bin";
+      std::string pFileName = baseFileName + "p_"+ std::string(padding, '0') + std::to_string(img - 1) + ".bin";
+
+      // Save the u Solution into the u1FIlename using ofstream and set precision to 16
+				std::ofstream u1File(u1FileName, std::ios::out | std::ios::binary);
+				u1File.precision(16);
+
+				// Write the double pointer array sol[0] to sol[N_U] into the file u1File
+				u1File.write(reinterpret_cast<const char *>(sol), N_U * sizeof(double));
+
+				// Close the file u1File
+				u1File.close();
+
+				// Save the u Solution into the u2FIlename using ofstream and set precision to 16
+				std::ofstream u2File(u2FileName, std::ios::out | std::ios::binary);
+				u2File.precision(16);
+
+				// Write the double pointer array sol[N_U] to sol[2*N_U] into the file u2File
+				u2File.write(reinterpret_cast<const char *>(sol +N_U ), N_U * sizeof(double));
+
+				// Close the file u2File
+				u2File.close();
+
+				// Save the u Solution into the u3FIlename using ofstream and set precision to 16
+				std::ofstream u3File(u3FileName, std::ios::out | std::ios::binary);
+				u3File.precision(16);
+
+				// Write the double pointer array sol[2*N_U] to sol[3*N_U] into the file u3File
+				u3File.write(reinterpret_cast<const char *>(sol + (2 * N_U)), N_U * sizeof(double));
+
+				// Close the file u3File
+				u3File.close();
+
+				// Save the p Solution into the pFIlename using ofstream and set precision to 16
+				std::ofstream pFile(pFileName, std::ios::out | std::ios::binary);
+				pFile.precision(16);
+
+				// write the double pointer array sol[3*N_U] to sol[3*N_U + N_P] into the file pFile
+				pFile.write(reinterpret_cast<const char *>(sol+ (3 * N_U)), N_P * sizeof(double));
+
+				// close pfile
+				pFile.close();	
 
 //====================================================================== 
 // measure errors to known solution

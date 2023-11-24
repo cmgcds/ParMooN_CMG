@@ -21,7 +21,7 @@
 #include "Particle.h"
 #include <cmath>
 
-#define MAX_THREAD_PER_BLOCK 128
+#define MAX_THREAD_PER_BLOCK 512
 
 struct __device__ Vector3D_Cuda
 {

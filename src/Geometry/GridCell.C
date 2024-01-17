@@ -1029,7 +1029,7 @@ bool TGridCell::PointInCell(double X, double Y)
     DY = Y - DY;
 
     // check if given point is identical to vertex
-    if(DX*DX + DY*DY < 1e-8)
+    if(DX*DX + DY*DY < 5e-6)
     {
       return true;
     }
@@ -1038,7 +1038,7 @@ bool TGridCell::PointInCell(double X, double Y)
 //     DX /= len;
 //     DY /= len;
 
-    test = (bool) (test && ((NX * DX + NY * DY) > -1e-8)); 
+    test = (bool) (test && ((NX * DX + NY * DY) > -5e-6)); 
   }
 
   return test;

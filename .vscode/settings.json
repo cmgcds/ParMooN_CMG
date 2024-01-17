@@ -162,7 +162,12 @@
         "FESpace.C": "cpp",
         "ALE_3D.C": "cpp",
         "SiminhaleParticleTracking.C": "cpp",
-        "ABL.C": "cpp"
+        "ABL.C": "cpp",
+        "CD2D_VPINNs_Inverse.C": "cpp",
+        "QuadFormulaTria.C": "cpp",
+        "SystemCD2D.C": "cpp",
+        "Quadrangle.C": "cpp",
+        "MGComponents2D.C": "cpp"
     },
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#2f7c47",

@@ -14,7 +14,7 @@
 #include <MainUtilities.h>
 
 #include  <stdlib.h>
-#include <MooNMD_Io.h>
+#include <MooNMD_Io.h> cc xvds
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -22,7 +22,7 @@
   #include "../Examples/CD_2D/SineLaplace.h" // smooth sol in unitsquares
 #else
   // #include "../Examples/CD_2D/SineLaplace.h"  
-  #include "../Examples/CD_2D/Perturbed.h" 
+  #include "../Main_Users/Thivin/fastVPINNs/square_inverse.h"
 #endif
 
 
@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
      {
        Domain->GmshGen(TDatabase::ParamDB->GEOFILE); 
        OutPut("GMSH used for meshing !!!" << endl);
+       
     }//gmsh mesh
   else if(TDatabase::ParamDB->MESH_TYPE==2)    //triangle mesh
      {  
@@ -174,8 +175,9 @@ int main(int argc, char* argv[])
   double h = 0.01;
   int N = (int)((double)(1.0/h) + 1);
   
+
   // Read the Argument from the command line as filename
-  std::string filename = argv[2];
+  std::string filename = "fem_output.csv";
 
   std::ofstream outputFile(filename);
   for (int j = 0 ; j < N ; j++)
@@ -187,7 +189,7 @@ int main(int argc, char* argv[])
       double values[4];
 
       Scalar_FeFunction->FindGradient(x,y,values);
-      outputFile <<x<<","<<y<<","<<values[0]<<endl;
+      outputFile <<x<<","<<y<<","<<values[0]<< "," << values[1] <<"," <<values[2] <<  endl;
     }
   }
   //======================================================================

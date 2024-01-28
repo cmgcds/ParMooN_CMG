@@ -1,12 +1,17 @@
-#include<vector>
-#include<string>
+#include <vector>
+#include <string>
 #include <map>
 #include <vector>
 #include <AllClasses.h>
 #include <FEFunction3D.h>
+#include <curand_kernel.h>
 
 #ifndef __Particle__
 #define __Particle__
+
+// typedef curandState RandomStateType;
+typedef curandStatePhilox4_32_10_t RandomStateType;
+// typedef curandStateMRG32k3a_t RandomStateType;
 
 // Class of Mono Disperse Particles
 class TParticles
@@ -343,10 +348,12 @@ class TParticles
           // deposited particles status
           int* d_m_is_deposited_particle;
 
-
           // Allocate memory for Column Index and Row Pointer for the adjacency matrix
           int* d_m_row_pointer;
           int* d_m_col_index;
+
+					// pseudo random states
+					RandomStateType* d_m_curand_states;
 
 
           // --- CUDA RELATED FUNCTIONS -- //

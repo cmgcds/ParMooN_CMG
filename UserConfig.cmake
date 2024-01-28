@@ -11,28 +11,6 @@ set(CMAKE_VERBOSE_MAKEFILE FALSE)
 # set(AParMooN_GEO "2D" CACHE STRING "Change AParMooN_GEO, to select the Dimensio of the problem")
 set(AParMooN_GEO "3D" CACHE STRING "Change AParMooN_GEO, to select the Dimension of the problem")
 
-#...................................................................................................................................................
-# select this line accordingly to include your main program
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/CD2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TCD2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/2D_Programs/TCD2D_Shell_ParMooN.C" CACHE STRING "Enter to select the Main file of the model") 
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/NSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TNSE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/CD3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/TCD3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/NSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/3D_Programs/SiminhaleParticleTracking_MPI_15LPM.C" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/3D_Programs/Siminhale_Pipe_Bend.C" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Main_Users/Thivin/HiPC_Paper.C" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/NSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-#  set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/3D_Programs/NSE3D_Siminhale.C" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/FTLE_Computation.cpp" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/FTLE_COMPUTATION_withData.cpp" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/TNSE3D/thivin_TNSE3D.cpp" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/Sample_mesh_move_2d.cpp" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/2DPrograms/TBE2D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
-# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/ANNPrograms/ANN_SUPG.C" CACHE STRING "Enter to select the Main file of the model")
-
 # selection of architect type (LINUX64 MAC64 INTEL64 TYRONE64 CRAY64)
 set(AParMooN_ARCH "INTEL64" CACHE STRING "select the machine type")
 
@@ -41,29 +19,15 @@ set(AParMooN_PARALLEL_TYPE "SCUDA" CACHE STRING "select the parallel type")
 
 #  selection of program type (MPICH OPENMPI INTELMPI CRAYMPI MACMPI)
 set(AParMooN_MPI_IMPLEMENTATION "INTELMPI" CACHE STRING "select the MPI Implementation type")
- 
-# set the path to save the exe file ....................................................................................
-#.......................................................................................................................
-# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/aletnse3d" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/TCD2D" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/NSE3D" CACHE STRING "select the model")
-#  set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/TNSE2D_FTLE" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/TNSE2D" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/TNSE3D/fluid_test" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Fluid/test" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Fluid_Solutions_refined/" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Fluid_1LPM/" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Particle_Solutions_l_inf/" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Particle_PolyDisperse_15LPM_2/" CACHE STRING "select the model")
-set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Pipe_Bend_Stationary/" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/HiPC_Paper/" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "/home/thivin/ITC_Output/8_100k_final" CACHE STRING "select the model")
 
-# set(AParMooN_OUTPUT_DIR_PATH "" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/thivin3d" CACHE STRING "select the model")
-#set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/burger" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/cd1dANN" CACHE STRING "select the model")
-# set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/../ParMooN_Output/ANNRegression" CACHE STRING "select the model")
+# select this line accordingly to include your main program
+# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/NSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
+# set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/3DPrograms/TNSE3D_ParMooN.C" CACHE STRING "Enter to select the Main file of the model")
+set(AParMooN_MODEL "${PROJECT_SOURCE_DIR}/Main_Users/Thivin/3D_Programs/SiminhaleParticleTracking_MPI" CACHE STRING "Enter to select the Main file of the model")
+ 
+# set the path to save the exe file
+set(AParMooN_OUTPUT_DIR_PATH "${CMAKE_SOURCE_DIR}/Output/Particle/" CACHE STRING "select the model")
+# set(AParMooN_OUTPUT_DIR_PATH "/media/HDD/thivin/ITC/Output/Siminhale_Pipe_Bend_Stationary/" CACHE STRING "select the model")
 
 set(USE_PARMOON_DEFINE -D__PRIVATE__)
 

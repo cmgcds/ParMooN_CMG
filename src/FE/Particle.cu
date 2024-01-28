@@ -15,10 +15,13 @@
 
 #include <cuda.h>
 #include "helper_cuda.h"
+#include <math_constants.h>
 #include <AllClasses.h>
 #include <FEDatabase3D.h>
 #include "Particle.h"
 #include <cmath>
+
+#define MAX_THREAD_PER_BLOCK 512
 
 struct __device__ Vector3D_Cuda
 {
@@ -251,6 +254,34 @@ __device__ double cd_cc_cuda(double fluid_density,
     return cd/cc;
 }   
 
+// GPU Function to compute acceleration due to brownian force
+__device__ void brownian_acc(double fluid_density,
+														 double particle_diameter,
+														 double fluid_dynamic_viscosity,
+														 double lambda,
+														 double time_step,
+														 int tid,
+														 RandomStateType rand_state,
+														 double particle_mass,
+														 double *fbx,
+														 double *fby,
+														 double *fbz
+														 )
+{
+    double cc = 1.0 + ((2 * lambda) / particle_diameter) * (1.257 + 0.4 * exp(-1.0 * ((1.1 * particle_diameter) / (2 * lambda))));
+		double kb = 1.3806488e23; // Boltzmann constant (J/K)
+		double temp = 310; // temperature (K)
+		double d = (kb * temp * cc) / (3 * CUDART_PI_F * fluid_density * particle_diameter); // Brownian diffusivity
+
+		double gx = curand_normal_double(&rand_state);
+		double gy = curand_normal_double(&rand_state);
+		double gz = curand_normal_double(&rand_state);
+		double value = kb * temp * sqrt(2 / d * time_step) / particle_mass;
+		*fbx = gx * value;
+		*fby = gy * value;
+		*fbz = gz * value;
+}   
+
 // Function to set the sell and return the reference values
 // this function is HARD CODED for a tetrahedral cell with p2 finite element
 // HARDCODED - THIVIN
@@ -425,6 +456,7 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
                                             int* d_m_is_error_particle,
                                             int* d_m_is_stagnant_particle,
                                             int* d_m_is_ghost_particle,
+																						RandomStateType *d_m_curand_states,
 
                                             // row pointer and column indices of the adjacency matrix
                                             int* d_m_row_pointer,
@@ -461,38 +493,44 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
         // }
 
         // Call the funciton to obtain the velocity at the given point
-        struct Vector3D_Cuda interpolated_velocities = Obtain_velocity_at_a_point(cell_no,
-                                    tid,
-                                           d_m_particle_position_x,
-                                           d_m_particle_position_y,
-                                           d_m_particle_position_z,
-                                           d_m_particle_velocity_x,
-                                           d_m_particle_velocity_y,
-                                           d_m_particle_velocity_z,
-                                           d_m_cell_vertices_x,
-                                           d_m_cell_vertices_y,
-                                           d_m_cell_vertices_z,
-                                           d_m_velocity_nodal_values_x,
-                                             d_m_velocity_nodal_values_y,
-                                                d_m_velocity_nodal_values_z,
-                                           d_m_global_dof_indices,
-                                           d_m_begin_indices);
+        struct Vector3D_Cuda interpolated_velocities =
+					Obtain_velocity_at_a_point(cell_no,
+																		 tid,
+																		 d_m_particle_position_x,
+																		 d_m_particle_position_y,
+																		 d_m_particle_position_z,
+																		 d_m_particle_velocity_x,
+																		 d_m_particle_velocity_y,
+																		 d_m_particle_velocity_z,
+																		 d_m_cell_vertices_x,
+																		 d_m_cell_vertices_y,
+																		 d_m_cell_vertices_z,
+																		 d_m_velocity_nodal_values_x,
+																		 d_m_velocity_nodal_values_y,
+																		 d_m_velocity_nodal_values_z,
+																		 d_m_global_dof_indices,
+																		 d_m_begin_indices);
 
         // USe the interpolated velocity functions to call the Calculate_Updated_Position_CUDA function 
         // This function updates the position array automatically
         // a Double can only be declated as a double * in cuda, due to malloc, so 
         // we will convert it to double value here.
         double fluid_density = *d_m_fluid_density;
+        double particle_diameter = d_m_particle_diameter[tid];
         double dynamic_viscosity_fluid = *d_m_dynamic_viscosity_fluid;
         double lambda = *d_m_lambda;
         double gravity_x = *d_m_gravity_x;
         double gravity_y = *d_m_gravity_y;
         double gravity_z = *d_m_gravity_z;
-
-        //  if (tid == 0)
-        // {
-        //     printf("GPU : %f %f %f\n", interpolated_velocities.x, interpolated_velocities.y, interpolated_velocities.z);
-        // }
+				double particle_mass = *d_m_particle_density * CUDART_PI_F * pow(particle_diameter, 3) / 6;
+				double fbx = 0, fby = 0, fbz = 0;
+				RandomStateType rand_state = d_m_curand_states[tid];
+				// TODO: exclude brownian motion as it fluctuates a lot
+				// brownian_acc(fluid_density,
+				// 						 particle_diameter,
+				// 						 dynamic_viscosity_fluid,
+				// 						 lambda, time_step, tid, rand_state,
+				// 						 particle_mass, &fbx, &fby, &fbz);
 
         // Calculate cd_cc
         double cd_cc_x = 0.0;
@@ -504,31 +542,29 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
         double fluid_velocity_y = interpolated_velocities.y;
         double fluid_velocity_z = interpolated_velocities.z;
 
-        
-
         cd_cc_x = cd_cc_cuda(fluid_density,
-                            d_m_particle_diameter[tid],
-                            fluid_velocity_x,
-                            d_m_particle_velocity_x[tid],
-                            dynamic_viscosity_fluid,
-                            lambda
-                            );
+                             d_m_particle_diameter[tid],
+                             fluid_velocity_x,
+                             d_m_particle_velocity_x[tid],
+                             dynamic_viscosity_fluid,
+                             lambda
+                             );
         
         cd_cc_y = cd_cc_cuda(fluid_density,
-                                d_m_particle_diameter[tid],
-                                fluid_velocity_y,
-                                d_m_particle_velocity_y[tid],
-                                dynamic_viscosity_fluid,
-                                lambda
-                                );
+                             d_m_particle_diameter[tid],
+                             fluid_velocity_y,
+                             d_m_particle_velocity_y[tid],
+                             dynamic_viscosity_fluid,
+                             lambda
+                             );
         
         cd_cc_z = cd_cc_cuda(fluid_density,
-                                d_m_particle_diameter[tid],
-                                fluid_velocity_z,
-                                d_m_particle_velocity_z[tid],
-                                dynamic_viscosity_fluid,
-                                lambda
-                                );  
+                             d_m_particle_diameter[tid],
+                             fluid_velocity_z,
+                             d_m_particle_velocity_z[tid],
+                             dynamic_viscosity_fluid,
+                             lambda
+                             );  
         
         // // FInd the minimum cd_cc
         // double cd_cc_min = cd_cc_x;
@@ -551,12 +587,15 @@ __global__ void Interpolate_Velocity_CUDA(  // cell Vertices
 
         rhs_x = inertial_constant * cd_cc_x * abs(fluid_velocity_x - d_m_particle_velocity_x[tid]) * (fluid_velocity_x - d_m_particle_velocity_x[tid]);
         rhs_x += gravity_x * (fluid_density - d_m_particle_density[tid]) / d_m_particle_density[tid];
+				rhs_x += fbx;
 
         rhs_y = inertial_constant * cd_cc_y * abs(fluid_velocity_y - d_m_particle_velocity_y[tid]) * (fluid_velocity_y - d_m_particle_velocity_y[tid]);
         rhs_y += gravity_y * (fluid_density - d_m_particle_density[tid]) / d_m_particle_density[tid];
+				rhs_y += fby;
 
         rhs_z = inertial_constant * cd_cc_z * abs(fluid_velocity_z - d_m_particle_velocity_z[tid]) * (fluid_velocity_z - d_m_particle_velocity_z[tid]);
         rhs_z += gravity_z * (fluid_density - d_m_particle_density[tid]) / d_m_particle_density[tid];
+				rhs_z += fbz;
 
         //  if (tid == 0)
         // {
@@ -968,6 +1007,12 @@ __global__ void DetectStagnantParticles_CUDA(double* d_m_particle_position_x,
         }
 }
 
+__global__ void setup_curand(RandomStateType *state)
+{
+    int id = threadIdx.x + blockIdx.x * blockDim.x;
+    curand_init(1234, id, 0, &state[id]);
+}
+
 void TParticles::SetupCudaDataStructures(TFESpace3D* fespace)
 {
     // get the collection of cells from the fespace
@@ -1207,6 +1252,18 @@ void TParticles::SetupCudaDataStructures(TFESpace3D* fespace)
         }
     }
 
+		// ---------------  Setup Pseudo Random Number Generator ----------------
+
+		// Allocate memory for curand states
+    checkCudaErrors(cudaMalloc((void**)&d_m_curand_states, N_Particles * sizeof(RandomStateType)));
+
+		// initialize curand states
+    int C_NUM_BLOCKS = std::ceil(double(N_Particles)/MAX_THREAD_PER_BLOCK);
+
+    dim3 dimGrid(C_NUM_BLOCKS);
+    dim3 dimBlock(N_Particles);
+
+		setup_curand<<<dimGrid, dimBlock>>>(d_m_curand_states);
     
    
     // ----- ALLOCATE MEMORY IN GPU FOR ALL THE DEVICE VARIABLES -----
@@ -1510,7 +1567,6 @@ void TParticles::CD_CC_Cuda()
 // Host wrapper for performing the velocity interpolation at every time step
 void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles_released,int N_DOF,int N_Cells)
 {
-    int MAX_THREAD_PER_BLOCK = 512;
     int N_threads; 
 
     if(N_Particles_released >= MAX_THREAD_PER_BLOCK) 
@@ -1521,11 +1577,10 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
     
     int C_NUM_BLOCKS = std::ceil(double(N_Particles_released)/MAX_THREAD_PER_BLOCK);
 
+    dim3 dimGrid(C_NUM_BLOCKS);
+    dim3 dimBlock(N_threads);
 
-   dim3 dimGrid(C_NUM_BLOCKS);
-   dim3 dimBlock(N_threads);
-
-   // time the kernel
+    // time the kernel
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventRecord(start, 0);
@@ -1587,6 +1642,7 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
                                                     d_m_is_error_particle,
                                                     d_m_is_stagnant_particle,
                                                     d_m_is_ghost_particle,
+																										d_m_curand_states,
                                                     d_m_row_pointer,
                                                     d_m_col_index,
                                                     N_Cells,
@@ -1660,7 +1716,6 @@ void TParticles::InterpolateVelocityHostWrapper(double time_step,int N_Particles
 // Host wrapper for detecting stagnant particles
 void TParticles::DetectStagnantParticlesHostWrapper(int N_Particles_released)
 {
-    int MAX_THREAD_PER_BLOCK = 32;
     int N_threads; 
 
     if(N_Particles_released >= MAX_THREAD_PER_BLOCK) 

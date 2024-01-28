@@ -446,6 +446,17 @@ void TDatabase::SetDefaultParameters()
   ParamDB->DEFECT_CORRECTION_TYPE = 0;
   ParamDB->CELL_MEASURE = 0;
 
+	ParamDB->LENGTH_SCALE = 0.02;
+	ParamDB->VELOCITY_SCALE = 3.183098862; // 60 LPM
+	ParamDB->PARTICLE_DIAMETER = 4.3e-6;
+	ParamDB->PARTICLE_DENSITY = 914;
+	ParamDB->FLUID_DENSITY = 1.1385;
+	ParamDB->FLUID_VISCOSITY = 0.00001893;
+	ParamDB->IS_PARTICLE_MONODISPERSE = 1; 
+	ParamDB->IS_PARTICLE_FUSED = 1; 
+	ParamDB->PARTICLE_RELEASE_NO = 5000;
+	ParamDB->PARTICLE_RELEASE_INTERVAL = 100;
+
   ParamDB->FACE_SIGMA = 1;
   ParamDB->WEAK_BC_SIGMA = 1;
   ParamDB->WEAK_BC = 0;
@@ -777,6 +788,7 @@ void TDatabase::SetDefaultParameters()
   TimeDB->CURRENTTIME = 0;
   TimeDB->CURRENTTIMESTEPLENGTH = 1;
   TimeDB->TIMESTEPLENGTH = 1;
+  TimeDB->TIMESTEPSPLIT = 1;
   TimeDB->MIN_TIMESTEPLENGTH = 1E-4;
   TimeDB->MAX_TIMESTEPLENGTH = 0.5;
   TimeDB->TIMESTEPLENGTH_TOL = 1e-3;
@@ -1407,6 +1419,17 @@ void TDatabase::WriteParamDB(char *ExecutedFile)
   OutFile << "WEAK_BC_SIGMA: " << ParamDB->WEAK_BC_SIGMA << endl;
   OutFile << "WEAK_BC: " << ParamDB->WEAK_BC << endl;
 
+	OutFile << "LENGTH_SCALE: " << ParamDB->LENGTH_SCALE << endl;
+	OutFile << "VELOCITY_SCALE: " << ParamDB->VELOCITY_SCALE << endl;
+	OutFile << "PARTICLE_DIAMETER: " << ParamDB->PARTICLE_DIAMETER << endl;
+	OutFile << "PARTICLE_DENSITY: " << ParamDB->PARTICLE_DENSITY << endl;
+	OutFile << "FLUID_DENSITY: " << ParamDB->FLUID_DENSITY << endl;
+	OutFile << "FLUID_VISCOSITY: " << ParamDB->FLUID_VISCOSITY << endl;
+	OutFile << "IS_PARTICLE_MONODISPERSE: " << ParamDB->IS_PARTICLE_MONODISPERSE << endl; 
+	OutFile << "IS_PARTICLE_FUSED: " << ParamDB->IS_PARTICLE_FUSED << endl; 
+	OutFile << "PARTICLE_RELEASE_NO: " << ParamDB->PARTICLE_RELEASE_NO << endl;
+	OutFile << "PARTICLE_RELEASE_INTERVAL: " << ParamDB->PARTICLE_RELEASE_INTERVAL << endl;
+
   OutFile << "RE_NR: " << ParamDB->RE_NR << endl;
   OutFile << "RA_NR: " << ParamDB->RA_NR << endl;
   OutFile << "ROSSBY_NR: " << ParamDB->ROSSBY_NR << endl;
@@ -1836,6 +1859,7 @@ void TDatabase::WriteTimeDB()
   OutFile << "CURRENTTIME: " << TimeDB->CURRENTTIME << endl;
   OutFile << "CURRENTTIMESTEPLENGTH: " << TimeDB->CURRENTTIMESTEPLENGTH << endl;
   OutFile << "TIMESTEPLENGTH: " << TimeDB->TIMESTEPLENGTH << endl;
+  OutFile << "TIMESTEPSPLIT: " << TimeDB->TIMESTEPSPLIT << endl;
   OutFile << "MIN_TIMESTEPLENGTH: " << TimeDB->MIN_TIMESTEPLENGTH << endl;
   OutFile << "MAX_TIMESTEPLENGTH: " << TimeDB->MAX_TIMESTEPLENGTH << endl;
   OutFile << "TIMESTEPLENGTH_TOL: " << TimeDB->TIMESTEPLENGTH_TOL << endl;

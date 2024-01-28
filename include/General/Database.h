@@ -424,6 +424,21 @@ struct TParaDB
   int RFB_SUBMESH_LAYERS;
 
   //======================================================================
+  /** parameters for particle deposition */
+  //======================================================================
+
+	double LENGTH_SCALE;
+	double VELOCITY_SCALE;
+	double PARTICLE_DIAMETER;
+	double PARTICLE_DENSITY;
+	double FLUID_DENSITY;
+	double FLUID_VISCOSITY;
+	int IS_PARTICLE_MONODISPERSE; 
+	int IS_PARTICLE_FUSED; 
+	int PARTICLE_RELEASE_NO;
+	int PARTICLE_RELEASE_INTERVAL;
+
+  //======================================================================
   /** parameters for slip with friction and penetration with resistance
       boundary conditions                                               */
   //======================================================================
@@ -1068,6 +1083,7 @@ struct TTimDB
   double CURRENTTIME;
   double CURRENTTIMESTEPLENGTH;
   double TIMESTEPLENGTH;
+	int TIMESTEPSPLIT;
   double INTERNAL_STARTTIME;
   double MIN_TIMESTEPLENGTH;
   double MAX_TIMESTEPLENGTH;

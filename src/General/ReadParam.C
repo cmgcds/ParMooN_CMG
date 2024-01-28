@@ -482,6 +482,57 @@ int TDomain::ReadParam(char *ParamFile)
       N_Param++;
     }
 
+		if (!strcmp(line, "LENGTH_SCALE:"))
+		{
+			dat >> TDatabase::ParamDB->LENGTH_SCALE;
+			N_Param++;
+		}
+		if (!strcmp(line, "VELOCITY_SCALE:"))
+		{
+			dat >> TDatabase::ParamDB->VELOCITY_SCALE;
+			N_Param++;
+		}
+		if (!strcmp(line, "PARTICLE_DIAMETER:"))
+		{
+			dat >> TDatabase::ParamDB->PARTICLE_DIAMETER;
+			N_Param++;
+		}
+		if (!strcmp(line, "PARTICLE_DENSITY:"))
+		{
+			dat >> TDatabase::ParamDB->PARTICLE_DENSITY;
+			N_Param++;
+		}
+		if (!strcmp(line, "FLUID_DENSITY:"))
+		{
+			dat >> TDatabase::ParamDB->FLUID_DENSITY;
+			N_Param++;
+		}
+		if (!strcmp(line, "FLUID_VISCOSITY:"))
+		{
+			dat >> TDatabase::ParamDB->FLUID_VISCOSITY;
+			N_Param++;
+		}
+		if (!strcmp(line, "IS_PARTICLE_MONODISPERSE:"))
+		{
+			dat >> TDatabase::ParamDB->IS_PARTICLE_MONODISPERSE; 
+			N_Param++;
+		}
+		if (!strcmp(line, "IS_PARTICLE_FUSED:"))
+		{
+			dat >> TDatabase::ParamDB->IS_PARTICLE_FUSED; 
+			N_Param++;
+		}
+		if (!strcmp(line, "PARTICLE_RELEASE_NO:"))
+		{
+			dat >> TDatabase::ParamDB->PARTICLE_RELEASE_NO;
+			N_Param++;
+		}
+		if (!strcmp(line, "PARTICLE_RELEASE_INTERVAL:"))
+		{
+			dat >> TDatabase::ParamDB->PARTICLE_RELEASE_INTERVAL;
+			N_Param++;
+		}
+
     if (!strcmp(line, "CELL_MEASURE:"))
     {
 	dat >> TDatabase::ParamDB->CELL_MEASURE;
@@ -2260,6 +2311,11 @@ int TDomain::ReadParam(char *ParamFile)
     if (!strcmp(line, "TIMESTEPLENGTH:"))
     {
       dat >> TDatabase::TimeDB->TIMESTEPLENGTH;
+      N_Param++;
+    }
+    if (!strcmp(line, "TIMESTEPSPLIT:"))
+    {
+      dat >> TDatabase::TimeDB->TIMESTEPSPLIT;
       N_Param++;
     }
     if (!strcmp(line, "MIN_TIMESTEPLENGTH:"))

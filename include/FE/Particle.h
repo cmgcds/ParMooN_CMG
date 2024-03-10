@@ -4,14 +4,19 @@
 #include <vector>
 #include <AllClasses.h>
 #include <FEFunction3D.h>
-#include <curand_kernel.h>
+
+#ifdef _CUDA
+	#include <curand_kernel.h>
+#endif
 
 #ifndef __Particle__
 #define __Particle__
 
-// typedef curandState RandomStateType;
-typedef curandStatePhilox4_32_10_t RandomStateType;
-// typedef curandStateMRG32k3a_t RandomStateType;
+#ifdef _CUDA
+	// typedef curandState RandomStateType;
+	typedef curandStatePhilox4_32_10_t RandomStateType;
+	// typedef curandStateMRG32k3a_t RandomStateType;
+#endif
 
 // Class of Mono Disperse Particles
 class TParticles
